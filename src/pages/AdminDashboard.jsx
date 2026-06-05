@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
 const STATUS_STYLES = {
@@ -18,7 +18,6 @@ export default function AdminDashboard() {
   const [search, setSearch] = useState("");
   const [userEmail, setUserEmail] = useState("");
 
-  // Auth guard + initial fetch
   useEffect(() => {
     const init = async () => {
       const { data } = await supabase.auth.getSession();
@@ -34,12 +33,10 @@ export default function AdminDashboard() {
 
   const fetchAppointments = async () => {
     setLoading(true);
-    setError(null);
     const { data, error: dbError } = await supabase
       .from("appointments")
       .select("*")
       .order("created_at", { ascending: false });
-
     setLoading(false);
     if (dbError) {
       setError(dbError.message);
@@ -53,7 +50,6 @@ export default function AdminDashboard() {
       .from("appointments")
       .update({ status })
       .eq("id", id);
-
     if (dbError) {
       alert("Could not update: " + dbError.message);
       return;
@@ -68,7 +64,7 @@ export default function AdminDashboard() {
     navigate("/admin/login", { replace: true });
   };
 
-  const filtered = appointments.filter((a) => {
+  const filteredAppts = appointments.filter((a) => {
     if (filter !== "all" && a.status !== filter) return false;
     if (search) {
       const q = search.toLowerCase();
@@ -94,9 +90,8 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#f8f7f4]">
-      {/* Header */}
       <header className="bg-[#081225] text-white px-6 py-5 shadow-lg">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-lg font-black tracking-wider text-[#d4af37] uppercase">
               Saikripa Textiles
@@ -105,10 +100,14 @@ export default function AdminDashboard() {
               Admin Dashboard
             </p>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-gray-400 hidden sm:inline">
-              {userEmail}
-            </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Link
+              to="/admin/sales"
+              className="text-xs font-bold bg-[#d4af37] hover:bg-[#c49f2d] text-[#081225] px-4 py-2 rounded-xl transition"
+            >
+              📊 Sales Records
+            </Link>
+            <span className="text-xs text-gray-400 hidden lg:inline ml-2">{userEmail}</span>
             <button
               onClick={handleLogout}
               className="text-xs font-bold bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl transition"
@@ -120,6 +119,15 @@ export default function AdminDashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-2xl font-black text-[#081225]">Appointments</h2>
+            <p className="text-xs text-gray-400 mt-1 uppercase tracking-widest font-bold">
+              Booking requests from the website
+            </p>
+          </div>
+        </div>
+
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
           {[
@@ -137,6 +145,23 @@ export default function AdminDashboard() {
             </div>
           ))}
         </div>
+
+        {/* Sales Records jump card */}
+        <Link
+          to="/admin/sales"
+          className="block bg-gradient-to-r from-[#d4af37] to-[#c49f2d] text-[#081225] rounded-2xl p-6 mb-6 hover:shadow-xl transition group"
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="text-3xl">📊</div>
+              <div>
+                <h3 className="font-black text-lg">Sales Records</h3>
+                <p className="text-sm text-[#081225]/80">View all sales bills, add new transactions, track revenue</p>
+              </div>
+            </div>
+            <div className="text-2xl font-black group-hover:translate-x-1 transition">→</div>
+          </div>
+        </Link>
 
         {/* Filters */}
         <div className="bg-white rounded-2xl p-4 mb-6 border border-gray-100 flex flex-col sm:flex-row gap-3 sm:items-center">
@@ -170,18 +195,17 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        {/* List */}
-        {loading ? (
-          <div className="text-center py-20 text-gray-400">Loading appointments...</div>
-        ) : error ? (
+        {error ? (
           <div className="bg-red-50 text-red-600 rounded-2xl p-4 text-sm">{error}</div>
-        ) : filtered.length === 0 ? (
+        ) : loading ? (
+          <div className="text-center py-12 text-gray-400">Loading appointments...</div>
+        ) : filteredAppts.length === 0 ? (
           <div className="bg-white rounded-2xl p-12 text-center text-gray-400 border border-gray-100">
             No appointments match this filter.
           </div>
         ) : (
           <div className="space-y-3">
-            {filtered.map((a) => (
+            {filteredAppts.map((a) => (
               <div
                 key={a.id}
                 className="bg-white rounded-2xl p-5 border border-gray-100 hover:shadow-lg transition"
@@ -193,7 +217,9 @@ export default function AdminDashboard() {
                         {a.name}
                       </h3>
                       <span
-                        className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${STATUS_STYLES[a.status] || "bg-gray-100 text-gray-600"}`}
+                        className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${
+                          STATUS_STYLES[a.status] || "bg-gray-100 text-gray-600"
+                        }`}
                       >
                         {a.status}
                       </span>

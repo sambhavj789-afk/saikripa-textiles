@@ -8,6 +8,7 @@ import Catalogue from "./pages/Catalogue.jsx";
 import FabricDetail from "./pages/FabricDetail.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
+import SalesRecords from "./pages/SalesRecords";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -18,6 +19,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/catalogue/:slug" element={<FabricDetail />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/sales" element={<SalesRecords />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
