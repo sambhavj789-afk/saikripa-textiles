@@ -46,6 +46,7 @@ export default function AdminDashboard() {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   useEffect(() => {
     const init = async () => {
@@ -87,6 +88,44 @@ export default function AdminDashboard() {
       prev.map((a) => (a.id === id ? { ...a, status } : a))
     );
   };
+  const handleDelete = async (id, name) => {
+    if (!confirm(`Permanently delete appointment for ${name}? This cannot be undone.`)) return;
+    const { error: dbError } = await supabase.from("appointments").delete().eq("id", id);
+    if (dbError) {
+      alert("Could not delete: " + dbError.message);
+      return;
+    }
+    setAppointments((prev) => prev.filter((a) => a.id !== id));
+  };
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredAppts.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredAppts.map((a) => a.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`Permanently delete ${ids.length} appointment${ids.length === 1 ? "" : "s"}? This cannot be undone.`)) return;
+    const { error: dbError } = await supabase.from("appointments").delete().in("id", ids);
+    if (dbError) {
+      alert("Could not delete: " + dbError.message);
+      return;
+    }
+    setAppointments((prev) => prev.filter((a) => !selectedIds.has(a.id)));
+    setSelectedIds(new Set());
+  };
 
   const filteredAppts = appointments.filter((a) => {
     if (filter !== "all" && a.status !== filter) return false;
@@ -127,13 +166,34 @@ export default function AdminDashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
           <div>
             <h2 className="text-2xl font-black text-[#081225]">Appointments</h2>
             <p className="text-xs text-gray-400 mt-1 uppercase tracking-widest font-bold">
               Booking requests from the website
             </p>
           </div>
+          {filteredAppts.length > 0 && (
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-xs font-bold text-gray-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.size > 0 && selectedIds.size === filteredAppts.length}
+                  onChange={toggleSelectAll}
+                  className="w-4 h-4 accent-[#d4af37]"
+                />
+                Select All ({filteredAppts.length})
+              </label>
+              {selectedIds.size > 0 && (
+                <button
+                  onClick={handleBulkDelete}
+                  className="bg-red-500 text-white px-4 py-2 rounded-xl font-bold text-xs hover:bg-red-600 transition shadow"
+                >
+                  Delete Selected ({selectedIds.size})
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
@@ -197,10 +257,21 @@ export default function AdminDashboard() {
             {filteredAppts.map((a) => (
               <div
                 key={a.id}
-                className="bg-white rounded-2xl p-5 border border-gray-100 hover:shadow-lg transition"
+                className={`bg-white rounded-2xl p-5 border transition hover:shadow-lg ${
+                  selectedIds.has(a.id)
+                    ? "border-[#d4af37] bg-[#fff8e1]/30"
+                    : "border-gray-100"
+                }`}
               >
                 <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                  <div className="flex-1 min-w-0">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(a.id)}
+                      onChange={() => toggleSelect(a.id)}
+                      className="mt-1 w-4 h-4 accent-[#d4af37] cursor-pointer flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="font-black text-[#081225] text-base truncate">
                         {a.name}
@@ -248,6 +319,7 @@ export default function AdminDashboard() {
                       Booked: {new Date(a.created_at).toLocaleString("en-IN")}
                     </p>
                   </div>
+                  </div>
 
                   <div className="flex flex-col gap-2 lg:w-44 flex-shrink-0">
                     <select
@@ -264,10 +336,16 @@ export default function AdminDashboard() {
                       href={`https://wa.me/${a.phone.replace(/\D/g, "")}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-center bg-[#25d366] text-white text-xs font-bold py-2 rounded-xl hover:bg-[#1ebe5d] transition"
+                      className="text-center bg-[#081225] text-white text-xs font-bold py-2 rounded-xl hover:bg-[#0f1f63] transition"
                     >
                       WhatsApp
                     </a>
+                    <button
+                      onClick={() => handleDelete(a.id, a.name)}
+                      className="text-center border border-red-200 text-red-600 text-xs font-bold py-2 rounded-xl hover:bg-red-50 transition"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
               </div>

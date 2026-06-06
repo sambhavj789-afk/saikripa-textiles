@@ -549,7 +549,6 @@ export default function SalesRecords() {
                                     <tr className="text-gray-400 uppercase tracking-widest">
                                       <th className="text-left font-bold py-2">Quality</th>
                                       <th className="text-right font-bold py-2">Meter</th>
-                                      <th className="text-right font-bold py-2">Amount</th>
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -557,9 +556,12 @@ export default function SalesRecords() {
                                       <tr key={it.id} className="border-t border-gray-200/60">
                                         <td className="py-2 text-[#081225] font-semibold">{it.quality}</td>
                                         <td className="py-2 text-right font-mono text-gray-700">{Number(it.meter).toFixed(2)}</td>
-                                        <td className="py-2 text-right font-mono font-bold text-[#081225]">{inr(it.amount)}</td>
                                       </tr>
                                     ))}
+                                    <tr className="border-t-2 border-[#d4af37]/40">
+                                      <td className="py-2 text-[#7a6015] font-black uppercase tracking-wider text-[11px]">Total Amount</td>
+                                      <td className="py-2 text-right font-mono font-black text-[#7a6015]">{inr(billTotal(b))}</td>
+                                    </tr>
                                   </tbody>
                                 </table>
                               )}

@@ -259,7 +259,7 @@ export default function PurchaseRecords() {
           <div>
             <h2 className="text-2xl font-black text-[#081225]">Purchase Records</h2>
             <p className="text-xs text-gray-400 mt-1 uppercase tracking-widest font-bold">
-              Purchase bills from suppliers — Plus = less received · Minus = extra received
+              Purchase bills from suppliers — Plus = underweight · Minus = overweight
             </p>
           </div>
           <button
@@ -306,11 +306,11 @@ export default function PurchaseRecords() {
                 <input type="number" step="0.01" value={form.meter} onChange={(e) => handleChange("meter", e.target.value)} placeholder="0.00" required className={inputCls} />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-red-500 uppercase tracking-widest mb-1">Plus (+) — less received</label>
+                <label className="block text-[10px] font-bold text-red-500 uppercase tracking-widest mb-1">Plus (+) — underweight</label>
                 <input type="number" step="0.01" value={form.plus} onChange={(e) => handleChange("plus", e.target.value)} placeholder="0.00" className={inputCls} />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-green-600 uppercase tracking-widest mb-1">Minus (−) — extra received</label>
+                <label className="block text-[10px] font-bold text-green-600 uppercase tracking-widest mb-1">Minus (−) — overweight</label>
                 <input type="number" step="0.01" value={form.minus} onChange={(e) => handleChange("minus", e.target.value)} placeholder="0.00" className={inputCls} />
               </div>
               <div>
@@ -366,8 +366,8 @@ export default function PurchaseRecords() {
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
           <SummaryTile label="Bills" value={totals.bills} />
           <SummaryTile label="Total Meter" value={totals.meter.toFixed(2)} />
-          <SummaryTile label="Plus (Short)" value={totals.plus.toFixed(2)} colorClass="text-red-600" />
-          <SummaryTile label="Minus (Extra)" value={totals.minus.toFixed(2)} colorClass="text-green-600" />
+          <SummaryTile label="Plus (Underweight)" value={totals.plus.toFixed(2)} colorClass="text-red-600" />
+          <SummaryTile label="Minus (Overweight)" value={totals.minus.toFixed(2)} colorClass="text-green-600" />
           <SummaryTile label="Total Amount" value={inr(totals.amount)} highlight />
         </div>
 
