@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import AdminNav from "../components/AdminNav";
+import Autocomplete from "../components/Autocomplete";
 
 const inr = (n) =>
   new Intl.NumberFormat("en-IN", {
@@ -9,12 +11,27 @@ const inr = (n) =>
     maximumFractionDigits: 0,
   }).format(n || 0);
 
-// Empty line-item template
+const FABRIC_QUALITIES = [
+  "Superior Collection",
+  "Gold Club",
+  "Aura Plus",
+  "Innova",
+  "Milky Way",
+  "Classic P 7200",
+  "Victory",
+  "Alpha Dyed",
+  "Poly King",
+  "Good Cut",
+  "Fant",
+  "Rages",
+  "Chindi",
+];
+
 const emptyItem = () => ({ quality: "", meter: "", rate: "", amount: "", _touched: false });
 
 export default function SalesRecords() {
   const navigate = useNavigate();
-  const [bills, setBills] = useState([]); // each bill includes nested .items
+  const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userEmail, setUserEmail] = useState("");
@@ -31,6 +48,7 @@ export default function SalesRecords() {
     notes: "",
   });
   const [items, setItems] = useState([emptyItem()]);
+
   const [salesSearch, setSalesSearch] = useState("");
   const [saleTypeFilter, setSaleTypeFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date");
@@ -51,7 +69,6 @@ export default function SalesRecords() {
 
   const fetchBills = async () => {
     setLoading(true);
-    // Fetch bills with their items via a join
     const { data, error: dbError } = await supabase
       .from("sales_records")
       .select("*, bill_items(*)")
@@ -64,10 +81,23 @@ export default function SalesRecords() {
     setBills(data || []);
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/admin/login", { replace: true });
-  };
+  const partyOptions = useMemo(() => {
+    const set = new Set();
+    bills.forEach((b) => b.party && set.add(b.party));
+    return Array.from(set).sort();
+  }, [bills]);
+
+  const agencyOptions = useMemo(() => {
+    const set = new Set();
+    bills.forEach((b) => b.agency_name && set.add(b.agency_name));
+    return Array.from(set).sort();
+  }, [bills]);
+
+  const notesOptions = useMemo(() => {
+    const set = new Set();
+    bills.forEach((b) => b.notes && set.add(b.notes));
+    return Array.from(set).sort();
+  }, [bills]);
 
   const resetForm = () => {
     setForm({
@@ -90,17 +120,21 @@ export default function SalesRecords() {
     setItems((prev) => {
       const next = [...prev];
       const item = { ...next[index], [field]: value };
-      // Auto-calc per-item amount from meter × rate, unless user has typed in amount
-      if ((field === "meter" || field === "rate") && !item._touched) {
-        const m = parseFloat(field === "meter" ? value : item.meter);
-        const r = parseFloat(field === "rate" ? value : item.rate);
-        if (!isNaN(m) && !isNaN(r)) {
-          item.amount = (m * r).toFixed(2);
-        }
-      }
+
       if (field === "amount") {
         item._touched = true;
       }
+
+      if ((field === "meter" || field === "rate") && !item._touched) {
+        const m = parseFloat(field === "meter" ? value : item.meter);
+        const r = parseFloat(field === "rate" ? value : item.rate);
+        if (!isNaN(m) && !isNaN(r) && m > 0 && r > 0) {
+          item.amount = (m * r).toFixed(2);
+        } else {
+          item.amount = "";
+        }
+      }
+
       next[index] = item;
       return next;
     });
@@ -168,7 +202,6 @@ export default function SalesRecords() {
         return;
       }
       billId = editingId;
-      // Delete existing items, we'll re-insert them
       await supabase.from("bill_items").delete().eq("sales_record_id", billId);
     } else {
       const { data, error: dbError } = await supabase
@@ -183,7 +216,6 @@ export default function SalesRecords() {
       billId = data.id;
     }
 
-    // Insert all line items
     const itemsPayload = validItems.map((it) => ({
       sales_record_id: billId,
       quality: it.quality.trim(),
@@ -205,7 +237,6 @@ export default function SalesRecords() {
 
   const handleDelete = async (id) => {
     if (!confirm("Delete this bill and all its line items? This cannot be undone.")) return;
-    // bill_items rows cascade-delete via the FK constraint
     const { error: dbError } = await supabase.from("sales_records").delete().eq("id", id);
     if (dbError) {
       alert("Could not delete: " + dbError.message);
@@ -266,47 +297,29 @@ export default function SalesRecords() {
       return 0;
     });
 
-  const billTotal = (b) =>
-    (b.bill_items || []).reduce((sum, it) => sum + Number(it.amount || 0), 0);
-  const billMeters = (b) =>
-    (b.bill_items || []).reduce((sum, it) => sum + Number(it.meter || 0), 0);
-
+  const billTotal = (b) => (b.bill_items || []).reduce((sum, it) => sum + Number(it.amount || 0), 0);
+  const billMeters = (b) => (b.bill_items || []).reduce((sum, it) => sum + Number(it.meter || 0), 0);
   const grandTotal = filteredBills.reduce((sum, b) => sum + billTotal(b), 0);
   const grandMeters = filteredBills.reduce((sum, b) => sum + billMeters(b), 0);
-
-  // Form-side computed total
   const formTotal = items.reduce((sum, it) => {
     const a = parseFloat(it.amount);
     return sum + (isNaN(a) ? 0 : a);
   }, 0);
 
+  const inputCls = "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#d4af37]";
+  const innerInputCls = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#d4af37] bg-white";
+
   return (
     <div className="min-h-screen bg-[#f8f7f4]">
-      <header className="bg-[#081225] text-white px-6 py-5 shadow-lg">
-        <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-lg font-black tracking-wider text-[#d4af37] uppercase">
-              Saikripa Textiles
-            </h1>
-            <p className="text-[10px] text-gray-400 tracking-[0.25em] uppercase mt-0.5">
-              Sales Records
-            </p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <Link
-              to="/admin/dashboard"
-              className="text-xs font-bold bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl transition"
-            >
-              ← Dashboard
-            </Link>
-            <span className="text-xs text-gray-400 hidden lg:inline ml-2">{userEmail}</span>
-            <button
-              onClick={handleLogout}
-              className="text-xs font-bold bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl transition"
-            >
-              Sign Out
-            </button>
-          </div>
+      <header className="bg-[#081225] text-white py-5 shadow-lg relative">
+        <AdminNav userEmail={userEmail} className="absolute left-4 top-1/2 -translate-y-1/2" />
+        <div className="max-w-7xl mx-auto px-6">
+          <h1 className="text-lg font-black tracking-wider text-[#d4af37] uppercase">
+            Saikripa Textiles
+          </h1>
+          <p className="text-[10px] text-gray-400 tracking-[0.25em] uppercase mt-0.5">
+            Sales Records
+          </p>
         </div>
       </header>
 
@@ -325,7 +338,7 @@ export default function SalesRecords() {
             }}
             className="bg-[#d4af37] text-[#081225] px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#c49f2d] transition shadow"
           >
-            {showForm ? "× Close Form" : "+ New Sale Record"}
+            {showForm ? "Close Form" : "+ New Sale Record"}
           </button>
         </div>
 
@@ -334,55 +347,27 @@ export default function SalesRecords() {
         )}
 
         {showForm && (
-          <form
-            onSubmit={handleSubmit}
-            className="bg-white rounded-2xl p-6 mb-6 border border-[#d4af37]/30 shadow-lg"
-          >
+          <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 mb-6 border border-[#d4af37]/30 shadow-lg">
             <h3 className="font-black text-[#081225] mb-4">
               {editingId ? "Edit Sales Record" : "New Sales Record"}
             </h3>
 
-            {/* Bill header fields */}
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <div>
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Date *</label>
-                <input
-                  type="date"
-                  value={form.bill_date}
-                  onChange={(e) => handleFormChange("bill_date", e.target.value)}
-                  required
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#d4af37]"
-                />
+                <input type="date" value={form.bill_date} onChange={(e) => handleFormChange("bill_date", e.target.value)} required className={inputCls} />
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Bill # *</label>
-                <input
-                  type="text"
-                  value={form.bill_number}
-                  onChange={(e) => handleFormChange("bill_number", e.target.value)}
-                  placeholder="e.g. 1024"
-                  required
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#d4af37]"
-                />
+                <input type="text" value={form.bill_number} onChange={(e) => handleFormChange("bill_number", e.target.value)} placeholder="e.g. 1024" required className={inputCls} />
               </div>
               <div className="sm:col-span-2">
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Party *</label>
-                <input
-                  type="text"
-                  value={form.party}
-                  onChange={(e) => handleFormChange("party", e.target.value)}
-                  placeholder="Buyer name / firm"
-                  required
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#d4af37]"
-                />
+                <Autocomplete value={form.party} onChange={(v) => handleFormChange("party", v)} suggestions={partyOptions} placeholder="Buyer name / firm" required className={inputCls} />
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Sale Type *</label>
-                <select
-                  value={form.sale_type}
-                  onChange={(e) => handleFormChange("sale_type", e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#d4af37] bg-white"
-                >
+                <select value={form.sale_type} onChange={(e) => handleFormChange("sale_type", e.target.value)} className={inputCls + " bg-white"}>
                   <option value="Direct">Direct</option>
                   <option value="Agency">Agency</option>
                 </select>
@@ -390,103 +375,45 @@ export default function SalesRecords() {
               {form.sale_type === "Agency" && (
                 <div className="sm:col-span-3">
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Agency Name</label>
-                  <input
-                    type="text"
-                    value={form.agency_name}
-                    onChange={(e) => handleFormChange("agency_name", e.target.value)}
-                    placeholder="Agent / agency"
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#d4af37]"
-                  />
+                  <Autocomplete value={form.agency_name} onChange={(v) => handleFormChange("agency_name", v)} suggestions={agencyOptions} placeholder="Agent / agency" className={inputCls} />
                 </div>
               )}
               <div className={form.sale_type === "Agency" ? "sm:col-span-4" : "sm:col-span-3"}>
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Notes</label>
-                <input
-                  type="text"
-                  value={form.notes}
-                  onChange={(e) => handleFormChange("notes", e.target.value)}
-                  placeholder="Optional — payment terms, delivery, etc."
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#d4af37]"
-                />
+                <Autocomplete value={form.notes} onChange={(v) => handleFormChange("notes", v)} suggestions={notesOptions} placeholder="Optional — payment terms, delivery, etc." className={inputCls} />
               </div>
             </div>
 
-            {/* Line items */}
             <div className="border-t border-gray-100 pt-5 mb-3">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-black text-[#081225] uppercase tracking-wide">Fabrics on this bill</h4>
-                <button
-                  type="button"
-                  onClick={addItem}
-                  className="text-xs font-bold text-[#c6a55c] hover:text-[#7a6015] hover:underline"
-                >
-                  + Add another fabric
-                </button>
+                <button type="button" onClick={addItem} className="text-xs font-bold text-[#c6a55c] hover:text-[#7a6015] hover:underline">+ Add another fabric</button>
               </div>
 
               <div className="space-y-3">
                 {items.map((it, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-gray-50 rounded-xl p-4 grid sm:grid-cols-12 gap-3 items-end"
-                  >
+                  <div key={idx} className="bg-gray-50 rounded-xl p-4 grid sm:grid-cols-12 gap-3 items-end">
                     <div className="sm:col-span-4">
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Quality *</label>
-                      <input
-                        type="text"
-                        value={it.quality}
-                        onChange={(e) => handleItemChange(idx, "quality", e.target.value)}
-                        placeholder="e.g. Superior Collection"
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#d4af37] bg-white"
-                      />
+                      <Autocomplete value={it.quality} onChange={(v) => handleItemChange(idx, "quality", v)} suggestions={FABRIC_QUALITIES} placeholder="e.g. Superior Collection" className={innerInputCls} />
                     </div>
                     <div className="sm:col-span-2">
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Meter *</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={it.meter}
-                        onChange={(e) => handleItemChange(idx, "meter", e.target.value)}
-                        placeholder="0.00"
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#d4af37] bg-white"
-                      />
+                      <input type="number" step="0.01" value={it.meter} onChange={(e) => handleItemChange(idx, "meter", e.target.value)} placeholder="0.00" className={innerInputCls} />
                     </div>
                     <div className="sm:col-span-2">
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Rate *</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={it.rate}
-                        onChange={(e) => handleItemChange(idx, "rate", e.target.value)}
-                        placeholder="0.00"
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#d4af37] bg-white"
-                      />
+                      <input type="number" step="0.01" value={it.rate} onChange={(e) => handleItemChange(idx, "rate", e.target.value)} placeholder="0.00" className={innerInputCls} />
                     </div>
                     <div className="sm:col-span-3">
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
                         Amount {!it._touched && it.meter && it.rate && <span className="font-normal normal-case text-gray-400 tracking-normal">(auto)</span>}
                       </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={it.amount}
-                        onChange={(e) => handleItemChange(idx, "amount", e.target.value)}
-                        placeholder="0.00"
-                        className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#d4af37] ${
-                          it._touched ? "border-[#d4af37] bg-[#fff8e1]" : "border-gray-200 bg-white"
-                        }`}
-                      />
+                      <input type="number" step="0.01" value={it.amount} onChange={(e) => handleItemChange(idx, "amount", e.target.value)} placeholder="0.00" className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#d4af37] ${it._touched ? "border-[#d4af37] bg-[#fff8e1]" : "border-gray-200 bg-white"}`} />
                     </div>
                     <div className="sm:col-span-1 flex justify-end">
                       {items.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeItem(idx)}
-                          className="text-red-500 hover:text-red-700 text-xl font-bold w-8 h-8 flex items-center justify-center"
-                          aria-label="Remove fabric"
-                        >
-                          ×
-                        </button>
+                        <button type="button" onClick={() => removeItem(idx)} className="text-red-500 hover:text-red-700 text-xl font-bold w-8 h-8 flex items-center justify-center" aria-label="Remove fabric">×</button>
                       )}
                     </div>
                   </div>
@@ -494,50 +421,27 @@ export default function SalesRecords() {
               </div>
             </div>
 
-            {/* Bill total */}
             <div className="bg-[#081225] text-white rounded-xl px-5 py-3 flex items-center justify-between mb-5">
               <span className="text-xs font-bold uppercase tracking-widest text-[#d4af37]">Bill Total</span>
               <span className="text-xl font-black">{inr(formTotal)}</span>
             </div>
 
             <div className="flex gap-3">
-              <button
-                type="submit"
-                className="bg-[#081225] text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-[#0f1f63] transition"
-              >
+              <button type="submit" className="bg-[#081225] text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-[#0f1f63] transition">
                 {editingId ? "Update Bill" : "Save Bill"}
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  resetForm();
-                  setShowForm(false);
-                }}
-                className="border border-gray-200 text-gray-600 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-50 transition"
-              >
+              <button type="button" onClick={() => { resetForm(); setShowForm(false); }} className="border border-gray-200 text-gray-600 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-50 transition">
                 Cancel
               </button>
             </div>
           </form>
         )}
 
-        {/* Filters */}
         <div className="bg-white rounded-2xl p-4 mb-4 border border-gray-100 flex flex-col sm:flex-row gap-3 sm:items-center flex-wrap">
-          <input
-            type="text"
-            placeholder="Search by party, bill #, quality, agency..."
-            value={salesSearch}
-            onChange={(e) => setSalesSearch(e.target.value)}
-            className="flex-1 min-w-[200px] border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#d4af37]"
-          />
-
+          <input type="text" placeholder="Search by party, bill #, quality, agency..." value={salesSearch} onChange={(e) => setSalesSearch(e.target.value)} className="flex-1 min-w-[200px] border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#d4af37]" />
           <div className="flex items-center gap-1 border border-gray-200 rounded-xl overflow-hidden bg-white">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3">Sort</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="text-xs font-bold py-2 pr-2 focus:outline-none bg-white text-[#081225]"
-            >
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="text-xs font-bold py-2 pr-2 focus:outline-none bg-white text-[#081225]">
               <option value="date">Date</option>
               <option value="bill">Bill #</option>
               <option value="party">Party</option>
@@ -545,40 +449,20 @@ export default function SalesRecords() {
               <option value="amount">Amount</option>
               <option value="meters">Meters</option>
             </select>
-            <button
-              onClick={() => setSortDir(sortDir === "asc" ? "desc" : "asc")}
-              className="text-sm font-bold px-3 py-2 text-[#081225] hover:bg-gray-100 transition border-l border-gray-200"
-              aria-label={sortDir === "asc" ? "Ascending" : "Descending"}
-              title={sortDir === "asc" ? "Ascending (A→Z, oldest first)" : "Descending (Z→A, newest first)"}
-            >
+            <button onClick={() => setSortDir(sortDir === "asc" ? "desc" : "asc")} className="text-sm font-bold px-3 py-2 text-[#081225] hover:bg-gray-100 transition border-l border-gray-200" title={sortDir === "asc" ? "Ascending" : "Descending"}>
               {sortDir === "asc" ? "↑" : "↓"}
             </button>
           </div>
-
           <div className="flex gap-2">
             {["all", "Direct", "Agency"].map((t) => (
-              <button
-                key={t}
-                onClick={() => setSaleTypeFilter(t)}
-                className={`px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wide transition ${
-                  saleTypeFilter === t
-                    ? "bg-[#081225] text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
+              <button key={t} onClick={() => setSaleTypeFilter(t)} className={`px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wide transition ${saleTypeFilter === t ? "bg-[#081225] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
                 {t}
               </button>
             ))}
           </div>
-          <button
-            onClick={fetchBills}
-            className="text-xs font-bold text-[#c6a55c] hover:underline whitespace-nowrap"
-          >
-            ↻ Refresh
-          </button>
+          <button onClick={fetchBills} className="text-xs font-bold text-[#c6a55c] hover:underline whitespace-nowrap">Refresh</button>
         </div>
 
-        {/* Summary */}
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div className="bg-white rounded-2xl p-4 border border-gray-100">
             <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Bills</p>
@@ -594,7 +478,6 @@ export default function SalesRecords() {
           </div>
         </div>
 
-        {/* Bills table */}
         {loading ? (
           <div className="text-center py-12 text-gray-400">Loading sales records...</div>
         ) : filteredBills.length === 0 ? (
@@ -624,44 +507,25 @@ export default function SalesRecords() {
                     const itemCount = (b.bill_items || []).length;
                     return (
                       <React.Fragment key={b.id}>
-                        <tr
-                          className={`border-t border-gray-100 hover:bg-gray-50 transition cursor-pointer ${i % 2 === 1 ? "bg-gray-50/40" : ""}`}
-                          onClick={() => setExpandedBill(isOpen ? null : b.id)}
-                        >
+                        <tr className={`border-t border-gray-100 hover:bg-gray-50 transition cursor-pointer ${i % 2 === 1 ? "bg-gray-50/40" : ""}`} onClick={() => setExpandedBill(isOpen ? null : b.id)}>
                           <td className="px-3 py-3 text-center">
-                            <svg
-                              className={`inline-block w-3 h-3 text-[#081225] transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`}
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="3"
-                              viewBox="0 0 24 24"
-                            >
+                            <svg className={`inline-block w-3 h-3 text-[#081225] transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                             </svg>
                           </td>
                           <td className="px-3 py-3 text-gray-600 whitespace-nowrap">
-                            {new Date(b.bill_date).toLocaleDateString("en-IN", {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                            })}
+                            {new Date(b.bill_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
                           </td>
                           <td className="px-3 py-3 font-bold text-[#081225]">{b.bill_number}</td>
                           <td className="px-3 py-3 text-[#081225]">{b.party}</td>
                           <td className="px-3 py-3">
                             {b.sale_type === "Agency" ? (
                               <div>
-                                <span className="text-[10px] bg-[#d4af37]/15 text-[#7a6015] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                                  Agency
-                                </span>
-                                {b.agency_name && (
-                                  <p className="text-xs text-gray-500 mt-1">{b.agency_name}</p>
-                                )}
+                                <span className="text-[10px] bg-[#d4af37]/15 text-[#7a6015] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Agency</span>
+                                {b.agency_name && (<p className="text-xs text-gray-500 mt-1">{b.agency_name}</p>)}
                               </div>
                             ) : (
-                              <span className="text-[10px] bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                                Direct
-                              </span>
+                              <span className="text-[10px] bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Direct</span>
                             )}
                           </td>
                           <td className="px-3 py-3 text-center text-gray-600">
@@ -670,18 +534,8 @@ export default function SalesRecords() {
                           <td className="px-3 py-3 text-right font-mono text-gray-700">{billMeters(b).toFixed(2)}</td>
                           <td className="px-3 py-3 text-right font-mono font-bold text-[#081225]">{inr(billTotal(b))}</td>
                           <td className="px-3 py-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                            <button
-                              onClick={() => startEdit(b)}
-                              className="text-xs font-bold text-[#c6a55c] hover:underline mr-3"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDelete(b.id)}
-                              className="text-xs font-bold text-red-500 hover:underline"
-                            >
-                              Delete
-                            </button>
+                            <button onClick={() => startEdit(b)} className="text-xs font-bold text-[#c6a55c] hover:underline mr-3">Edit</button>
+                            <button onClick={() => handleDelete(b.id)} className="text-xs font-bold text-red-500 hover:underline">Delete</button>
                           </td>
                         </tr>
                         {isOpen && (

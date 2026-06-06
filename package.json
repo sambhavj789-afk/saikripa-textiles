@@ -12,10 +12,14 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.107.0",
     "@tailwindcss/vite": "^4.3.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.16.0",
-    "tailwindcss": "^4.3.0"
+    "recharts": "^3.8.1",
+    "tailwindcss": "^4.3.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

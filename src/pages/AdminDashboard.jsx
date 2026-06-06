@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import AdminNav from "../components/AdminNav";
 
 const STATUS_STYLES = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -8,6 +9,34 @@ const STATUS_STYLES = {
   cancelled: "bg-red-100 text-red-800",
   completed: "bg-blue-100 text-blue-800",
 };
+
+// Compact contact icons
+const PhoneIcon = ({ className = "w-3.5 h-3.5" }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h2.28a2 2 0 011.94 1.515l.7 2.793a2 2 0 01-.45 1.95l-1.27 1.27a16 16 0 006.586 6.586l1.27-1.27a2 2 0 011.95-.45l2.793.7A2 2 0 0121 18.72V21a2 2 0 01-2 2A18 18 0 013 5z" />
+  </svg>
+);
+const MailIcon = ({ className = "w-3.5 h-3.5" }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l9 6 9-6M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+  </svg>
+);
+const PinIcon = ({ className = "w-3.5 h-3.5" }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 11.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9c0 6-7 13-7 13s-7-7-7-13a7 7 0 0114 0z" />
+  </svg>
+);
+const CalendarIcon = ({ className = "w-3.5 h-3.5" }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+  </svg>
+);
+const TagIcon = ({ className = "w-3.5 h-3.5" }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M3 7v6.586a1 1 0 00.293.707l9.414 9.414a1 1 0 001.414 0l6.586-6.586a1 1 0 000-1.414L11.293 6.293A1 1 0 0010.586 6H4a1 1 0 00-1 1z" />
+  </svg>
+);
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -59,11 +88,6 @@ export default function AdminDashboard() {
     );
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/admin/login", { replace: true });
-  };
-
   const filteredAppts = appointments.filter((a) => {
     if (filter !== "all" && a.status !== filter) return false;
     if (search) {
@@ -90,31 +114,15 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#f8f7f4]">
-      <header className="bg-[#081225] text-white px-6 py-5 shadow-lg">
-        <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-lg font-black tracking-wider text-[#d4af37] uppercase">
-              Saikripa Textiles
-            </h1>
-            <p className="text-[10px] text-gray-400 tracking-[0.25em] uppercase mt-0.5">
-              Admin Dashboard
-            </p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <Link
-              to="/admin/sales"
-              className="text-xs font-bold bg-[#d4af37] hover:bg-[#c49f2d] text-[#081225] px-4 py-2 rounded-xl transition"
-            >
-              📊 Sales Records
-            </Link>
-            <span className="text-xs text-gray-400 hidden lg:inline ml-2">{userEmail}</span>
-            <button
-              onClick={handleLogout}
-              className="text-xs font-bold bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl transition"
-            >
-              Sign Out
-            </button>
-          </div>
+      <header className="bg-[#081225] text-white py-5 shadow-lg relative">
+        <AdminNav userEmail={userEmail} className="absolute left-4 top-1/2 -translate-y-1/2" />
+        <div className="max-w-7xl mx-auto px-6">
+          <h1 className="text-lg font-black tracking-wider text-[#d4af37] uppercase">
+            Saikripa Textiles
+          </h1>
+          <p className="text-[10px] text-gray-400 tracking-[0.25em] uppercase mt-0.5">
+            Admin Dashboard
+          </p>
         </div>
       </header>
 
@@ -128,7 +136,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
           {[
             ["Total", counts.total, "text-[#081225]"],
@@ -146,24 +153,6 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* Sales Records jump card */}
-        <Link
-          to="/admin/sales"
-          className="block bg-gradient-to-r from-[#d4af37] to-[#c49f2d] text-[#081225] rounded-2xl p-6 mb-6 hover:shadow-xl transition group"
-        >
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="text-3xl">📊</div>
-              <div>
-                <h3 className="font-black text-lg">Sales Records</h3>
-                <p className="text-sm text-[#081225]/80">View all sales bills, add new transactions, track revenue</p>
-              </div>
-            </div>
-            <div className="text-2xl font-black group-hover:translate-x-1 transition">→</div>
-          </div>
-        </Link>
-
-        {/* Filters */}
         <div className="bg-white rounded-2xl p-4 mb-6 border border-gray-100 flex flex-col sm:flex-row gap-3 sm:items-center">
           <input
             type="text"
@@ -191,7 +180,7 @@ export default function AdminDashboard() {
             onClick={fetchAppointments}
             className="text-xs font-bold text-[#c6a55c] hover:underline whitespace-nowrap"
           >
-            ↻ Refresh
+            Refresh
           </button>
         </div>
 
@@ -224,25 +213,30 @@ export default function AdminDashboard() {
                         {a.status}
                       </span>
                     </div>
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
-                      <div className="text-gray-600">
-                        📞 <a href={`tel:${a.phone}`} className="hover:text-[#c6a55c]">{a.phone}</a>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1.5 text-sm">
+                      <div className="text-gray-600 flex items-center gap-2">
+                        <PhoneIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                        <a href={`tel:${a.phone}`} className="hover:text-[#c6a55c]">{a.phone}</a>
                       </div>
                       {a.email && (
-                        <div className="text-gray-600 truncate">
-                          ✉️ <a href={`mailto:${a.email}`} className="hover:text-[#c6a55c]">{a.email}</a>
+                        <div className="text-gray-600 truncate flex items-center gap-2">
+                          <MailIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                          <a href={`mailto:${a.email}`} className="hover:text-[#c6a55c] truncate">{a.email}</a>
                         </div>
                       )}
                       {(a.city || a.state) && (
-                        <div className="text-gray-600">
-                          📍 {[a.city, a.state].filter(Boolean).join(", ")}
+                        <div className="text-gray-600 flex items-center gap-2">
+                          <PinIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                          {[a.city, a.state].filter(Boolean).join(", ")}
                         </div>
                       )}
-                      <div className="text-gray-600">
-                        📅 {a.preferred_date} · {a.preferred_time}
+                      <div className="text-gray-600 flex items-center gap-2">
+                        <CalendarIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                        {a.preferred_date} · {a.preferred_time}
                       </div>
-                      <div className="text-gray-600 sm:col-span-2 lg:col-span-2">
-                        🗂️ {a.appointment_type}
+                      <div className="text-gray-600 sm:col-span-2 lg:col-span-2 flex items-center gap-2">
+                        <TagIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                        {a.appointment_type}
                       </div>
                     </div>
                     {a.notes && (
@@ -272,7 +266,7 @@ export default function AdminDashboard() {
                       rel="noreferrer"
                       className="text-center bg-[#25d366] text-white text-xs font-bold py-2 rounded-xl hover:bg-[#1ebe5d] transition"
                     >
-                      💬 WhatsApp
+                      WhatsApp
                     </a>
                   </div>
                 </div>
