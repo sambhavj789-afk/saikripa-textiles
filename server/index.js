@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3000;
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
+  process.env.SUPABASE_SERVICE_KEY
 );
 
 app.use(cors());
@@ -48,9 +48,14 @@ app.post("/api/appointments", async (req, res) => {
       message: "City: " + city + ", State: " + state,
     });
 
+    await supabase
+      .from("appointments")
+      .update({ google_event_id: calendarEvent.id })
+      .eq("id", appointment.id);
+
     res.status(201).json({
       message: "Appointment booked successfully!",
-      appointment: appointment,
+      appointment: { ...appointment, google_event_id: calendarEvent.id },
       calendarLink: calendarEvent.htmlLink,
     });
 
