@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "../lib/supabase";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const TIME_SLOTS = [
@@ -234,28 +233,26 @@ export default function AppointmentModal({ onClose }) {
 
     const waUrl = buildWhatsAppUrl({ ...form, date: selectedDate, time: selectedTime });
 
-    const { error: dbError } = await supabase.from("appointments").insert([
-      {
+    const response = await fetch("http://localhost:3000/api/appointments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         name: form.name,
         phone: form.phone,
         email: form.email || null,
         city: form.city || null,
         state: form.state || null,
         appointment_type: form.appointmentType,
-        preferred_date: selectedDate.toISOString().split("T")[0],
+        preferred_date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`,
         preferred_time: selectedTime,
-        notes: form.notes || null,
-        status: "pending",
-      },
-    ]);
+      }),
+    });
 
     setSubmitting(false);
 
-    if (dbError) {
-      console.error("Supabase error:", dbError);
+    if (!response.ok) {
       setError("⚠️ Could not save to database, but you can still notify us via WhatsApp.");
     }
-
     setWhatsappUrl(waUrl);
     setSubmitted(true);
   };
