@@ -48,10 +48,21 @@ app.post("/api/appointments", async (req, res) => {
       message: "City: " + city + ", State: " + state,
     });
 
-    await supabase
+    console.log("Calendar event created with ID:", calendarEvent.id);
+    console.log("Trying to update appointment ID:", appointment.id);
+
+    const updateResult = await supabase
       .from("appointments")
       .update({ google_event_id: calendarEvent.id })
-      .eq("id", appointment.id);
+      .eq("id", appointment.id)
+      .select();
+
+    if (updateResult.error) {
+      console.error("UPDATE FAILED:", updateResult.error);
+    } else {
+      console.log("UPDATE succeeded. Rows affected:", updateResult.data?.length);
+      console.log("Updated row:", JSON.stringify(updateResult.data, null, 2));
+    }
 
     res.status(201).json({
       message: "Appointment booked successfully!",

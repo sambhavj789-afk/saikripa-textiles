@@ -24,3 +24,11 @@ dist-ssr
 *.sw?
 
 server/service-account.json
+
+# Environment & credentials
+.env
+.env.local
+server/.env
+backend/.env
+service-account.json
+server/service-account.json
