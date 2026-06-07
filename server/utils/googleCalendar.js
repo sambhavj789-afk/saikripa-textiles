@@ -69,5 +69,22 @@ async function createCalendarEvent(appointment) {
   console.log("Calendar event created: " + response.data.htmlLink);
   return response.data;
 }
-
-module.exports = { createCalendarEvent };
+async function deleteCalendarEvent(eventId) {
+  if (!eventId) return { ok: true, skipped: true };
+  try {
+    await calendar.events.delete({
+      calendarId: process.env.GOOGLE_CALENDAR_ID,
+      eventId: eventId,
+    });
+    console.log("Calendar event deleted:", eventId);
+    return { ok: true };
+  } catch (error) {
+    if (error.code === 404 || error.code === 410) {
+      console.log("Calendar event already gone:", eventId);
+      return { ok: true, alreadyGone: true };
+    }
+    console.error("Failed to delete calendar event:", error.message);
+    throw error;
+  }
+}
+module.exports = { createCalendarEvent, deleteCalendarEvent };

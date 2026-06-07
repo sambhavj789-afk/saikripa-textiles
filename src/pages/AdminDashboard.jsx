@@ -90,6 +90,16 @@ export default function AdminDashboard() {
   };
   const handleDelete = async (id, name) => {
     if (!confirm(`Permanently delete appointment for ${name}? This cannot be undone.`)) return;
+    const appt = appointments.find((a) => a.id === id);
+    if (appt?.google_event_id) {
+      try {
+        await fetch(`http://localhost:3000/api/calendar/${appt.google_event_id}`, {
+          method: "DELETE",
+        });
+      } catch (err) {
+        console.warn("Calendar delete failed:", err);
+      }
+    }
     const { error: dbError } = await supabase.from("appointments").delete().eq("id", id);
     if (dbError) {
       alert("Could not delete: " + dbError.message);
@@ -226,11 +236,10 @@ export default function AdminDashboard() {
               <button
                 key={s}
                 onClick={() => setFilter(s)}
-                className={`px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wide transition ${
-                  filter === s
-                    ? "bg-[#081225] text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+                className={`px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wide transition ${filter === s
+                  ? "bg-[#081225] text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
               >
                 {s}
               </button>
@@ -257,11 +266,10 @@ export default function AdminDashboard() {
             {filteredAppts.map((a) => (
               <div
                 key={a.id}
-                className={`bg-white rounded-2xl p-5 border transition hover:shadow-lg ${
-                  selectedIds.has(a.id)
-                    ? "border-[#d4af37] bg-[#fff8e1]/30"
-                    : "border-gray-100"
-                }`}
+                className={`bg-white rounded-2xl p-5 border transition hover:shadow-lg ${selectedIds.has(a.id)
+                  ? "border-[#d4af37] bg-[#fff8e1]/30"
+                  : "border-gray-100"
+                  }`}
               >
                 <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -272,53 +280,52 @@ export default function AdminDashboard() {
                       className="mt-1 w-4 h-4 accent-[#d4af37] cursor-pointer flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-black text-[#081225] text-base truncate">
-                        {a.name}
-                      </h3>
-                      <span
-                        className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${
-                          STATUS_STYLES[a.status] || "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {a.status}
-                      </span>
-                    </div>
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1.5 text-sm">
-                      <div className="text-gray-600 flex items-center gap-2">
-                        <PhoneIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                        <a href={`tel:${a.phone}`} className="hover:text-[#c6a55c]">{a.phone}</a>
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="font-black text-[#081225] text-base truncate">
+                          {a.name}
+                        </h3>
+                        <span
+                          className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${STATUS_STYLES[a.status] || "bg-gray-100 text-gray-600"
+                            }`}
+                        >
+                          {a.status}
+                        </span>
                       </div>
-                      {a.email && (
-                        <div className="text-gray-600 truncate flex items-center gap-2">
-                          <MailIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                          <a href={`mailto:${a.email}`} className="hover:text-[#c6a55c] truncate">{a.email}</a>
-                        </div>
-                      )}
-                      {(a.city || a.state) && (
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1.5 text-sm">
                         <div className="text-gray-600 flex items-center gap-2">
-                          <PinIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                          {[a.city, a.state].filter(Boolean).join(", ")}
+                          <PhoneIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                          <a href={`tel:${a.phone}`} className="hover:text-[#c6a55c]">{a.phone}</a>
+                        </div>
+                        {a.email && (
+                          <div className="text-gray-600 truncate flex items-center gap-2">
+                            <MailIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                            <a href={`mailto:${a.email}`} className="hover:text-[#c6a55c] truncate">{a.email}</a>
+                          </div>
+                        )}
+                        {(a.city || a.state) && (
+                          <div className="text-gray-600 flex items-center gap-2">
+                            <PinIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                            {[a.city, a.state].filter(Boolean).join(", ")}
+                          </div>
+                        )}
+                        <div className="text-gray-600 flex items-center gap-2">
+                          <CalendarIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                          {a.preferred_date} · {a.preferred_time}
+                        </div>
+                        <div className="text-gray-600 sm:col-span-2 lg:col-span-2 flex items-center gap-2">
+                          <TagIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                          {a.appointment_type}
+                        </div>
+                      </div>
+                      {a.notes && (
+                        <div className="mt-3 bg-gray-50 rounded-xl p-3 text-xs text-gray-600 leading-relaxed">
+                          <span className="font-bold text-gray-500">Notes:</span> {a.notes}
                         </div>
                       )}
-                      <div className="text-gray-600 flex items-center gap-2">
-                        <CalendarIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                        {a.preferred_date} · {a.preferred_time}
-                      </div>
-                      <div className="text-gray-600 sm:col-span-2 lg:col-span-2 flex items-center gap-2">
-                        <TagIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                        {a.appointment_type}
-                      </div>
+                      <p className="text-[10px] text-gray-400 mt-2">
+                        Booked: {new Date(a.created_at).toLocaleString("en-IN")}
+                      </p>
                     </div>
-                    {a.notes && (
-                      <div className="mt-3 bg-gray-50 rounded-xl p-3 text-xs text-gray-600 leading-relaxed">
-                        <span className="font-bold text-gray-500">Notes:</span> {a.notes}
-                      </div>
-                    )}
-                    <p className="text-[10px] text-gray-400 mt-2">
-                      Booked: {new Date(a.created_at).toLocaleString("en-IN")}
-                    </p>
-                  </div>
                   </div>
 
                   <div className="flex flex-col gap-2 lg:w-44 flex-shrink-0">

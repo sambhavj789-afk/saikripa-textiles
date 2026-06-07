@@ -2,7 +2,7 @@
 const cors = require("cors");
 const dotenv = require("dotenv");
 const { createClient } = require("@supabase/supabase-js");
-const { createCalendarEvent } = require("./utils/googleCalendar");
+const { createCalendarEvent, deleteCalendarEvent } = require("./utils/googleCalendar");
 
 dotenv.config();
 
@@ -98,6 +98,14 @@ app.delete("/api/appointments/:id", async (req, res) => {
   } catch (err) {
     console.error("Delete error: " + err.message);
     res.status(500).json({ error: "Failed to delete appointment" });
+  }
+});
+app.delete("/api/calendar/:eventId", async (req, res) => {
+  try {
+    const result = await deleteCalendarEvent(req.params.eventId);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 app.listen(PORT, function () {

@@ -233,7 +233,7 @@ export default function AppointmentModal({ onClose }) {
 
     const waUrl = buildWhatsAppUrl({ ...form, date: selectedDate, time: selectedTime });
 
-    const response = await fetch("http://localhost:3000/api/appointments", {
+   const response = await fetch("http://localhost:3000/api/appointments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -243,7 +243,7 @@ export default function AppointmentModal({ onClose }) {
         city: form.city || null,
         state: form.state || null,
         appointment_type: form.appointmentType,
-        preferred_date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`,
+        preferred_date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`,
         preferred_time: selectedTime,
       }),
     });
@@ -252,6 +252,9 @@ export default function AppointmentModal({ onClose }) {
 
     if (!response.ok) {
       setError("⚠️ Could not save to database, but you can still notify us via WhatsApp.");
+    } else {
+      const data = await response.json();
+      console.log("Appointment booked with calendar event:", data.appointment?.google_event_id);
     }
     setWhatsappUrl(waUrl);
     setSubmitted(true);
