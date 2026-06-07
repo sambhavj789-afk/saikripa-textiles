@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
-// Icon components — clean SVGs to replace emoji
 const HomeIcon = ({ className = "w-5 h-5" }) => (
   <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1V10" />
@@ -15,21 +15,15 @@ const ChartIcon = ({ className = "w-5 h-5" }) => (
   </svg>
 );
 
-const InsightsIcon = ({ className = "w-5 h-5" }) => (
-  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6m0 0V5m0 8h6m-6 0H3m12 6v-4m0 0V5m0 8h6m-6 0h-2" />
-  </svg>
-);
-
 const CartIcon = ({ className = "w-5 h-5" }) => (
   <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
   </svg>
 );
 
-const ExternalIcon = ({ className = "w-4 h-4" }) => (
+const InsightsIcon = ({ className = "w-5 h-5" }) => (
   <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6m0 0V5m0 8h6m-6 0H3m12 6v-4m0 0V5m0 8h6m-6 0h-2" />
   </svg>
 );
 
@@ -38,19 +32,12 @@ export default function AdminNav({ userEmail, className = "" }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    setOpen(false);
-  }, [location.pathname]);
+  useEffect(() => { setOpen(false); }, [location.pathname]);
 
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    if (open) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => { document.body.style.overflow = ""; };
   }, [open]);
 
   const handleLogout = async () => {
@@ -59,17 +46,89 @@ export default function AdminNav({ userEmail, className = "" }) {
   };
 
   const navItems = [
-    { path: "/admin/dashboard", label: "Dashboard", Icon: HomeIcon, desc: "Appointments & overview" },
-    { path: "/admin/sales", label: "Sales Records", Icon: ChartIcon, desc: "Bill log & sales" },
-    { path: "/admin/purchases", label: "Purchase Records", Icon: CartIcon, desc: "Supplier bills" },
-    { path: "/admin/analytics", label: "Analytics", Icon: InsightsIcon, desc: "Charts & insights" },
+    { path: "/admin/dashboard", label: "Dashboard", Icon: HomeIcon },
+    { path: "/admin/sales", label: "Sales Records", Icon: ChartIcon },
+    { path: "/admin/purchases", label: "Purchase Records", Icon: CartIcon },
+    { path: "/admin/analytics", label: "Analytics", Icon: InsightsIcon },
   ];
+
+  const drawer = (
+    <>
+      <div
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[99]"
+        onClick={() => setOpen(false)}
+      />
+      <div className="fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-[#0a1124] border-r border-[#1a2233] text-[#e8edf5] shadow-2xl z-[100] overflow-y-auto">
+        <div className="p-6 border-b border-[#1a2233]">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2
+                className="text-base font-bold tracking-[0.2em] uppercase"
+                style={{ background: "linear-gradient(135deg, #f4d77a 0%, #d4af37 50%, #a8842c 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}
+              >
+                Saikripa Textiles
+              </h2>
+              <p className="text-[10px] text-[#7a8499] tracking-[0.3em] uppercase mt-1 font-medium">
+                Admin Panel
+              </p>
+            </div>
+            <button
+              onClick={() => setOpen(false)}
+              className="text-[#7a8499] hover:text-[#e8edf5] text-2xl leading-none w-8 h-8 flex items-center justify-center transition"
+              aria-label="Close menu"
+            >
+              ×
+            </button>
+          </div>
+          {userEmail && (
+            <p className="text-xs text-[#7a8499] mt-3 truncate">{userEmail}</p>
+          )}
+        </div>
+
+        <div className="p-3 space-y-2">
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            const Icon = item.Icon;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+                  isActive
+                    ? "bg-[#d4af37] text-[#020817]"
+                    : "bg-[#020817] text-[#e8edf5] hover:bg-[#0e1730] border border-[#1a2233]"
+                }`}
+              >
+                <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? "text-[#020817]" : "text-[#d4af37]"}`} />
+                <span className="font-bold text-sm">{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="p-4 border-t border-[#1a2233] space-y-2 mt-4">
+          <Link
+            to="/"
+            className="flex items-center justify-center gap-2 w-full bg-[#020817] border border-[#1a2233] text-[#a8b0c0] py-2.5 rounded-lg font-medium text-xs uppercase tracking-wider hover:border-[#d4af37]/40 hover:text-[#e8edf5] transition"
+          >
+            View Website
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="flex items-center justify-center gap-2 w-full bg-rose-500/10 border border-rose-500/30 text-rose-300 py-2.5 rounded-lg font-medium text-xs uppercase tracking-wider hover:bg-rose-500/20 transition"
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <>
       <button
         onClick={() => setOpen(true)}
-        className={`flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white transition flex-shrink-0 ${className}`}
+        className={`flex items-center justify-center w-10 h-10 rounded-lg bg-[#0a1124] border border-[#1a2233] hover:border-[#d4af37]/50 text-[#e8edf5] transition flex-shrink-0 ${className}`}
         aria-label="Open menu"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -77,81 +136,7 @@ export default function AdminNav({ userEmail, className = "" }) {
         </svg>
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-[100] flex">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
-          />
-
-          <div className="relative w-80 max-w-[85vw] h-full bg-[#081225] text-white flex flex-col shadow-2xl">
-            <div className="p-6 border-b border-white/10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-base font-black tracking-wider text-[#d4af37] uppercase">
-                    Saikripa Textiles
-                  </h2>
-                  <p className="text-[10px] text-gray-400 tracking-[0.25em] uppercase mt-0.5">
-                    Admin Panel
-                  </p>
-                </div>
-                <button
-                  onClick={() => setOpen(false)}
-                  className="text-white/60 hover:text-white text-2xl leading-none w-8 h-8 flex items-center justify-center"
-                  aria-label="Close menu"
-                >
-                  ×
-                </button>
-              </div>
-              {userEmail && (
-                <p className="text-xs text-gray-400 mt-3 truncate">{userEmail}</p>
-              )}
-            </div>
-
-            <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-              {navItems.map((item) => {
-                const isActive = location.pathname === item.path;
-                const Icon = item.Icon;
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition ${
-                      isActive
-                        ? "bg-[#d4af37] text-[#081225]"
-                        : "text-white/80 hover:bg-white/10 hover:text-white"
-                    }`}
-                  >
-                    <Icon className="w-5 h-5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className="font-bold text-sm">{item.label}</p>
-                      <p className={`text-[10px] uppercase tracking-widest ${isActive ? "text-[#081225]/70" : "text-gray-400"}`}>
-                        {item.desc}
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </nav>
-
-            <div className="p-4 border-t border-white/10 space-y-2">
-              <Link
-                to="/"
-                className="flex items-center justify-center gap-2 w-full border border-white/20 text-white/80 py-2.5 rounded-xl font-bold text-xs hover:bg-white/10 transition"
-              >
-                <ExternalIcon className="w-3.5 h-3.5" />
-                View Website
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="flex items-center justify-center gap-2 w-full bg-red-500/10 border border-red-500/30 text-red-300 py-2.5 rounded-xl font-bold text-xs hover:bg-red-500/20 transition"
-              >
-                Sign Out
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {open && createPortal(drawer, document.body)}
     </>
   );
 }

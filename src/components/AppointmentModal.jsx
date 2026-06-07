@@ -242,7 +242,7 @@ export default function AppointmentModal({ onClose }) {
         city: form.city || null,
         state: form.state || null,
         appointment_type: form.appointmentType,
-        preferred_date: selectedDate.toISOString().split("T")[0],
+        preferred_date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`,
         preferred_time: selectedTime,
         notes: form.notes || null,
         status: "pending",
