@@ -1,68 +1,14 @@
 import React, { useState, useEffect } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import AppointmentModal from "./components/AppointmentModal";
+import { collections } from "./data/collections";
 
 // ── Utility: lock/unlock body scroll ──────────────────────────────────────────
 const lockScroll = () => (document.body.style.overflow = "hidden");
 const unlockScroll = () => (document.body.style.overflow = "");
 
 // ── Data ──────────────────────────────────────────────────────────────────────
-const collections = [
- {
-    title: "Superior Collection",
-    gsm: "380 GSM",
-    blend: "65/35 PV",
-    images: ["/catalogue/superior1.jpg", "/catalogue/superior2.jpg"],
-    image: "/catalogue/superior1.jpg",
-    category: "Premium Suiting",
-    moq: "100 meters",
-    colors: "40+ shades",
-    finish: "Anti-wrinkle finish",
-    uses: "School & Corporate Uniforms",
-    description:
-      "Our flagship suiting fabric engineered for durability and sharp drape. Ideal for school uniforms, corporate blazers, and hotel staff attire.",
-  },
-  {
-    title: "Gold Club",
-    gsm: "350 GSM",
-    blend: "65/35 PV",
-    image: "/catalogue/goldclub.jpg",
-    category: "Executive Choice",
-    moq: "50 meters",
-    colors: "30+ shades",
-    finish: "Lustrous finish",
-    uses: "Hospitality & Hotel Uniforms",
-    description:
-      "Executive-grade fabric with a premium lustrous finish. Preferred by leading hotel chains and hospitality groups across India.",
-  },
-  {
-    title: "Aura Plus",
-    gsm: "380 GSM",
-    blend: "Premium PV",
-    image: "/catalogue/auraplus.jpg",
-    category: "Premium Suiting",
-    moq: "100 meters",
-    colors: "50+ shades",
-    finish: "Soft-touch finish",
-    uses: "Premium Institutional Wear",
-    description:
-      "Crafted with premium PV blend for a soft-touch feel without compromising on structural integrity. Perfect for premium institutional uniforms.",
-  },
-  {
-    title: "Milky Way",
-    gsm: "300 GSM",
-    blend: "65/35 PV",
-    image: "/catalogue/milkyway.jpg",
-    category: "Lightweight",
-    moq: "50 meters",
-    colors: "25+ shades",
-    finish: "Breathable weave",
-    uses: "Summer Uniforms & Industrial Wear",
-    description:
-      "Lightweight breathable fabric designed for warm climates. Widely used for summer school uniforms and industrial workwear across Rajasthan.",
-  },
-];
-
 const testimonials = [
   {
     name: "Rakesh Sharma",
@@ -124,7 +70,7 @@ const whyUs = [
 ];
 
 // ── Navbar ─────────────────────────────────────────────────────────────────────
-function Navbar({ hasBar }) {
+function Navbar({ hasBar, onBookAppointment }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const topOffset = hasBar ? "top-[36px]" : "top-0";
   const navLinks = ["Home", "Collections", "Why Us", "Process", "Contact"];
@@ -155,12 +101,24 @@ function Navbar({ hasBar }) {
               </a>
             ))}
             <a
+              href="/catalogue"
+              className="hover:text-[#d4af37] transition-colors duration-200"
+            >
+              Catalogue
+            </a>
+            <button
+              onClick={onBookAppointment}
+              className="ml-2 bg-[#d4af37] text-[#08102e] px-5 py-2 rounded-xl font-bold text-xs hover:bg-[#c49f2d] transition flex items-center gap-1.5"
+            >
+              📅 Book Appointment
+            </button>
+            <a
               href="https://wa.me/918949881253"
               target="_blank"
               rel="noreferrer"
-              className="ml-2 bg-[#d4af37] text-[#08102e] px-5 py-2 rounded-xl font-bold text-xs hover:bg-[#c49f2d] transition"
+              className="border border-white/20 text-white/80 px-4 py-2 rounded-xl font-bold text-xs hover:text-white hover:border-white/40 transition"
             >
-              WhatsApp Inquiry
+              WhatsApp
             </a>
           </nav>
 
@@ -205,8 +163,20 @@ function Navbar({ hasBar }) {
                   {l}
                 </a>
               ))}
+              <a
+                href="/catalogue"
+                className="text-white/80 hover:text-[#d4af37] text-lg font-semibold transition"
+              >
+                Catalogue
+              </a>
             </nav>
             <div className="mt-auto space-y-3">
+              <button
+                onClick={() => { setMenuOpen(false); unlockScroll(); onBookAppointment(); }}
+                className="flex items-center justify-center gap-2 w-full bg-[#d4af37] text-[#08102e] py-3 rounded-xl font-bold"
+              >
+                📅 Book Appointment
+              </button>
               <a
                 href="https://wa.me/918949881253"
                 target="_blank"
@@ -495,15 +465,14 @@ function ScrollToTop() {
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 export default function LuxuryTextileWebsite() {
-  const [activeFilter, setActiveFilter] = useState("All");
   const [selectedItem, setSelectedItem] = useState(null);
   const [barVisible, setBarVisible] = useState(true);
+  const [appointmentOpen, setAppointmentOpen] = useState(false);
   const navTopOffset = barVisible ? "pt-[100px]" : "pt-[72px]";
 
-  const filteredCollections =
-    activeFilter === "All"
-      ? collections
-      : collections.filter((item) => item.category === activeFilter);
+  const bestsellers = collections.filter((c) =>
+    ["superior-collection", "gold-club", "aura-plus"].includes(c.slug)
+  );
 
   useEffect(() => {
     AOS.init({
@@ -513,10 +482,6 @@ export default function LuxuryTextileWebsite() {
       offset: 50,
     });
   }, []);
-
-  useEffect(() => {
-    AOS.refresh();
-  }, [activeFilter]);
 
   return (
     <div className="bg-white text-gray-900 overflow-x-hidden font-sans scroll-smooth">
@@ -530,14 +495,13 @@ export default function LuxuryTextileWebsite() {
         </div>
       )}
 
-      <Navbar hasBar={barVisible} />
+      <Navbar hasBar={barVisible} onBookAppointment={() => setAppointmentOpen(true)} />
 
       {/* ── HERO ── */}
       <section
         id="home"
         className={`relative min-h-screen flex items-center text-white px-6 overflow-hidden ${navTopOffset}`}
       >
-        {/* Fabric background */}
         <div className="absolute inset-0 z-0">
           <img
             src="https://images.unsplash.com/photo-1640767760729-7bfb6ce43ad4?q=80&w=1600&auto=format&fit=crop"
@@ -574,6 +538,12 @@ export default function LuxuryTextileWebsite() {
               <a href="#collections" className="bg-gradient-to-r from-[#d4af37] to-[#aa8c2c] text-[#08102e] px-8 py-4 rounded-2xl font-bold hover:scale-105 hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] transition-all duration-300">
                 Explore Collections
               </a>
+              <button
+                onClick={() => setAppointmentOpen(true)}
+                className="border border-[#d4af37]/40 bg-[#d4af37]/10 hover:bg-[#d4af37]/20 transition-all duration-300 px-8 py-4 rounded-2xl font-semibold text-white backdrop-blur flex items-center gap-2"
+              >
+                📅 Book a Meeting
+              </button>
               <a
                 href="https://wa.me/918949881253"
                 target="_blank"
@@ -587,7 +557,7 @@ export default function LuxuryTextileWebsite() {
 
           <div className="relative hidden lg:block" data-aos="fade-left">
             <div className="absolute -inset-4 bg-gradient-to-r from-[#d4af37]/20 to-[#0b1748]/30 blur-3xl rounded-[40px]" />
-           <img
+            <img
               src="/hero.jpg"
               alt="Premium folded suiting fabric rolls"
               className="relative rounded-[32px] shadow-[0_30px_80px_rgba(0,0,0,0.5)] w-full h-[620px] object-cover border border-white/10"
@@ -618,39 +588,21 @@ export default function LuxuryTextileWebsite() {
         </div>
       </section>
 
-      {/* ── COLLECTIONS ── */}
+      {/* ── COLLECTIONS (Bestsellers) ── */}
       <section id="collections" className="py-28 px-6 bg-[#f8f7f4]">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-14" data-aos="fade-up">
-            <p className="uppercase tracking-[0.3em] text-xs text-[#c6a55c] font-bold mb-3">Premium Catalogue</p>
+            <p className="uppercase tracking-[0.3em] text-xs text-[#c6a55c] font-bold mb-3">Bestsellers</p>
             <h2 className="text-4xl md:text-5xl font-black tracking-tight text-[#081225] leading-tight">
-              Luxury Fabric Collections
+              Our Most Trusted Fabrics
             </h2>
             <p className="mt-5 text-gray-500 leading-relaxed">
-              Premium suiting fabrics engineered for schools, corporate uniforms, hospitality, and industrial workwear.
+              The three collections our wholesale buyers reorder most — proven across schools, corporate uniforms, and hospitality.
             </p>
           </div>
 
-          {/* Filters */}
-          <div className="flex flex-wrap justify-center gap-3 mb-12" data-aos="fade-up">
-            {["All", "Premium Suiting", "Executive Choice", "Lightweight"].map((f) => (
-              <button
-                key={f}
-                onClick={() => setActiveFilter(f)}
-                className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 ${
-                  activeFilter === f
-                    ? "bg-[#081225] text-white shadow-lg"
-                    : "bg-white border border-gray-200 text-gray-600 hover:border-[#d4af37] hover:text-[#081225]"
-                }`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
-
-          {/* Product Grid */}
-          <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-7">
-            {filteredCollections.map((item, i) => (
+          <div className="grid md:grid-cols-3 gap-7">
+            {bestsellers.map((item, i) => (
               <div
                 key={item.title}
                 data-aos="fade-up"
@@ -661,21 +613,26 @@ export default function LuxuryTextileWebsite() {
                   <img
                     src={item.image}
                     alt={item.title}
-                    className="w-full h-full object-contain group-hover:scale-105 transition duration-700"
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-700"
                   />
                   <div className="absolute top-3 left-3">
                     <span className="bg-[#081225]/80 backdrop-blur text-white px-2.5 py-1 rounded-lg text-[10px] font-bold">
                       {item.category}
                     </span>
                   </div>
+                  <div className="absolute top-3 right-3">
+                    <span className="bg-[#d4af37] text-[#081225] px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                      ★ Bestseller
+                    </span>
+                  </div>
                 </div>
                 <div className="p-6 flex flex-col flex-grow">
-                  <div className="flex gap-2 mb-3">
+                  <div className="flex gap-2 mb-3 flex-wrap">
                     <span className="bg-[#081225] text-white px-3 py-1 rounded-full text-[10px] font-bold">{item.gsm}</span>
                     <span className="bg-[#d4af37]/15 text-[#7a6015] px-3 py-1 rounded-full text-[10px] font-bold">{item.blend}</span>
                   </div>
                   <h3 className="text-xl font-black text-[#081225] mb-2">{item.title}</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed flex-grow">{item.description.substring(0, 80)}...</p>
+                  <p className="text-gray-500 text-sm leading-relaxed flex-grow">{item.description.substring(0, 90)}...</p>
                   <div className="mt-5 space-y-2">
                     <button
                       onClick={() => setSelectedItem(item)}
@@ -697,9 +654,15 @@ export default function LuxuryTextileWebsite() {
             ))}
           </div>
 
-          <div className="text-center mt-10">
-            <a href="#contact" className="inline-flex items-center gap-2 text-[#c6a55c] font-bold text-sm hover:underline">
-              Need a custom fabric? Request a shade card →
+          <div className="mt-14 text-center" data-aos="fade-up">
+            <p className="text-gray-500 text-sm mb-4">
+              Looking for Gaberdine, lightweight Trovin, or other Matty blends?
+            </p>
+            <a
+              href="/catalogue"
+              className="inline-flex items-center gap-2 bg-[#081225] text-white px-8 py-4 rounded-2xl font-bold hover:bg-[#0f1f63] transition shadow-lg"
+            >
+              📚 View Full Catalogue
             </a>
           </div>
         </div>
@@ -739,14 +702,14 @@ export default function LuxuryTextileWebsite() {
           />
         </div>
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center relative z-10">
-      <div data-aos="fade-up">
+          <div data-aos="fade-up">
             <img
               src="https://images.unsplash.com/photo-1705493253566-1522b9015c58?q=80&w=1400&auto=format&fit=crop"
               alt="Saikripa Textiles Manufacturing"
               className="rounded-[32px] shadow-[0_20px_60px_rgba(0,0,0,0.1)] w-full border border-gray-100 hover:scale-[1.01] transition-all duration-500"
             />
           </div>
-             <div data-aos="fade-up" data-aos-delay="100">
+          <div data-aos="fade-up" data-aos-delay="100">
             <p className="uppercase tracking-[0.3em] text-xs text-[#c6a55c] font-bold mb-4">About Us</p>
             <h2 className="text-4xl md:text-5xl font-black tracking-tight text-[#081225] leading-tight mb-7">
               Craftsmanship From The Heart of Bhilwara
@@ -758,7 +721,7 @@ export default function LuxuryTextileWebsite() {
               With over a decade of expertise and a strong supply chain rooted in Rajasthan's textile hub, we offer direct-factory pricing with the quality assurance of a trusted institution.
             </p>
             <div className="grid grid-cols-2 gap-4">
-              {[["10+", "Years of Experience"], ["1000+", "Happy Clients"], ["4", "Premium Collections"], ["48hr", "Sample Dispatch"]].map(([val, label]) => (
+              {[["10+", "Years of Experience"], ["1000+", "Happy Clients"], ["6", "Premium Collections"], ["48hr", "Sample Dispatch"]].map(([val, label]) => (
                 <div key={label} className="bg-white rounded-2xl p-4 border border-gray-100">
                   <p className="text-2xl font-black text-[#d4af37]">{val}</p>
                   <p className="text-xs text-gray-500 mt-1 font-medium">{label}</p>
@@ -855,7 +818,7 @@ export default function LuxuryTextileWebsite() {
             </p>
           </div>
           <div className="grid lg:grid-cols-2 gap-12 items-start">
-              <ContactForm />
+            <ContactForm />
             <div className="space-y-6">
               <div className="bg-white rounded-[24px] p-7 border border-gray-100 shadow-sm">
                 <h3 className="font-black text-[#081225] mb-4 text-lg">Contact Information</h3>
@@ -863,8 +826,8 @@ export default function LuxuryTextileWebsite() {
                   {[
                     ["📞", "Phone / WhatsApp", "+91 89498 81253"],
                     ["✉️", "Email", "saikripatextiles58@gmail.com"],
-                    ["📍", "Location", "Bhilwara, Rajasthan, India"],
-                    ["⏰", "Business Hours", "Mon–Sat: 9:00 AM – 7:00 PM"],
+                    ["📍", "Location", "38A, Marvel Square, Gandhinagar, Bhilwara, Rajasthan"],
+                    ["⏰", "Business Hours", "Mon–Sat: 10:00 AM – 7:00 PM"],
                   ].map(([icon, label, value]) => (
                     <div key={label} className="flex items-start gap-3">
                       <span className="text-xl flex-shrink-0">{icon}</span>
@@ -890,6 +853,36 @@ export default function LuxuryTextileWebsite() {
                 >
                   🎨 Request Shade Card
                 </a>
+              </div>
+
+              <div className="relative overflow-hidden rounded-[24px] p-7 border border-[#d4af37]/30"
+                style={{
+                  background: "linear-gradient(135deg, #f8f4e8 0%, #fdf9ee 50%, #fff8e1 100%)"
+                }}
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#d4af37]/10 blur-3xl rounded-full pointer-events-none" />
+                <div className="flex items-start gap-4 relative z-10">
+                  <div className="w-12 h-12 rounded-2xl bg-[#d4af37] flex items-center justify-center text-xl flex-shrink-0 shadow-lg">
+                    📅
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-black text-[#081225] mb-1">Schedule a Meeting</h3>
+                    <p className="text-gray-500 text-sm mb-4 leading-relaxed">
+                      Book a dedicated slot with our team — fabric demo, bulk pricing, or order discussion.
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {["Mon – Sat", "10AM – 7PM", "Free Consultation"].map((tag) => (
+                        <span key={tag} className="text-[10px] bg-[#d4af37]/15 text-[#7a6015] px-2.5 py-1 rounded-full font-bold uppercase tracking-wide">{tag}</span>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setAppointmentOpen(true)}
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-[#d4af37] to-[#aa8c2c] text-[#08102e] px-6 py-3 rounded-xl font-bold text-sm hover:shadow-[0_8px_24px_rgba(212,175,55,0.35)] hover:scale-[1.02] transition-all duration-200"
+                    >
+                      📅 Book Appointment
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -924,6 +917,11 @@ export default function LuxuryTextileWebsite() {
                     </button>
                   </li>
                 ))}
+                <li className="pt-2 border-t border-white/10 mt-2">
+                  <a href="/catalogue" className="text-[#d4af37] font-bold hover:underline">
+                    View Full Catalogue →
+                  </a>
+                </li>
               </ul>
             </div>
             <div>
@@ -955,11 +953,10 @@ export default function LuxuryTextileWebsite() {
         💬
       </a>
 
-      {/* ── Back to Top ── */}
       <ScrollToTop />
 
-      {/* ── Product Modal ── */}
       {selectedItem && <ProductModal item={selectedItem} onClose={() => setSelectedItem(null)} />}
+      {appointmentOpen && <AppointmentModal onClose={() => setAppointmentOpen(false)} />}
     </div>
   );
 }
