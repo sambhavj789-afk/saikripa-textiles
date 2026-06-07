@@ -3,14 +3,22 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import AdminNav from "../components/AdminNav";
 
+// Premium dark palette
+// Page:       #020817  (deep blue-black)
+// Card:       #0a1124  (subtle lift from page)
+// Card hover: #0e1730  
+// Border:     #1a2233  (subtle, almost invisible)
+// Gold:       #d4af37
+// Text:       #e8edf5  (off-white with cool tint)
+// Muted:      #7a8499  (blue-gray secondary)
+
 const STATUS_STYLES = {
-  pending: "bg-yellow-100 text-yellow-800",
-  confirmed: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800",
-  completed: "bg-blue-100 text-blue-800",
+  pending: "bg-amber-500/10 text-amber-300 border border-amber-500/30",
+  confirmed: "bg-emerald-500/10 text-emerald-300 border border-emerald-500/30",
+  cancelled: "bg-rose-500/10 text-rose-300 border border-rose-500/30",
+  completed: "bg-sky-500/10 text-sky-300 border border-sky-500/30",
 };
 
-// Compact contact icons
 const PhoneIcon = ({ className = "w-3.5 h-3.5" }) => (
   <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h2.28a2 2 0 011.94 1.515l.7 2.793a2 2 0 01-.45 1.95l-1.27 1.27a16 16 0 006.586 6.586l1.27-1.27a2 2 0 011.95-.45l2.793.7A2 2 0 0121 18.72V21a2 2 0 01-2 2A18 18 0 013 5z" />
@@ -88,18 +96,25 @@ export default function AdminDashboard() {
       prev.map((a) => (a.id === id ? { ...a, status } : a))
     );
   };
-  const handleDelete = async (id, name) => {
+
+ const handleDelete = async (id, name) => {
     if (!confirm(`Permanently delete appointment for ${name}? This cannot be undone.`)) return;
+    
+    // First fetch the appointment to get its calendar event ID
     const appt = appointments.find((a) => a.id === id);
+    
+    // Delete from Google Calendar if there's an event ID
     if (appt?.google_event_id) {
       try {
         await fetch(`http://localhost:3000/api/calendar/${appt.google_event_id}`, {
           method: "DELETE",
         });
       } catch (err) {
-        console.warn("Calendar delete failed:", err);
+        console.warn("Calendar event delete failed (will still remove from DB):", err);
       }
     }
+    
+    // Then delete from Supabase
     const { error: dbError } = await supabase.from("appointments").delete().eq("id", id);
     if (dbError) {
       alert("Could not delete: " + dbError.message);
@@ -107,6 +122,7 @@ export default function AdminDashboard() {
     }
     setAppointments((prev) => prev.filter((a) => a.id !== id));
   };
+
   const toggleSelect = (id) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -161,31 +177,44 @@ export default function AdminDashboard() {
     { total: 0, pending: 0, confirmed: 0, cancelled: 0, completed: 0 }
   );
 
+  const goldGlow = { boxShadow: "0 0 40px rgba(212, 175, 55, 0.08), inset 0 0 0 1px rgba(212, 175, 55, 0.3)" };
+
   return (
-    <div className="min-h-screen bg-[#f8f7f4]">
-      <header className="bg-[#081225] text-white py-5 shadow-lg relative">
+    <div className="min-h-screen bg-[#020817] text-[#e8edf5] relative overflow-x-hidden">
+      {/* Ambient gold glow accent in top-right */}
+      <div
+        className="fixed top-0 right-0 w-[600px] h-[600px] pointer-events-none opacity-50"
+        style={{
+          background: "radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0) 70%)",
+        }}
+      />
+
+      <header className="relative border-b border-[#1a2233]/80 backdrop-blur-xl bg-[#020817]/80 sticky top-0 z-40">
         <AdminNav userEmail={userEmail} className="absolute left-4 top-1/2 -translate-y-1/2" />
-        <div className="max-w-7xl mx-auto px-6">
-          <h1 className="text-lg font-black tracking-wider text-[#d4af37] uppercase">
+        <div className="max-w-7xl mx-auto px-6 py-5">
+          <h1
+            className="text-lg font-bold tracking-[0.2em] uppercase"
+            style={{ background: "linear-gradient(135deg, #f4d77a 0%, #d4af37 50%, #a8842c 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}
+          >
             Saikripa Textiles
           </h1>
-          <p className="text-[10px] text-gray-400 tracking-[0.25em] uppercase mt-0.5">
+          <p className="text-[10px] text-[#7a8499] tracking-[0.35em] uppercase mt-1 font-medium">
             Admin Dashboard
           </p>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+      <main className="max-w-7xl mx-auto px-6 py-10 relative">
+        <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
           <div>
-            <h2 className="text-2xl font-black text-[#081225]">Appointments</h2>
-            <p className="text-xs text-gray-400 mt-1 uppercase tracking-widest font-bold">
+            <h2 className="text-4xl font-bold tracking-tight text-white">Appointments</h2>
+            <p className="text-xs text-[#7a8499] mt-2 uppercase tracking-[0.25em] font-medium">
               Booking requests from the website
             </p>
           </div>
           {filteredAppts.length > 0 && (
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 text-xs font-bold text-gray-600 cursor-pointer">
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-xs font-medium text-[#7a8499] cursor-pointer uppercase tracking-wider">
                 <input
                   type="checkbox"
                   checked={selectedIds.size > 0 && selectedIds.size === filteredAppts.length}
@@ -197,7 +226,7 @@ export default function AdminDashboard() {
               {selectedIds.size > 0 && (
                 <button
                   onClick={handleBulkDelete}
-                  className="bg-red-500 text-white px-4 py-2 rounded-xl font-bold text-xs hover:bg-red-600 transition shadow"
+                  className="bg-rose-500/10 border border-rose-500/40 text-rose-300 px-4 py-2 rounded-lg font-medium text-xs uppercase tracking-wider hover:bg-rose-500/20 hover:border-rose-500/60 transition"
                 >
                   Delete Selected ({selectedIds.size})
                 </button>
@@ -206,40 +235,49 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+        {/* Stats — Total tile is hero with gold glow */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
+          <div className="rounded-xl p-5 bg-gradient-to-br from-[#0d1530] to-[#0a1124] relative overflow-hidden" style={goldGlow}>
+            <div className="absolute top-0 right-0 w-32 h-32 opacity-20 pointer-events-none" style={{ background: "radial-gradient(circle at top right, rgba(212, 175, 55, 0.4) 0%, transparent 60%)" }} />
+            <p className="text-[10px] text-[#d4af37]/70 uppercase tracking-[0.3em] font-medium relative">Total</p>
+            <p className="text-4xl font-bold text-[#d4af37] mt-3 relative tracking-tight">{counts.total}</p>
+          </div>
           {[
-            ["Total", counts.total, "text-[#081225]"],
-            ["Pending", counts.pending, "text-yellow-600"],
-            ["Confirmed", counts.confirmed, "text-green-600"],
-            ["Completed", counts.completed, "text-blue-600"],
-            ["Cancelled", counts.cancelled, "text-red-600"],
+            ["Pending", counts.pending, "text-amber-300"],
+            ["Confirmed", counts.confirmed, "text-emerald-300"],
+            ["Completed", counts.completed, "text-sky-300"],
+            ["Cancelled", counts.cancelled, "text-rose-300"],
           ].map(([label, val, color]) => (
-            <div key={label} className="bg-white rounded-2xl p-4 border border-gray-100">
-              <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">
+            <div key={label} className="bg-[#0a1124] rounded-xl p-5 border border-[#1a2233] hover:border-[#1a2233] transition">
+              <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">
                 {label}
               </p>
-              <p className={`text-2xl font-black ${color} mt-1`}>{val}</p>
+              <p className={`text-4xl font-bold ${color} mt-3 tracking-tight`}>{val}</p>
             </div>
           ))}
         </div>
 
-        <div className="bg-white rounded-2xl p-4 mb-6 border border-gray-100 flex flex-col sm:flex-row gap-3 sm:items-center">
-          <input
-            type="text"
-            placeholder="Search by name, phone, city, state, type..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#d4af37]"
-          />
+        {/* Filters */}
+        <div className="bg-[#0a1124] rounded-xl p-4 mb-6 border border-[#1a2233] flex flex-col sm:flex-row gap-3 sm:items-center">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              placeholder="Search by name, phone, city, state, type..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-[#020817] border border-[#1a2233] rounded-lg px-4 py-2.5 text-sm text-[#e8edf5] placeholder-[#4a5568] focus:outline-none focus:border-[#d4af37]/60 focus:bg-[#020817] transition"
+            />
+          </div>
           <div className="flex gap-2 flex-wrap">
             {["all", "pending", "confirmed", "completed", "cancelled"].map((s) => (
               <button
                 key={s}
                 onClick={() => setFilter(s)}
-                className={`px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wide transition ${filter === s
-                  ? "bg-[#081225] text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
+                className={`px-3 py-2 rounded-lg text-xs font-medium uppercase tracking-wider transition ${
+                  filter === s
+                    ? "bg-gradient-to-br from-[#d4af37] to-[#a8842c] text-[#020817] shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+                    : "bg-[#020817] border border-[#1a2233] text-[#7a8499] hover:text-[#e8edf5] hover:border-[#d4af37]/40"
+                }`}
               >
                 {s}
               </button>
@@ -247,18 +285,18 @@ export default function AdminDashboard() {
           </div>
           <button
             onClick={fetchAppointments}
-            className="text-xs font-bold text-[#c6a55c] hover:underline whitespace-nowrap"
+            className="text-xs font-medium text-[#d4af37] hover:text-[#f4d77a] whitespace-nowrap transition uppercase tracking-wider"
           >
             Refresh
           </button>
         </div>
 
         {error ? (
-          <div className="bg-red-50 text-red-600 rounded-2xl p-4 text-sm">{error}</div>
+          <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded-xl p-4 text-sm">{error}</div>
         ) : loading ? (
-          <div className="text-center py-12 text-gray-400">Loading appointments...</div>
+          <div className="text-center py-12 text-[#7a8499]">Loading appointments...</div>
         ) : filteredAppts.length === 0 ? (
-          <div className="bg-white rounded-2xl p-12 text-center text-gray-400 border border-gray-100">
+          <div className="bg-[#0a1124] rounded-xl p-12 text-center text-[#7a8499] border border-[#1a2233]">
             No appointments match this filter.
           </div>
         ) : (
@@ -266,10 +304,11 @@ export default function AdminDashboard() {
             {filteredAppts.map((a) => (
               <div
                 key={a.id}
-                className={`bg-white rounded-2xl p-5 border transition hover:shadow-lg ${selectedIds.has(a.id)
-                  ? "border-[#d4af37] bg-[#fff8e1]/30"
-                  : "border-gray-100"
-                  }`}
+                className={`relative rounded-xl p-5 border transition-all duration-300 hover:-translate-y-0.5 ${
+                  selectedIds.has(a.id)
+                    ? "bg-gradient-to-br from-[#0e1730] to-[#0a1124] border-[#d4af37]/50"
+                    : "bg-[#0a1124] border-[#1a2233] hover:border-[#d4af37]/30 hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
+                }`}
               >
                 <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -277,53 +316,55 @@ export default function AdminDashboard() {
                       type="checkbox"
                       checked={selectedIds.has(a.id)}
                       onChange={() => toggleSelect(a.id)}
-                      className="mt-1 w-4 h-4 accent-[#d4af37] cursor-pointer flex-shrink-0"
+                      className="mt-1.5 w-4 h-4 accent-[#d4af37] cursor-pointer flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-black text-[#081225] text-base truncate">
+                      <div className="flex items-center gap-3 mb-3">
+                        <h3 className="font-semibold text-white text-lg truncate">
                           {a.name}
                         </h3>
                         <span
-                          className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wide ${STATUS_STYLES[a.status] || "bg-gray-100 text-gray-600"
-                            }`}
+                          className={`text-[10px] px-2.5 py-1 rounded-full font-medium uppercase tracking-wider ${
+                            STATUS_STYLES[a.status] || "bg-[#1a2233] text-[#7a8499] border border-[#1a2233]"
+                          }`}
                         >
                           {a.status}
                         </span>
                       </div>
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1.5 text-sm">
-                        <div className="text-gray-600 flex items-center gap-2">
-                          <PhoneIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                          <a href={`tel:${a.phone}`} className="hover:text-[#c6a55c]">{a.phone}</a>
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2 text-sm">
+                        <div className="text-[#a8b0c0] flex items-center gap-2">
+                          <PhoneIcon className="w-3.5 h-3.5 text-[#d4af37]/70 flex-shrink-0" />
+                          <a href={`tel:${a.phone}`} className="hover:text-[#d4af37] transition">{a.phone}</a>
                         </div>
                         {a.email && (
-                          <div className="text-gray-600 truncate flex items-center gap-2">
-                            <MailIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                            <a href={`mailto:${a.email}`} className="hover:text-[#c6a55c] truncate">{a.email}</a>
+                          <div className="text-[#a8b0c0] truncate flex items-center gap-2">
+                            <MailIcon className="w-3.5 h-3.5 text-[#d4af37]/70 flex-shrink-0" />
+                            <a href={`mailto:${a.email}`} className="hover:text-[#d4af37] truncate transition">{a.email}</a>
                           </div>
                         )}
                         {(a.city || a.state) && (
-                          <div className="text-gray-600 flex items-center gap-2">
-                            <PinIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                          <div className="text-[#a8b0c0] flex items-center gap-2">
+                            <PinIcon className="w-3.5 h-3.5 text-[#d4af37]/70 flex-shrink-0" />
                             {[a.city, a.state].filter(Boolean).join(", ")}
                           </div>
                         )}
-                        <div className="text-gray-600 flex items-center gap-2">
-                          <CalendarIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                        <div className="text-[#a8b0c0] flex items-center gap-2">
+                          <CalendarIcon className="w-3.5 h-3.5 text-[#d4af37]/70 flex-shrink-0" />
                           {a.preferred_date} · {a.preferred_time}
                         </div>
-                        <div className="text-gray-600 sm:col-span-2 lg:col-span-2 flex items-center gap-2">
-                          <TagIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                        <div className="text-[#a8b0c0] sm:col-span-2 lg:col-span-2 flex items-center gap-2">
+                          <TagIcon className="w-3.5 h-3.5 text-[#d4af37]/70 flex-shrink-0" />
                           {a.appointment_type}
                         </div>
                       </div>
                       {a.notes && (
-                        <div className="mt-3 bg-gray-50 rounded-xl p-3 text-xs text-gray-600 leading-relaxed">
-                          <span className="font-bold text-gray-500">Notes:</span> {a.notes}
+                        <div className="mt-3 bg-[#020817]/60 border border-[#1a2233] rounded-lg p-3 text-xs text-[#a8b0c0] leading-relaxed">
+                          <span className="font-medium text-[#7a8499] uppercase tracking-wider text-[10px]">Notes</span>
+                          <p className="mt-1">{a.notes}</p>
                         </div>
                       )}
-                      <p className="text-[10px] text-gray-400 mt-2">
-                        Booked: {new Date(a.created_at).toLocaleString("en-IN")}
+                      <p className="text-[10px] text-[#4a5568] mt-3 uppercase tracking-wider">
+                        Booked {new Date(a.created_at).toLocaleString("en-IN")}
                       </p>
                     </div>
                   </div>
@@ -332,7 +373,7 @@ export default function AdminDashboard() {
                     <select
                       value={a.status}
                       onChange={(e) => updateStatus(a.id, e.target.value)}
-                      className="border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-[#d4af37] bg-white"
+                      className="bg-[#020817] border border-[#1a2233] text-[#e8edf5] rounded-lg px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#d4af37]/60 transition cursor-pointer"
                     >
                       <option value="pending">Pending</option>
                       <option value="confirmed">Confirmed</option>
@@ -343,13 +384,13 @@ export default function AdminDashboard() {
                       href={`https://wa.me/${a.phone.replace(/\D/g, "")}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-center bg-[#081225] text-white text-xs font-bold py-2 rounded-xl hover:bg-[#0f1f63] transition"
+                      className="text-center bg-gradient-to-br from-[#d4af37] to-[#a8842c] text-[#020817] text-xs font-bold uppercase tracking-wider py-2 rounded-lg hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition"
                     >
                       WhatsApp
                     </a>
                     <button
                       onClick={() => handleDelete(a.id, a.name)}
-                      className="text-center border border-red-200 text-red-600 text-xs font-bold py-2 rounded-xl hover:bg-red-50 transition"
+                      className="text-center bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-medium uppercase tracking-wider py-2 rounded-lg hover:bg-rose-500/20 transition"
                     >
                       Delete
                     </button>
