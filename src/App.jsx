@@ -687,7 +687,7 @@ export default function LuxuryTextileWebsite() {
                   {[
                     { iconName: "phone", label: "Phone / WhatsApp", value: "+91 89498 81253" },
                     { iconName: "mail", label: "Email", value: "saikripatextiles58@gmail.com" },
-                    { iconName: "pin", label: "Location", value: "Marvel Syntex, 38-A/2, opp. Shiv Charan Mathur's, Marvel Square, Gandhi Nagar, Bhilwara, Rajasthan 311001" },
+                    { iconName: "pin", label: "Location", value: "Marvel Square, 38-A, opposite Shiv Charan Mathur House, Gandhi Nagar, Bhilwara, Rajasthan 311001" },
                     { iconName: "clock", label: "Business Hours", value: "Mon–Sat: 10:00 AM – 7:00 PM" },
                   ].map((c) => (
                     <div key={c.label} className="flex items-start gap-3">
@@ -738,10 +738,10 @@ export default function LuxuryTextileWebsite() {
               <ul className="space-y-2 text-[#a8b0c0] text-sm">
                 <li>+91 89498 81253</li>
                 <li>saikripatextiles58@gmail.com</li>
-                <li>Marvel Syntex, 38-A/2</li>
-                <li>opp. Shiv Charan Mathur's</li>
-                <li>Marvel Square, Gandhi Nagar</li>
-                <li>Bhilwara, Rajasthan 311001</li>
+                <li>Marvel Square, 38-A</li>
+                <li>opposite Shiv Charan Mathur House</li>
+                <li>Gandhi Nagar, Bhilwara</li>
+                <li>Rajasthan 311001</li>
                 <li className="pt-1">
                   <a href="https://maps.app.goo.gl/pps1Wfq2oJKSfkdk6" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-[#d4af37] font-bold text-xs hover:underline">
                     <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

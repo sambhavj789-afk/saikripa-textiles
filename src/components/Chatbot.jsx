@@ -59,7 +59,7 @@ const FLOWS = {
   },
   visit: {
     botMsg:
-      "We'd love to host you at our shop! 🏬\n\n📍 Marvel Syntex, 38-A/2\nopp. Shiv Charan Mathur's, Marvel Square\nGandhi Nagar, Bhilwara, Rajasthan 311001\n\n🕙 Mon–Sat: 10:00 AM – 7:00 PM\n📞 +91 89498 81253\n\nPlease WhatsApp or call us before visiting so we can have the right samples ready.",
+      "We'd love to host you at our shop! 🏬\n\n📍 Marvel Square, 38-A\nopposite Shiv Charan Mathur House\nGandhi Nagar, Bhilwara, Rajasthan 311001\n\n🕙 Mon–Sat: 10:00 AM – 7:00 PM\n📞 +91 89498 81253\n\nPlease WhatsApp or call us before visiting so we can have the right samples ready.",
     options: [
       {
         label: "📍 Get Directions",
