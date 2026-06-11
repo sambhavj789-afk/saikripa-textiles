@@ -58,21 +58,21 @@ export default function Catalogue() {
   const showGrouped = activeCategory === "All" && !search && view === "grid";
 
   return (
-    <div className="min-h-screen bg-[#f8f7f4]">
+    <div className="min-h-screen bg-[#020817] text-[#e8edf5]">
       {/* Header */}
-      <header className="bg-[#081225] text-white">
+      <header className="bg-[#020817] border-b border-[#1a2233] sticky top-0 z-40 backdrop-blur-xl bg-opacity-90">
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
           <Link to="/" className="flex flex-col">
             <h1 className="text-lg font-black tracking-wider text-[#d4af37] uppercase">
               Saikripa Textiles
             </h1>
-            <p className="text-[10px] text-gray-400 tracking-[0.25em] uppercase mt-0.5">
+            <p className="text-[10px] text-[#7a8499] tracking-[0.25em] uppercase mt-0.5">
               Full Catalogue
             </p>
           </Link>
           <Link
             to="/"
-            className="text-xs font-bold bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl transition"
+            className="text-xs font-bold bg-[#0a1124] border border-[#1a2233] text-white hover:border-[#d4af37]/40 px-4 py-2 rounded-xl transition"
           >
             ← Back to Home
           </Link>
@@ -80,15 +80,17 @@ export default function Catalogue() {
       </header>
 
       {/* Hero strip */}
-      <section className="bg-gradient-to-br from-[#020817] via-[#0b1748] to-[#172554] text-white px-6 py-14">
-        <div className="max-w-7xl mx-auto">
+      <section className="relative bg-[#020817] px-6 py-16 overflow-hidden border-b border-[#1a2233]">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] pointer-events-none opacity-50" style={{ background: "radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%)" }} />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] pointer-events-none opacity-40" style={{ background: "radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 70%)" }} />
+        <div className="max-w-7xl mx-auto relative">
           <p className="uppercase tracking-[0.3em] text-xs text-[#d4af37] font-bold mb-3">
             Saikripa Library
           </p>
-          <h2 className="text-4xl md:text-5xl font-black tracking-tight leading-tight max-w-2xl">
+          <h2 className="text-4xl md:text-5xl font-black tracking-tight leading-tight max-w-2xl text-white">
             Browse by category, or see everything.
           </h2>
-          <p className="mt-5 text-gray-300 max-w-2xl leading-relaxed">
+          <p className="mt-5 text-[#a8b0c0] max-w-2xl leading-relaxed">
             Saikripa fabrics organized by weave family — Gaberdine, 2/18 Matty,
             and PV Trovin. Search, compare up to three side-by-side, or click
             "See all" to open the full catalogue.
@@ -98,13 +100,13 @@ export default function Catalogue() {
 
       <main className="max-w-7xl mx-auto px-6 py-10">
         {/* Filter bar */}
-        <div className="bg-white rounded-2xl p-5 mb-6 border border-gray-100 shadow-sm">
+        <div className="bg-[#0a1124] rounded-2xl p-5 mb-6 border border-[#1a2233]">
           <input
             type="text"
             placeholder="Search by name, construction, use case..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20"
+            className="w-full bg-[#020817] border border-[#1a2233] rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#4a5568] focus:outline-none focus:border-[#d4af37]/60 focus:ring-2 focus:ring-[#d4af37]/20 transition"
           />
 
           <div className="flex flex-wrap gap-2 mt-4">
@@ -114,8 +116,8 @@ export default function Catalogue() {
                 onClick={() => setActiveCategory(cat)}
                 className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wide transition ${
                   activeCategory === cat
-                    ? "bg-[#081225] text-white shadow"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    ? "bg-gradient-to-br from-[#f4d77a] via-[#d4af37] to-[#a8842c] text-[#020817] shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+                    : "bg-[#020817] border border-[#1a2233] text-[#a8b0c0] hover:border-[#d4af37]/40 hover:text-[#d4af37]"
                 }`}
               >
                 {cat}
@@ -126,7 +128,7 @@ export default function Catalogue() {
 
         {/* Compare bar (sticky) */}
         {compareList.length > 0 && (
-          <div className="sticky top-0 z-30 bg-[#081225] text-white rounded-2xl p-4 mb-6 flex items-center justify-between shadow-lg">
+          <div className="sticky top-[88px] z-30 bg-[#0a1124] border border-[#d4af37]/30 rounded-2xl p-4 mb-6 flex items-center justify-between shadow-[0_10px_40px_rgba(0,0,0,0.5)]" style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.5), 0 0 30px rgba(212, 175, 55, 0.1)" }}>
             <div className="flex items-center gap-3 flex-wrap">
               <span className="text-xs font-bold uppercase tracking-widest text-[#d4af37]">
                 Compare ({compareList.length}/3)
@@ -135,12 +137,12 @@ export default function Catalogue() {
                 {compareItems.map((c) => (
                   <span
                     key={c.slug}
-                    className="text-xs bg-white/10 px-3 py-1 rounded-full flex items-center gap-2"
+                    className="text-xs bg-[#020817] border border-[#1a2233] text-white px-3 py-1 rounded-full flex items-center gap-2"
                   >
                     {c.title}
                     <button
                       onClick={() => toggleCompare(c.slug)}
-                      className="text-white/60 hover:text-white font-bold"
+                      className="text-[#7a8499] hover:text-white font-bold"
                       aria-label={`Remove ${c.title}`}
                     >
                       ×
@@ -153,10 +155,10 @@ export default function Catalogue() {
               <button
                 onClick={() => setView(view === "compare" ? "grid" : "compare")}
                 disabled={compareList.length < 2}
-                className={`text-xs font-bold px-4 py-2 rounded-xl transition ${
+                className={`text-xs font-bold px-4 py-2 rounded-xl transition uppercase tracking-wider ${
                   compareList.length < 2
-                    ? "bg-white/5 text-gray-500 cursor-not-allowed"
-                    : "bg-[#d4af37] text-[#081225] hover:bg-[#c49f2d]"
+                    ? "bg-[#020817] border border-[#1a2233] text-[#4a5568] cursor-not-allowed"
+                    : "bg-gradient-to-br from-[#f4d77a] via-[#d4af37] to-[#a8842c] text-[#020817] hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]"
                 }`}
               >
                 {view === "compare" ? "Show Grid" : "Compare"}
@@ -166,7 +168,7 @@ export default function Catalogue() {
                   setCompareList([]);
                   setView("grid");
                 }}
-                className="text-xs text-white/60 hover:text-white px-2"
+                className="text-xs text-[#7a8499] hover:text-white px-2"
               >
                 Clear
               </button>
@@ -186,18 +188,18 @@ export default function Catalogue() {
               >
                 <div />
                 {compareItems.map((c) => (
-                  <div key={c.slug} className="bg-white rounded-2xl p-4 border border-gray-100">
-                    <div className="aspect-square bg-gray-100 rounded-xl mb-3 overflow-hidden">
+                  <div key={c.slug} className="bg-[#0a1124] rounded-2xl p-4 border border-[#1a2233]">
+                    <div className="aspect-square bg-[#020817] rounded-xl mb-3 overflow-hidden">
                       <img
                         src={c.image}
                         alt={c.title}
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <h3 className="font-black text-[#081225] text-sm">{c.title}</h3>
+                    <h3 className="font-black text-white text-sm">{c.title}</h3>
                     <Link
                       to={`/catalogue/${c.slug}`}
-                      className="text-[10px] text-[#c6a55c] font-bold hover:underline"
+                      className="text-[10px] text-[#d4af37] font-bold hover:text-[#f4d77a]"
                     >
                       View details →
                     </Link>
@@ -214,13 +216,13 @@ export default function Catalogue() {
                   ["Best For", "uses"],
                 ].map(([label, key]) => (
                   <React.Fragment key={key}>
-                    <div className="text-xs font-bold text-gray-400 uppercase tracking-widest py-3 self-center">
+                    <div className="text-xs font-bold text-[#7a8499] uppercase tracking-widest py-3 self-center">
                       {label}
                     </div>
                     {compareItems.map((c) => (
                       <div
                         key={c.slug + key}
-                        className="bg-white rounded-xl px-4 py-3 border border-gray-100 text-sm font-semibold text-[#081225]"
+                        className="bg-[#0a1124] rounded-xl px-4 py-3 border border-[#1a2233] text-sm font-semibold text-white"
                       >
                         {c[key]}
                       </div>
@@ -237,17 +239,17 @@ export default function Catalogue() {
               <section key={group.name}>
                 <div className="flex items-center justify-between mb-5">
                   <div>
-                    <h3 className="text-2xl font-black text-[#081225]">
+                    <h3 className="text-2xl font-black text-white">
                       {group.name}
                     </h3>
-                    <p className="text-xs text-gray-400 mt-1 uppercase tracking-widest font-bold">
+                    <p className="text-xs text-[#7a8499] mt-1 uppercase tracking-widest font-bold">
                       {group.items.length}{" "}
                       {group.items.length === 1 ? "fabric" : "fabrics"}
                     </p>
                   </div>
                   <button
                     onClick={() => setActiveCategory(group.name)}
-                    className="text-sm font-bold text-[#c6a55c] hover:underline"
+                    className="text-sm font-bold text-[#d4af37] hover:text-[#f4d77a] transition"
                   >
                     See all →
                   </button>
@@ -270,14 +272,14 @@ export default function Catalogue() {
         ) : (
           // FLAT GRID — when a specific category is selected or search is active
           <>
-            <p className="text-sm text-gray-500 mb-4">
-              {filtered.length}{" "}
+            <p className="text-sm text-[#a8b0c0] mb-4">
+              <span className="text-white font-bold">{filtered.length}</span>{" "}
               {filtered.length === 1 ? "fabric" : "fabrics"} found
-              {activeCategory !== "All" && ` in ${activeCategory}`}
+              {activeCategory !== "All" && <span> in <span className="text-[#d4af37]">{activeCategory}</span></span>}
             </p>
 
             {filtered.length === 0 ? (
-              <div className="bg-white rounded-2xl p-12 text-center text-gray-400 border border-gray-100">
+              <div className="bg-[#0a1124] rounded-2xl p-12 text-center text-[#7a8499] border border-[#1a2233]">
                 No fabrics match your filters. Try clearing the search or category.
               </div>
             ) : (
@@ -298,10 +300,12 @@ export default function Catalogue() {
       </main>
 
       {/* Footer CTA */}
-      <section className="bg-[#081225] text-white px-6 py-14">
-        <div className="max-w-3xl mx-auto text-center">
-          <h3 className="text-3xl font-black mb-4">Need a custom shade?</h3>
-          <p className="text-gray-300 mb-6">
+      <section className="relative bg-[#0a1124] border-t border-[#1a2233] px-6 py-16 overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] pointer-events-none opacity-40" style={{ background: "radial-gradient(ellipse, rgba(212, 175, 55, 0.12) 0%, transparent 70%)" }} />
+        <div className="max-w-3xl mx-auto text-center relative">
+          <p className="uppercase tracking-[0.3em] text-xs text-[#d4af37] font-bold mb-3">Custom Orders</p>
+          <h3 className="text-3xl md:text-4xl font-black mb-4 text-white tracking-tight">Need a custom shade?</h3>
+          <p className="text-[#a8b0c0] mb-7 leading-relaxed">
             Bulk orders can be custom-dyed to your exact Pantone reference. Talk
             to our team for a quote.
           </p>
@@ -310,13 +314,13 @@ export default function Catalogue() {
               href="https://wa.me/918949881253"
               target="_blank"
               rel="noreferrer"
-              className="bg-[#25d366] text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-[#1ebe5d] transition"
+              className="bg-gradient-to-br from-[#f4d77a] via-[#d4af37] to-[#a8842c] text-[#020817] px-7 py-3.5 rounded-xl font-bold text-sm hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] hover:scale-[1.02] transition uppercase tracking-wider"
             >
-              💬 WhatsApp Inquiry
+              WhatsApp Inquiry
             </a>
             <Link
               to="/"
-              className="border border-white/20 px-6 py-3 rounded-xl font-bold text-sm hover:bg-white/10 transition"
+              className="border border-[#1a2233] bg-[#020817] text-white px-7 py-3.5 rounded-xl font-bold text-sm hover:border-[#d4af37]/40 transition uppercase tracking-wider"
             >
               Back to Home
             </Link>
@@ -330,10 +334,14 @@ export default function Catalogue() {
 // ── Fabric Card (extracted as reusable component) ───────────────────────────
 function FabricCard({ item, isCompared, onToggleCompare, onNavigate }) {
   return (
-    <div className="group bg-white rounded-[24px] overflow-hidden border border-gray-100 hover:border-[#d4af37]/40 hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] transition-all duration-300 flex flex-col">
+    <div className={`group bg-[#0a1124] rounded-[24px] overflow-hidden border transition-all duration-300 flex flex-col ${
+      isCompared
+        ? "border-[#d4af37]/60 shadow-[0_0_30px_rgba(212,175,55,0.15)]"
+        : "border-[#1a2233] hover:border-[#d4af37]/40 hover:shadow-[0_20px_50px_rgba(0,0,0,0.4)]"
+    }`}>
       <button
         onClick={onNavigate}
-        className="relative aspect-[4/3] bg-gray-100 overflow-hidden block w-full"
+        className="relative aspect-[4/3] bg-[#020817] overflow-hidden block w-full"
       >
         <img
           src={item.image}
@@ -341,7 +349,7 @@ function FabricCard({ item, isCompared, onToggleCompare, onNavigate }) {
           className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
         />
         <div className="absolute top-3 left-3">
-          <span className="bg-[#081225]/80 backdrop-blur text-white px-2.5 py-1 rounded-lg text-[10px] font-bold">
+          <span className="bg-[#020817]/90 backdrop-blur border border-[#1a2233] text-white px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">
             {item.category}
           </span>
         </div>
@@ -349,31 +357,31 @@ function FabricCard({ item, isCompared, onToggleCompare, onNavigate }) {
 
       <div className="p-5 flex flex-col flex-grow">
         <div className="flex gap-2 mb-3 flex-wrap">
-          <span className="bg-[#081225] text-white px-3 py-1 rounded-full text-[10px] font-bold">
+          <span className="bg-[#020817] border border-[#1a2233] text-white px-3 py-1 rounded-full text-[10px] font-bold">
             {item.gsm}
           </span>
-          <span className="bg-[#d4af37]/15 text-[#7a6015] px-3 py-1 rounded-full text-[10px] font-bold">
+          <span className="bg-[#d4af37]/15 border border-[#d4af37]/30 text-[#d4af37] px-3 py-1 rounded-full text-[10px] font-bold">
             {item.construction}
           </span>
         </div>
-        <h3 className="text-lg font-black text-[#081225] mb-2">{item.title}</h3>
-        <p className="text-gray-500 text-sm leading-relaxed flex-grow">
+        <h3 className="text-lg font-black text-white mb-2 group-hover:text-[#d4af37] transition-colors">{item.title}</h3>
+        <p className="text-[#7a8499] text-sm leading-relaxed flex-grow">
           {item.description.substring(0, 100)}...
         </p>
 
         <div className="mt-4 grid grid-cols-2 gap-2">
           <button
             onClick={onNavigate}
-            className="bg-[#081225] text-white py-2.5 rounded-xl font-bold text-xs hover:bg-[#0f1f63] transition"
+            className="bg-[#d4af37] text-[#020817] py-2.5 rounded-xl font-bold text-xs hover:bg-[#c49f2d] transition uppercase tracking-wider"
           >
             View Details
           </button>
           <button
             onClick={onToggleCompare}
-            className={`py-2.5 rounded-xl font-bold text-xs transition border ${
+            className={`py-2.5 rounded-xl font-bold text-xs transition border uppercase tracking-wider ${
               isCompared
-                ? "bg-[#d4af37] text-[#081225] border-[#d4af37]"
-                : "bg-white text-gray-600 border-gray-200 hover:border-[#d4af37] hover:text-[#081225]"
+                ? "bg-[#d4af37]/15 text-[#d4af37] border-[#d4af37]/40"
+                : "bg-[#020817] text-[#a8b0c0] border-[#1a2233] hover:border-[#d4af37]/40 hover:text-[#d4af37]"
             }`}
           >
             {isCompared ? "✓ Comparing" : "+ Compare"}

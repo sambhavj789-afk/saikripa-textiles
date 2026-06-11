@@ -64,7 +64,7 @@ export default function AdminNav({ userEmail, className = "" }) {
             <div>
               <h2
                 className="text-base font-bold tracking-[0.2em] uppercase"
-                style={{ background: "linear-gradient(135deg, #f4d77a 0%, #d4af37 50%, #a8842c 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}
+                style={{ background: "linear-gradient(135deg, #f4d77a 0%, #d4af3750%, #a8842c 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}
               >
                 Saikripa Textiles
               </h2>

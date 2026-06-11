@@ -20,3 +20,66 @@ body {
     transform: translateY(0px);
   }
 }
+/* Chrome autofill dark theme override */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 30px #020817 inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #d4af37 !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+.bestseller-card {
+  transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 300ms ease-out,
+              box-shadow 350ms ease-out;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.bestseller-card:hover {
+  transform: translate3d(0, -8px, 0);
+  border-color: rgba(212, 175, 55, 0.6);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4),
+              0 0 40px rgba(212, 175, 55, 0.2);
+}
+
+.bestseller-img {
+  transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform: scale(1) translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+.bestseller-card:hover .bestseller-img {
+  transform: scale(1.08) translate3d(0, 0, 0);
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fadeIn {
+  animation: fadeIn 200ms ease-out;
+}
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-slideUp {
+  animation: slideUp 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInUp {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-fadeInUp {
+  animation: fadeInUp 200ms ease-out;
+}

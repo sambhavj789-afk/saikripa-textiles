@@ -221,7 +221,7 @@ export default function Analytics() {
         <AdminNav userEmail={userEmail} className="absolute left-4 top-1/2 -translate-y-1/2" />
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-bold tracking-[0.2em] uppercase" style={{ background: "linear-gradient(135deg, #f4d77a 0%, #d4af37 50%, #a8842c 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Saikripa Textiles</h1>
+            <h1 className="text-lg font-bold tracking-[0.2em] uppercase" style={{ background: "linear-gradient(135deg, #f4d77a 0%, #d4af3750%, #a8842c 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Saikripa Textiles</h1>
             <p className="text-[10px] text-[#7a8499] tracking-[0.35em] uppercase mt-1 font-medium">Analytics</p>
           </div>
           <button onClick={fetchData} className="text-xs font-medium text-[#d4af37] hover:text-[#f4d77a] uppercase tracking-wider transition">Refresh</button>

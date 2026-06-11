@@ -8,8 +8,7 @@ import AdminNav from "../components/AdminNav";
 // Card:       #0a1124  (subtle lift from page)
 // Card hover: #0e1730  
 // Border:     #1a2233  (subtle, almost invisible)
-// Gold:       #d4af37
-// Text:       #e8edf5  (off-white with cool tint)
+// Gold:       #d4af37// Text:       #e8edf5  (off-white with cool tint)
 // Muted:      #7a8499  (blue-gray secondary)
 
 const STATUS_STYLES = {
@@ -194,7 +193,7 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto px-6 py-5">
           <h1
             className="text-lg font-bold tracking-[0.2em] uppercase"
-            style={{ background: "linear-gradient(135deg, #f4d77a 0%, #d4af37 50%, #a8842c 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}
+            style={{ background: "linear-gradient(135deg, #f4d77a 0%, #d4af3750%, #a8842c 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}
           >
             Saikripa Textiles
           </h1>
