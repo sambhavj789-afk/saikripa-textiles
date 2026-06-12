@@ -94,6 +94,14 @@ function Icon({ name, className = "w-8 h-8" }) {
 const lockScroll = () => (document.body.style.overflow = "hidden");
 const unlockScroll = () => (document.body.style.overflow = "");
 
+// ── Reusable: Gold gradient section divider ─────────────────────────────────
+function GoldDivider({ position = "top" }) {
+  const posCls = position === "top" ? "top-0" : "bottom-0";
+  return (
+    <div className={`absolute ${posCls} left-0 w-full h-px bg-gradient-to-r from-transparent via-[#d4af37]/30 to-transparent pointer-events-none`} />
+  );
+}
+
 // ── Data ──────────────────────────────────────────────────────────────────────
 const testimonials = [
   {
@@ -182,7 +190,8 @@ function Navbar({ hasBar }) {
 
   return (
     <>
-      <header className={`fixed ${topOffset} left-0 w-full z-50 backdrop-blur-2xl bg-[#020817]/80 border-b border-[#1a2233] shadow-[0_4px_30px_rgba(0,0,0,0.5)]`}>
+      <header className={`fixed ${topOffset} left-0 w-full z-50 backdrop-blur-2xl bg-[#020817]/80 shadow-[0_4px_30px_rgba(0,0,0,0.5)]`}>
+        <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#d4af37]/40 to-transparent pointer-events-none" />
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <a href="#home">
             <h1 className="text-xl font-black tracking-wider text-[#d4af37] uppercase leading-tight">
@@ -279,7 +288,7 @@ function ProductModal({ item, onClose }) {
         <div className="p-8">
           <p className="text-xs text-[#d4af37] font-bold uppercase tracking-widest mb-1">{item.category}</p>
           <h3 className="text-3xl font-black text-white mb-3">{item.title}</h3>
-          <p className="text-[#a8b0c0] leading-relaxed mb-6">{item.description}</p>
+          <p className="text-[#cbd5e1] leading-relaxed mb-6">{item.description}</p>
           <div className="grid grid-cols-2 gap-4 mb-8">
             {[["MOQ", item.moq], ["Available Colors", item.colors], ["Fabric Finish", item.finish], ["Best For", item.uses]].map(([label, value]) => (
               <div key={label} className="bg-[#020817] border border-[#1a2233] rounded-2xl p-4">
@@ -302,14 +311,14 @@ function ProductModal({ item, onClose }) {
 function FAQItem({ q, a }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border border-[#1a2233] rounded-2xl overflow-hidden bg-[#0a1124]">
+    <div className="border border-[#1a2233] rounded-2xl overflow-hidden bg-[#0a1124] hover:border-[#d4af37]/30 transition">
       <button className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-[#0e1730] transition" onClick={() => setOpen(!open)}>
         <span className="font-bold text-white pr-4">{q}</span>
         <span className={`text-[#d4af37] text-xl font-light flex-shrink-0 transition-transform duration-300 ${open ? "rotate-45" : ""}`}>+</span>
       </button>
       {open && (
         <div className="px-6 py-5 bg-[#020817] border-t border-[#1a2233]">
-          <p className="text-[#a8b0c0] leading-relaxed">{a}</p>
+          <p className="text-[#cbd5e1] leading-relaxed">{a}</p>
         </div>
       )}
     </div>
@@ -337,7 +346,7 @@ function ContactForm() {
           <Icon name="check" className="w-8 h-8" />
         </div>
         <h3 className="text-2xl font-black text-white mb-2">Inquiry Sent!</h3>
-        <p className="text-[#7a8499]">You'll be redirected to WhatsApp. We respond within 4 hours on business days.</p>
+        <p className="text-[#cbd5e1]">You'll be redirected to WhatsApp. We respond within 4 hours on business days.</p>
         <button onClick={() => setSubmitted(false)} className="mt-6 text-[#d4af37] font-bold text-sm hover:underline">Submit another inquiry</button>
       </div>
     );
@@ -346,7 +355,7 @@ function ContactForm() {
   return (
     <div className="bg-[#0a1124] border border-[#1a2233] rounded-[32px] p-8">
       <h3 className="text-2xl font-black text-white mb-1">Send an Inquiry</h3>
-      <p className="text-[#7a8499] text-sm mb-6">We respond within 4 business hours</p>
+      <p className="text-[#cbd5e1] text-sm mb-6">We respond within 4 business hours</p>
       <div className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
@@ -377,7 +386,7 @@ function ContactForm() {
           <label className="block text-xs font-bold text-[#7a8499] uppercase tracking-widest mb-1">Message</label>
           <textarea placeholder="Tell us your quantity, color requirements, or any specific needs..." rows={4} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className={inputCls + " resize-none"} />
         </div>
-        <button onClick={handleSubmit} className="w-full bg-[#d4af37] text-[#020817] py-4 rounded-2xl font-bold hover:bg-[#c49f2d] transition text-sm flex items-center justify-center gap-2">
+        <button onClick={handleSubmit} className="w-full bg-gradient-to-br from-[#f4d77a] via-[#d4af37] to-[#a8842c] text-[#020817] py-4 rounded-2xl font-bold hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] hover:scale-[1.01] transition-all duration-300 text-sm flex items-center justify-center gap-2">
           Send via WhatsApp
         </button>
         <p className="text-center text-xs text-[#7a8499]">
@@ -434,12 +443,12 @@ export default function LuxuryTextileWebsite() {
 
       {/* ── HERO ── */}
       <section id="home" className={`relative min-h-screen flex items-center text-white px-6 overflow-hidden ${navTopOffset}`}>
-        <div className="absolute inset-0 z-0">
-          <img src="https://images.unsplash.com/photo-1640767760729-7bfb6ce43ad4?q=80&w=1600&auto=format&fit=crop" alt="" className="w-full h-full object-cover opacity-40" />
-          <div className="absolute inset-0 bg-[#020817]/80" />
-        </div>
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#d4af37]/10 blur-[120px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#d4af37]/5 blur-[120px] rounded-full pointer-events-none" />
+        {/* Clean solid dark base */}
+        <div className="absolute inset-0 z-0 bg-[#020817]" />
+        {/* Single diffuse gold halo behind image side — no visible edges */}
+        <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[900px] h-[900px] bg-[#d4af37]/10 blur-[200px] rounded-full pointer-events-none" />
+        {/* Soft corner warmth bottom-left */}
+        <div className="absolute -bottom-40 -left-40 w-[600px] h-[600px] bg-[#d4af37]/5 blur-[180px] rounded-full pointer-events-none" />
 
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center py-16 relative z-10">
           <div data-aos="fade-right">
@@ -450,7 +459,7 @@ export default function LuxuryTextileWebsite() {
             <h1 className="text-5xl md:text-6xl font-black leading-[1.05] tracking-tight text-white">
               Premium Uniform Fabrics For Modern Institutions
             </h1>
-            <p className="mt-7 text-lg text-[#a8b0c0] leading-relaxed max-w-xl">
+            <p className="mt-7 text-lg text-[#cbd5e1] leading-relaxed max-w-xl">
               Trusted by 1000+ schools, corporates, hotels, and wholesalers across India. Direct factory pricing. 48-hour sample dispatch.
             </p>
 
@@ -471,21 +480,24 @@ export default function LuxuryTextileWebsite() {
 
           <div className="relative hidden lg:block" data-aos="fade-left">
             <div className="absolute -inset-4 bg-gradient-to-r from-[#d4af37]/20 to-[#d4af37]/10 blur-3xl rounded-[40px]" />
-            <img src="/hero.jpg" alt="Premium folded suiting fabric rolls" className="relative rounded-[32px] shadow-[0_30px_80px_rgba(0,0,0,0.5)] w-full h-[620px] object-cover border border-[#1a2233]" />
-            <a href="#collections" className="absolute -bottom-5 -left-5 bg-[#0a1124] border border-[#d4af37]/30 rounded-2xl px-5 py-4 hover:border-[#d4af37]/60 transition cursor-pointer group" style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.5), 0 0 30px rgba(212, 175, 55, 0.15)" }}>
-              <div className="flex items-center gap-2 mb-1">
+            <img src="/new.jpg" alt="Premium suiting fabric texture" className="relative rounded-[32px] shadow-[0_30px_80px_rgba(0,0,0,0.5),0_0_80px_rgba(212,175,55,0.15)] w-full h-[620px] object-cover border border-[#1a2233]" />
+            <a href="#collections" className="absolute -bottom-6 -left-6 bg-[#0a1124]/95 backdrop-blur-xl border border-[#d4af37]/30 rounded-2xl px-6 py-5 hover:border-[#d4af37]/60 hover:-translate-y-1 transition-all duration-300 cursor-pointer group overflow-hidden" style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(212, 175, 55, 0.2)" }}>
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#d4af37]/60 to-transparent" />
+              <div className="flex items-center gap-2 mb-2.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37] animate-pulse"></span>
-                <p className="text-[10px] text-[#7a8499] font-bold uppercase tracking-widest">Current Bestseller</p>
+                <p className="text-[9px] text-[#d4af37]/80 font-bold uppercase tracking-[0.3em]">Current Bestseller</p>
               </div>
-              <p className="text-sm font-black text-white group-hover:text-[#d4af37] transition">Superior Collection →</p>
-              <p className="text-xs text-[#d4af37] font-bold mt-0.5">380 GSM · 65/35 PV</p>
+              <p className="text-base font-black text-white group-hover:text-[#d4af37] transition-colors mb-1.5">Superior Collection →</p>
+              <p className="text-[11px] text-[#d4af37]/80 font-medium tracking-wider">380 GSM · 65/35 PV</p>
             </a>
           </div>
         </div>
       </section>
 
       {/* ── STATS ── */}
-      <section className="bg-[#0a1124] py-12 border-y border-[#1a2233]">
+      <section className="relative bg-[#0a1124] py-14">
+        <GoldDivider position="top" />
+        <GoldDivider position="bottom" />
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
           {[
             { num: 1000, suffix: "+", label: "Wholesale Clients" },
@@ -497,19 +509,19 @@ export default function LuxuryTextileWebsite() {
               <h3 className="text-3xl md:text-4xl font-black text-[#d4af37]">
                 {stat.text ? stat.text : <Counter end={stat.num} suffix={stat.suffix} />}
               </h3>
-              <p className="mt-2 text-xs text-[#7a8499] uppercase tracking-widest">{stat.label}</p>
+              <p className="mt-2 text-xs text-[#a8b0c0] uppercase tracking-widest font-semibold">{stat.label}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* ── COLLECTIONS (Bestsellers) ── */}
-      <section id="collections" className="py-28 px-6 bg-[#020817]">
+      <section id="collections" className="relative py-28 px-6 bg-[#020817]">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-14" data-aos="fade-up">
-            <p className="uppercase tracking-[0.3em] text-xs text-[#7a8499] font-bold mb-3">Bestsellers</p>
+            <p className="uppercase tracking-[0.3em] text-xs text-[#d4af37] font-bold mb-3">Bestsellers</p>
             <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight">Our Most Trusted Fabrics</h2>
-            <p className="mt-5 text-[#a8b0c0] leading-relaxed">The three collections our wholesale buyers reorder most — proven across schools, corporate uniforms, and hospitality.</p>
+            <p className="mt-5 text-[#cbd5e1] leading-relaxed">The three collections our wholesale buyers reorder most — proven across schools, corporate uniforms, and hospitality.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-7">
@@ -533,9 +545,9 @@ export default function LuxuryTextileWebsite() {
                     <span className="bg-[#d4af37]/15 border border-[#d4af37]/30 text-[#d4af37] px-3 py-1 rounded-full text-[10px] font-bold">{item.blend}</span>
                   </div>
                   <h3 className="text-xl font-black text-white mb-2">{item.title}</h3>
-                  <p className="text-[#7a8499] text-sm leading-relaxed flex-grow">{item.description.substring(0, 90)}...</p>
+                  <p className="text-[#a8b0c0] text-sm leading-relaxed flex-grow">{item.description.substring(0, 90)}...</p>
                   <div className="mt-5 space-y-2">
-                    <button onClick={(e) => { e.stopPropagation(); setSelectedItem(item); }} className="w-full bg-[#d4af37] text-[#020817] py-3 rounded-xl font-bold text-sm hover:bg-[#c49f2d] transition">View Details</button>
+                    <button onClick={(e) => { e.stopPropagation(); setSelectedItem(item); }} className="w-full bg-gradient-to-br from-[#f4d77a] via-[#d4af37] to-[#a8842c] text-[#020817] py-3 rounded-xl font-bold text-sm hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all duration-300">View Details</button>
                     <a onClick={(e) => e.stopPropagation()} href={`https://wa.me/918949881253?text=Hi, I'm interested in ${item.title} (${item.gsm}). Please share pricing.`} target="_blank" rel="noreferrer" className="flex items-center justify-center w-full border border-[#d4af37]/40 text-[#d4af37] py-3 rounded-xl font-bold text-sm hover:bg-[#d4af37]/10 transition">WhatsApp Quote</a>
                   </div>
                 </div>
@@ -557,10 +569,12 @@ export default function LuxuryTextileWebsite() {
       </section>
 
       {/* ── WHY CHOOSE US ── */}
-      <section id="why-us" className="py-28 px-6 bg-[#0a1124]">
+      <section id="why-us" className="relative py-28 px-6 bg-[#0a1124]">
+        <GoldDivider position="top" />
+        <GoldDivider position="bottom" />
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="uppercase tracking-[0.3em] text-xs text-[#7a8499] font-bold mb-3">Why Saikripa</p>
+            <p className="uppercase tracking-[0.3em] text-xs text-[#d4af37] font-bold mb-3">Why Saikripa</p>
             <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight">Why 1000+ Buyers Trust Us</h2>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-7">
@@ -570,7 +584,7 @@ export default function LuxuryTextileWebsite() {
                   <Icon name={w.iconName} className="w-6 h-6" />
                 </div>
                 <h3 className="text-lg font-black text-white mb-2">{w.title}</h3>
-                <p className="text-[#a8b0c0] text-sm leading-relaxed">{w.desc}</p>
+                <p className="text-[#cbd5e1] text-sm leading-relaxed">{w.desc}</p>
               </div>
             ))}
           </div>
@@ -579,23 +593,53 @@ export default function LuxuryTextileWebsite() {
 
       {/* ── ABOUT ── */}
       <section id="about" className="relative py-28 px-6 bg-[#020817] overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <img src="https://images.unsplash.com/photo-1705493253566-1522b9015c58?q=80&w=1600&auto=format&fit=crop" alt="" className="w-full h-full object-cover opacity-5" />
-        </div>
+        {/* Subtle gold ambient lighting */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] pointer-events-none opacity-40" style={{ background: "radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%)" }} />
+        <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] pointer-events-none opacity-30" style={{ background: "radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 70%)" }} />
+
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center relative z-10">
-          <div data-aos="fade-up">
-            <img src="https://images.unsplash.com/photo-1705493253566-1522b9015c58?q=80&w=1400&auto=format&fit=crop" alt="Saikripa Textiles Manufacturing" className="rounded-[32px] shadow-[0_20px_60px_rgba(0,0,0,0.4)] w-full border border-[#1a2233] hover:scale-[1.01] transition-all duration-500" />
+          <div data-aos="fade-up" className="relative">
+            <div className="absolute -inset-4 bg-gradient-to-br from-[#d4af37]/15 to-transparent blur-3xl rounded-[40px] pointer-events-none" />
+            <img src="https://images.unsplash.com/photo-1705493253566-1522b9015c58?q=80&w=1400&auto=format&fit=crop" alt="Saikripa Textiles Manufacturing" className="relative rounded-[32px] shadow-[0_20px_60px_rgba(0,0,0,0.4)] w-full border border-[#1a2233] hover:scale-[1.01] transition-all duration-500" />
           </div>
+
           <div data-aos="fade-up" data-aos-delay="100">
-            <p className="uppercase tracking-[0.3em] text-xs text-[#d4af37] font-bold mb-4">About Us</p>
-            <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight mb-7">Craftsmanship From The Heart of Bhilwara</h2>
-            <p className="text-[#a8b0c0] leading-relaxed mb-5">Saikripa Textiles is a Bhilwara-based premium suiting manufacturer supplying high-grade uniform fabrics to institutions, wholesalers, and corporate buyers across India. Our fabrics are engineered for consistency in GSM, color fastness, and durability.</p>
-            <p className="text-[#a8b0c0] leading-relaxed mb-8">With over a decade of expertise and a strong supply chain rooted in Rajasthan's textile hub, we offer direct-factory pricing with the quality assurance of a trusted institution.</p>
-            <div className="grid grid-cols-2 gap-4">
-              {[["10+", "Years of Experience"], ["1000+", "Happy Clients"], ["6", "Premium Collections"], ["48hr", "Sample Dispatch"]].map(([val, label]) => (
-                <div key={label} className="bg-[#0a1124] rounded-2xl p-4 border border-[#1a2233]">
-                  <p className="text-2xl font-black text-[#d4af37]">{val}</p>
-                  <p className="text-xs text-[#7a8499] mt-1 font-medium">{label}</p>
+            <div className="flex items-center gap-3 mb-4">
+              <p className="uppercase tracking-[0.3em] text-xs text-[#d4af37] font-bold">About Us</p>
+              <span className="w-1 h-1 rounded-full bg-[#d4af37]/50"></span>
+              <p className="uppercase tracking-[0.3em] text-xs text-[#a8b0c0] font-bold">Since 2014</p>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight mb-7">Manufacturers Of Uniform Suitings From Bhilwara</h2>
+
+            <p className="text-[#cbd5e1] leading-relaxed mb-5">
+              We're manufacturers in the field of uniform suitings — based in Bhilwara, Rajasthan's textile capital. Every fabric leaves our facility built on a simple promise: <span className="text-white font-semibold">qualitative products that don't compromise on standards</span>.
+            </p>
+
+            <p className="text-[#cbd5e1] leading-relaxed mb-8">
+              We offer the full range — from premium suiting at 380 GSM down to budget-friendly options — so every institution, wholesaler, and dealer can find something that fits their order. And we stand behind every meter we ship.
+            </p>
+
+            {/* Our promises — replaces generic stat tiles */}
+            <div className="space-y-3 mb-8">
+              {[
+                { title: "Colors That Stay True", desc: "Our shades won't fade — washed, worn, or weather-tested." },
+                { title: "Solidity Built To Last", desc: "GSM and weave integrity remain the same, forever." },
+                { title: "Fast, Reliable Dispatch", desc: "Samples in 48 hours. Bulk orders shipped on time, pan-India." },
+              ].map((p) => (
+                <div key={p.title} className="relative bg-[#0a1124] rounded-2xl px-5 py-4 border border-[#1a2233] hover:border-[#d4af37]/40 transition overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#f4d77a] via-[#d4af37] to-[#a8842c]" />
+                  <p className="text-sm font-black text-white mb-1 pl-2">{p.title}</p>
+                  <p className="text-xs text-[#a8b0c0] leading-relaxed pl-2">{p.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Compact stat strip */}
+            <div className="grid grid-cols-3 gap-3">
+              {[["12+", "Years"], ["1000+", "Clients"], ["6", "Collections"]].map(([val, label]) => (
+                <div key={label} className="bg-[#0a1124] rounded-2xl p-3 border border-[#1a2233] text-center hover:border-[#d4af37]/30 transition">
+                  <p className="text-xl font-black text-[#d4af37]">{val}</p>
+                  <p className="text-[10px] text-[#a8b0c0] mt-0.5 font-semibold uppercase tracking-wider">{label}</p>
                 </div>
               ))}
             </div>
@@ -604,10 +648,12 @@ export default function LuxuryTextileWebsite() {
       </section>
 
       {/* ── PROCESS ── */}
-      <section id="process" className="py-28 px-6 bg-[#0a1124]">
+      <section id="process" className="relative py-28 px-6 bg-[#0a1124]">
+        <GoldDivider position="top" />
+        <GoldDivider position="bottom" />
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="uppercase tracking-[0.3em] text-xs text-[#7a8499] font-bold mb-3">How It Works</p>
+            <p className="uppercase tracking-[0.3em] text-xs text-[#d4af37] font-bold mb-3">How It Works</p>
             <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight">From Inquiry to Delivery</h2>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-7">
@@ -622,7 +668,7 @@ export default function LuxuryTextileWebsite() {
                     <Icon name={s.iconName} className="w-6 h-6" />
                   </div>
                   <h3 className="text-lg font-black text-white mb-2 relative z-10">{s.title}</h3>
-                  <p className="text-[#a8b0c0] text-sm leading-relaxed relative z-10">{s.desc}</p>
+                  <p className="text-[#cbd5e1] text-sm leading-relaxed relative z-10">{s.desc}</p>
                 </div>
               </div>
             ))}
@@ -631,10 +677,10 @@ export default function LuxuryTextileWebsite() {
       </section>
 
       {/* ── TESTIMONIALS ── */}
-      <section className="py-28 px-6 bg-[#020817]">
+      <section className="relative py-28 px-6 bg-[#020817]">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-14" data-aos="fade-up">
-            <p className="uppercase tracking-[0.3em] text-xs text-[#7a8499] font-bold mb-3">Testimonials</p>
+            <p className="uppercase tracking-[0.3em] text-xs text-[#d4af37] font-bold mb-3">Testimonials</p>
             <h2 className="text-4xl md:text-5xl font-black text-white">What Our Clients Say</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-7">
@@ -648,11 +694,11 @@ export default function LuxuryTextileWebsite() {
                     <p className="text-[#7a8499] text-xs">{t.role}</p>
                   </div>
                 </div>
-                <p className="text-[10px] text-[#a8b0c0] font-medium tracking-widest mb-3 relative">{t.meta}</p>
+                <p className="text-[10px] text-[#d4af37]/70 font-medium tracking-widest mb-3 relative uppercase">{t.meta}</p>
                 <div className="flex gap-0.5 mb-4 relative">
                   {[...Array(5)].map((_, j) => <span key={j} className="text-[#d4af37] text-sm">★</span>)}
                 </div>
-                <p className="text-[#a8b0c0] text-sm leading-relaxed relative">"{t.text}"</p>
+                <p className="text-[#cbd5e1] text-sm leading-relaxed relative">"{t.text}"</p>
               </div>
             ))}
           </div>
@@ -660,10 +706,12 @@ export default function LuxuryTextileWebsite() {
       </section>
 
       {/* ── FAQ ── */}
-      <section className="py-28 px-6 bg-[#0a1124]">
+      <section className="relative py-28 px-6 bg-[#0a1124]">
+        <GoldDivider position="top" />
+        <GoldDivider position="bottom" />
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
-            <p className="uppercase tracking-[0.3em] text-xs text-[#7a8499] font-bold mb-3">FAQ</p>
+            <p className="uppercase tracking-[0.3em] text-xs text-[#d4af37] font-bold mb-3">FAQ</p>
             <h2 className="text-4xl font-black text-white">Frequently Asked Questions</h2>
           </div>
           <div className="space-y-3">{faqs.map((f, i) => <FAQItem key={i} q={f.q} a={f.a} />)}</div>
@@ -671,12 +719,12 @@ export default function LuxuryTextileWebsite() {
       </section>
 
       {/* ── CONTACT ── */}
-      <section id="contact" className="py-28 px-6 bg-[#020817]">
+      <section id="contact" className="relative py-28 px-6 bg-[#020817]">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14" data-aos="fade-up">
-            <p className="uppercase tracking-[0.3em] text-xs text-[#7a8499] font-bold mb-3">Get In Touch</p>
+            <p className="uppercase tracking-[0.3em] text-xs text-[#d4af37] font-bold mb-3">Get In Touch</p>
             <h2 className="text-4xl md:text-5xl font-black text-white">Request Pricing or Samples</h2>
-            <p className="mt-4 text-[#a8b0c0] max-w-xl mx-auto">Share your requirements and we'll respond with pricing, shade cards, and dispatch timelines within 4 hours.</p>
+            <p className="mt-4 text-[#cbd5e1] max-w-xl mx-auto">Share your requirements and we'll respond with pricing, shade cards, and dispatch timelines within 4 hours.</p>
           </div>
           <div className="grid lg:grid-cols-2 gap-12 items-start">
             <ContactForm />
@@ -705,8 +753,8 @@ export default function LuxuryTextileWebsite() {
 
               <div className="bg-[#0a1124] rounded-[24px] p-7 border border-[#1a2233]">
                 <h3 className="font-black text-white mb-2">Need a Physical Shade Card?</h3>
-                <p className="text-[#a8b0c0] text-sm mb-5 leading-relaxed">Request our full shade card booklet with fabric swatches — dispatched to your address within 3–5 business days.</p>
-                <a href="https://wa.me/918949881253?text=Hi, I'd like to request a physical shade card booklet. Please share details." target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 bg-[#d4af37] text-[#020817] px-6 py-3 rounded-xl font-bold text-sm hover:bg-[#c49f2d] transition">Request Shade Card</a>
+                <p className="text-[#cbd5e1] text-sm mb-5 leading-relaxed">Request our full shade card booklet with fabric swatches — dispatched to your address within 3–5 business days.</p>
+                <a href="https://wa.me/918949881253?text=Hi, I'd like to request a physical shade card booklet. Please share details." target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 bg-gradient-to-br from-[#f4d77a] via-[#d4af37] to-[#a8842c] text-[#020817] px-6 py-3 rounded-xl font-bold text-sm hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all duration-300">Request Shade Card</a>
               </div>
             </div>
           </div>
@@ -714,12 +762,13 @@ export default function LuxuryTextileWebsite() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="bg-[#0a1124] text-white py-16 px-6 border-t border-[#1a2233]">
+      <footer className="relative bg-[#0a1124] text-white py-16 px-6">
+        <GoldDivider position="top" />
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-4 gap-10 mb-12">
             <div className="md:col-span-2">
               <h3 className="text-2xl font-black text-[#d4af37] uppercase mb-2">Saikripa Textiles</h3>
-              <p className="text-[#a8b0c0] text-sm leading-relaxed max-w-xs mb-5">Premium uniform suiting manufacturer from Bhilwara, Rajasthan. Direct factory pricing with pan-India supply.</p>
+              <p className="text-[#cbd5e1] text-sm leading-relaxed max-w-xs mb-5">Premium uniform suiting manufacturer from Bhilwara, Rajasthan. Direct factory pricing with pan-India supply.</p>
               <div className="flex gap-3">
                 <a href="https://wa.me/918949881253" target="_blank" rel="noreferrer" className="bg-[#d4af37]/10 border border-[#d4af37]/30 text-[#d4af37] px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#d4af37]/20 transition">WhatsApp</a>
                 <a href="https://mail.google.com/mail/?view=cm&fs=1&to=saikripatextiles58@gmail.com" target="_blank" rel="noreferrer" className="bg-[#0a1124] border border-[#1a2233] text-[#a8b0c0] px-4 py-2 rounded-xl text-xs font-bold hover:border-[#d4af37]/40 transition">Email</a>
@@ -755,7 +804,8 @@ export default function LuxuryTextileWebsite() {
               </ul>
             </div>
           </div>
-          <div className="border-t border-[#1a2233] pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="relative pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#d4af37]/20 to-transparent pointer-events-none" />
             <p className="text-[#7a8499] text-xs">© 2025 Saikripa Textiles. All rights reserved.</p>
             <p className="text-[#7a8499] text-xs">Premium Suiting Manufacturer · Bhilwara, India</p>
           </div>

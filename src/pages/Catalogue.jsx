@@ -2,6 +2,14 @@ import React, { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { collections, categories } from "../data/collections";
 
+// ── Reusable: Gold gradient section divider ─────────────────────────────────
+function GoldDivider({ position = "top", strength = "30" }) {
+  const posCls = position === "top" ? "top-0" : "bottom-0";
+  return (
+    <div className={`absolute ${posCls} left-0 w-full h-px bg-gradient-to-r from-transparent via-[#d4af37]/${strength} to-transparent pointer-events-none`} />
+  );
+}
+
 export default function Catalogue() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
@@ -9,7 +17,6 @@ export default function Catalogue() {
   const [compareList, setCompareList] = useState([]);
   const [view, setView] = useState("grid");
 
-  // Apply search filter to all collections first
   const searched = useMemo(() => {
     if (!search) return collections;
     const q = search.toLowerCase();
@@ -23,20 +30,17 @@ export default function Catalogue() {
     );
   }, [search]);
 
-  // When a specific category is selected, filter to just that category
   const filtered = useMemo(() => {
     if (activeCategory === "All") return searched;
     return searched.filter((c) => c.category === activeCategory);
   }, [searched, activeCategory]);
 
-  // Group by category for the grouped view ("All" mode without search)
   const groupedByCategory = useMemo(() => {
     const groups = {};
     searched.forEach((c) => {
       if (!groups[c.category]) groups[c.category] = [];
       groups[c.category].push(c);
     });
-    // Preserve the canonical category order
     const orderedKeys = categories
       .filter((cat) => cat !== "All")
       .filter((cat) => groups[cat]);
@@ -59,8 +63,9 @@ export default function Catalogue() {
 
   return (
     <div className="min-h-screen bg-[#020817] text-[#e8edf5]">
-      {/* Header */}
-      <header className="bg-[#020817] border-b border-[#1a2233] sticky top-0 z-40 backdrop-blur-xl bg-opacity-90">
+      {/* Header — matches homepage navbar style with gold gradient bottom line */}
+      <header className="bg-[#020817]/90 backdrop-blur-xl sticky top-0 z-40 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
+        <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#d4af37]/40 to-transparent pointer-events-none" />
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
           <Link to="/" className="flex flex-col">
             <h1 className="text-lg font-black tracking-wider text-[#d4af37] uppercase">
@@ -79,22 +84,59 @@ export default function Catalogue() {
         </div>
       </header>
 
-      {/* Hero strip */}
-      <section className="relative bg-[#020817] px-6 py-16 overflow-hidden border-b border-[#1a2233]">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] pointer-events-none opacity-50" style={{ background: "radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%)" }} />
+     {/* Hero strip — gold dividers replace hard gray border */}
+      <section className="relative bg-[#020817] px-6 py-16 overflow-hidden">
+        <GoldDivider position="bottom" />
+        {/* Blurred fabric texture — decorative depth, no content */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.06]" style={{ backgroundImage: "url('/new.jpg')", backgroundSize: "cover", backgroundPosition: "right center", filter: "blur(12px)" }} />
+        {/* Decorative blurred gold orb cluster — top right */}
+        <div className="absolute -top-20 -right-20 w-[500px] h-[500px] pointer-events-none" style={{ background: "radial-gradient(circle, rgba(212, 175, 55, 0.18) 0%, rgba(212, 175, 55, 0.04) 50%, transparent 75%)" }} />
+        {/* Decorative blurred orb — mid right */}
+        <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[300px] h-[300px] pointer-events-none opacity-60" style={{ background: "radial-gradient(circle, rgba(212, 175, 55, 0.12) 0%, transparent 70%)", filter: "blur(40px)" }} />
+        {/* Bottom-left ambient warmth */}
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] pointer-events-none opacity-40" style={{ background: "radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 70%)" }} />
-        <div className="max-w-7xl mx-auto relative">
-          <p className="uppercase tracking-[0.3em] text-xs text-[#d4af37] font-bold mb-3">
-            Saikripa Library
-          </p>
-          <h2 className="text-4xl md:text-5xl font-black tracking-tight leading-tight max-w-2xl text-white">
-            Browse by category, or see everything.
-          </h2>
-          <p className="mt-5 text-[#a8b0c0] max-w-2xl leading-relaxed">
-            Saikripa fabrics organized by weave family — Gaberdine, 2/18 Matty,
-            and PV Trovin. Search, compare up to three side-by-side, or click
-            "See all" to open the full catalogue.
-          </p>
+        {/* Decorative gold ring — top right corner */}
+        <div className="absolute top-10 right-10 w-32 h-32 pointer-events-none opacity-20 hidden md:block">
+          <div className="absolute inset-0 rounded-full border border-[#d4af37]/40"></div>
+          <div className="absolute inset-3 rounded-full border border-[#d4af37]/30"></div>
+          <div className="absolute inset-6 rounded-full border border-[#d4af37]/20"></div>
+        </div>
+        <div className="max-w-7xl mx-auto relative flex flex-col lg:flex-row gap-10 items-start lg:items-center justify-between">
+          <div className="flex-1 min-w-0 max-w-3xl">
+            <p className="uppercase tracking-[0.3em] text-xs text-[#d4af37] font-bold mb-3">
+              Saikripa Library
+            </p>
+            <h2 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.1] text-white">
+              Premium suiting fabrics, manufactured in Bhilwara.
+            </h2>
+            <p className="mt-5 text-[#cbd5e1] leading-relaxed max-w-xl">
+              Browse the complete Saikripa collection — Gaberdine, 2/18 Matty, PV Trovin, and more. Trusted by 1000+ buyers across India for consistent GSM, color fastness, and fast dispatch.
+            </p>
+          </div>
+
+          {/* Quick stats — right side */}
+          <div className="flex flex-col gap-3 w-full lg:w-[240px] flex-shrink-0 lg:ml-auto">
+            <div className="relative bg-[#0a1124]/80 backdrop-blur-xl border border-[#d4af37]/30 rounded-2xl px-5 py-4 overflow-hidden" style={{ boxShadow: "0 10px 30px rgba(0,0,0,0.4), 0 0 30px rgba(212, 175, 55, 0.1)" }}>
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#d4af37]/60 to-transparent" />
+              <p className="text-[10px] text-[#d4af37]/80 font-bold uppercase tracking-[0.25em] mb-1.5">Collections</p>
+              <p className="text-3xl font-black text-white leading-none">6</p>
+              <p className="text-[11px] text-[#a8b0c0] mt-1.5 font-medium">Premium fabric families</p>
+            </div>
+
+            <div className="relative bg-[#0a1124]/80 backdrop-blur-xl border border-[#d4af37]/30 rounded-2xl px-5 py-4 overflow-hidden" style={{ boxShadow: "0 10px 30px rgba(0,0,0,0.4), 0 0 30px rgba(212, 175, 55, 0.1)" }}>
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#d4af37]/60 to-transparent" />
+              <p className="text-[10px] text-[#d4af37]/80 font-bold uppercase tracking-[0.25em] mb-1.5">Shades</p>
+              <p className="text-3xl font-black text-white leading-none">350<span className="text-[#d4af37]">+</span></p>
+              <p className="text-[11px] text-[#a8b0c0] mt-1.5 font-medium">Across all collections</p>
+            </div>
+
+            <div className="relative bg-[#0a1124]/80 backdrop-blur-xl border border-[#d4af37]/30 rounded-2xl px-5 py-4 overflow-hidden" style={{ boxShadow: "0 10px 30px rgba(0,0,0,0.4), 0 0 30px rgba(212, 175, 55, 0.1)" }}>
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#d4af37]/60 to-transparent" />
+              <p className="text-[10px] text-[#d4af37]/80 font-bold uppercase tracking-[0.25em] mb-1.5">Clients</p>
+              <p className="text-3xl font-black text-white leading-none">1000<span className="text-[#d4af37]">+</span></p>
+              <p className="text-[11px] text-[#a8b0c0] mt-1.5 font-medium">Wholesalers & institutions</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -128,7 +170,7 @@ export default function Catalogue() {
 
         {/* Compare bar (sticky) */}
         {compareList.length > 0 && (
-          <div className="sticky top-[88px] z-30 bg-[#0a1124] border border-[#d4af37]/30 rounded-2xl p-4 mb-6 flex items-center justify-between shadow-[0_10px_40px_rgba(0,0,0,0.5)]" style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.5), 0 0 30px rgba(212, 175, 55, 0.1)" }}>
+          <div className="sticky top-[88px] z-30 bg-[#0a1124] border border-[#d4af37]/30 rounded-2xl p-4 mb-6 flex items-center justify-between" style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.5), 0 0 30px rgba(212, 175, 55, 0.1)" }}>
             <div className="flex items-center gap-3 flex-wrap">
               <span className="text-xs font-bold uppercase tracking-widest text-[#d4af37]">
                 Compare ({compareList.length}/3)
@@ -188,7 +230,7 @@ export default function Catalogue() {
               >
                 <div />
                 {compareItems.map((c) => (
-                  <div key={c.slug} className="bg-[#0a1124] rounded-2xl p-4 border border-[#1a2233]">
+                  <div key={c.slug} className="bg-[#0a1124] rounded-2xl p-4 border border-[#1a2233] hover:border-[#d4af37]/30 transition">
                     <div className="aspect-square bg-[#020817] rounded-xl mb-3 overflow-hidden">
                       <img
                         src={c.image}
@@ -216,7 +258,7 @@ export default function Catalogue() {
                   ["Best For", "uses"],
                 ].map(([label, key]) => (
                   <React.Fragment key={key}>
-                    <div className="text-xs font-bold text-[#7a8499] uppercase tracking-widest py-3 self-center">
+                    <div className="text-xs font-bold text-[#d4af37] uppercase tracking-widest py-3 self-center">
                       {label}
                     </div>
                     {compareItems.map((c) => (
@@ -233,16 +275,18 @@ export default function Catalogue() {
             </div>
           </div>
         ) : showGrouped ? (
-          // GROUPED VIEW — when "All" is selected with no search
           <div className="space-y-12">
             {groupedByCategory.map((group) => (
               <section key={group.name}>
                 <div className="flex items-center justify-between mb-5">
                   <div>
+                    <p className="uppercase tracking-[0.3em] text-xs text-[#d4af37] font-bold mb-2">
+                      Collection
+                    </p>
                     <h3 className="text-2xl font-black text-white">
                       {group.name}
                     </h3>
-                    <p className="text-xs text-[#7a8499] mt-1 uppercase tracking-widest font-bold">
+                    <p className="text-xs text-[#a8b0c0] mt-1 uppercase tracking-widest font-semibold">
                       {group.items.length}{" "}
                       {group.items.length === 1 ? "fabric" : "fabrics"}
                     </p>
@@ -270,16 +314,15 @@ export default function Catalogue() {
             ))}
           </div>
         ) : (
-          // FLAT GRID — when a specific category is selected or search is active
           <>
-            <p className="text-sm text-[#a8b0c0] mb-4">
+            <p className="text-sm text-[#cbd5e1] mb-4">
               <span className="text-white font-bold">{filtered.length}</span>{" "}
               {filtered.length === 1 ? "fabric" : "fabrics"} found
               {activeCategory !== "All" && <span> in <span className="text-[#d4af37]">{activeCategory}</span></span>}
             </p>
 
             {filtered.length === 0 ? (
-              <div className="bg-[#0a1124] rounded-2xl p-12 text-center text-[#7a8499] border border-[#1a2233]">
+              <div className="bg-[#0a1124] rounded-2xl p-12 text-center text-[#cbd5e1] border border-[#1a2233]">
                 No fabrics match your filters. Try clearing the search or category.
               </div>
             ) : (
@@ -299,13 +342,15 @@ export default function Catalogue() {
         )}
       </main>
 
-      {/* Footer CTA */}
-      <section className="relative bg-[#0a1124] border-t border-[#1a2233] px-6 py-16 overflow-hidden">
+      {/* Footer CTA — gold dividers replace hard border */}
+      <section className="relative bg-[#0a1124] px-6 py-16 overflow-hidden">
+        <GoldDivider position="top" />
+        <GoldDivider position="bottom" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] pointer-events-none opacity-40" style={{ background: "radial-gradient(ellipse, rgba(212, 175, 55, 0.12) 0%, transparent 70%)" }} />
         <div className="max-w-3xl mx-auto text-center relative">
           <p className="uppercase tracking-[0.3em] text-xs text-[#d4af37] font-bold mb-3">Custom Orders</p>
           <h3 className="text-3xl md:text-4xl font-black mb-4 text-white tracking-tight">Need a custom shade?</h3>
-          <p className="text-[#a8b0c0] mb-7 leading-relaxed">
+          <p className="text-[#cbd5e1] mb-7 leading-relaxed">
             Bulk orders can be custom-dyed to your exact Pantone reference. Talk
             to our team for a quote.
           </p>
@@ -331,7 +376,7 @@ export default function Catalogue() {
   );
 }
 
-// ── Fabric Card (extracted as reusable component) ───────────────────────────
+// ── Fabric Card ─────────────────────────────────────────────────────────────
 function FabricCard({ item, isCompared, onToggleCompare, onNavigate }) {
   return (
     <div className={`group bg-[#0a1124] rounded-[24px] overflow-hidden border transition-all duration-300 flex flex-col ${
@@ -365,14 +410,14 @@ function FabricCard({ item, isCompared, onToggleCompare, onNavigate }) {
           </span>
         </div>
         <h3 className="text-lg font-black text-white mb-2 group-hover:text-[#d4af37] transition-colors">{item.title}</h3>
-        <p className="text-[#7a8499] text-sm leading-relaxed flex-grow">
+        <p className="text-[#cbd5e1] text-sm leading-relaxed flex-grow">
           {item.description.substring(0, 100)}...
         </p>
 
         <div className="mt-4 grid grid-cols-2 gap-2">
           <button
             onClick={onNavigate}
-            className="bg-[#d4af37] text-[#020817] py-2.5 rounded-xl font-bold text-xs hover:bg-[#c49f2d] transition uppercase tracking-wider"
+            className="bg-gradient-to-br from-[#f4d77a] via-[#d4af37] to-[#a8842c] text-[#020817] py-2.5 rounded-xl font-bold text-xs hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all duration-300 uppercase tracking-wider"
           >
             View Details
           </button>
