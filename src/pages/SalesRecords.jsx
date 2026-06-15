@@ -25,8 +25,8 @@ const emptyItem = () => ({
 const emptyInvoiceFields = () => ({
   bill_type: "Original",
   buyer_gstin: "", buyer_pan: "", buyer_address: "", buyer_state_code: "",
-  buyer_adhar: "", buyer_mobile: "",
-  agent_name: "",
+  buyer_adhar: "", buyer_mobile: "", buyer_email: "", buyer_cin: "",
+  agent_name: "", consignee_details: "",
   transport_name: "", transport_gstin: "", lr_no: "", lr_date: "", despatch_to: "",
   eway_bill_no: "", eway_bill_date: "", place_of_supply: "",
   cgst_percent: "0", sgst_percent: "0", igst_percent: "0",
@@ -164,7 +164,10 @@ export default function SalesRecords() {
       buyer_state_code: bill.buyer_state_code || "",
       buyer_adhar: bill.buyer_adhar || "",
       buyer_mobile: bill.buyer_mobile || "",
+      buyer_email: bill.buyer_email || "",
+      buyer_cin: bill.buyer_cin || "",
       agent_name: bill.agent_name || "",
+      consignee_details: bill.consignee_details || "",
       transport_name: bill.transport_name || "",
       transport_gstin: bill.transport_gstin || "",
       lr_no: bill.lr_no || "",
@@ -235,7 +238,10 @@ export default function SalesRecords() {
       buyer_state_code: form.buyer_state_code.trim() || null,
       buyer_adhar: form.buyer_adhar.trim() || null,
       buyer_mobile: form.buyer_mobile.trim() || null,
+      buyer_email: form.buyer_email.trim() || null,
+      buyer_cin: form.buyer_cin.trim() || null,
       agent_name: form.agent_name.trim() || null,
+      consignee_details: form.consignee_details.trim() || null,
       transport_name: form.transport_name.trim() || null,
       transport_gstin: form.transport_gstin.trim() || null,
       lr_no: form.lr_no.trim() || null,
@@ -408,7 +414,10 @@ export default function SalesRecords() {
                         buyer_state_code: matchingBill.buyer_state_code || prev.buyer_state_code,
                         buyer_adhar: matchingBill.buyer_adhar || prev.buyer_adhar,
                         buyer_mobile: matchingBill.buyer_mobile || prev.buyer_mobile,
+                        buyer_email: matchingBill.buyer_email || prev.buyer_email,
+                        buyer_cin: matchingBill.buyer_cin || prev.buyer_cin,
                         agent_name: matchingBill.agent_name || prev.agent_name,
+                        consignee_details: matchingBill.consignee_details || prev.consignee_details,
                         place_of_supply: matchingBill.place_of_supply || prev.place_of_supply,
                       }));
                       // Auto-open invoice section if we filled anything
@@ -552,8 +561,11 @@ export default function SalesRecords() {
                       <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">State Code</label><input type="text" value={form.buyer_state_code} onChange={(e) => handleFormChange("buyer_state_code", e.target.value)} placeholder="e.g. 24" className={inputCls} /></div>
                       <div className="sm:col-span-2 lg:col-span-3"><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Buyer Address</label><input type="text" value={form.buyer_address} onChange={(e) => handleFormChange("buyer_address", e.target.value)} placeholder="Full address with city, state" className={inputCls} /></div>
                       <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Buyer Mobile</label><input type="text" value={form.buyer_mobile} onChange={(e) => handleFormChange("buyer_mobile", e.target.value)} placeholder="10-digit number" className={inputCls} /></div>
+                      <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Buyer Email</label><input type="email" value={form.buyer_email} onChange={(e) => handleFormChange("buyer_email", e.target.value)} placeholder="buyer@example.com" className={inputCls} /></div>
                       <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Aadhar</label><input type="text" value={form.buyer_adhar} onChange={(e) => handleFormChange("buyer_adhar", e.target.value)} placeholder="Optional" className={inputCls} /></div>
+                      <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Buyer CIN</label><input type="text" value={form.buyer_cin} onChange={(e) => handleFormChange("buyer_cin", e.target.value)} placeholder="Corporate ID (optional)" className={inputCls} /></div>
                       <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Agent</label><input type="text" value={form.agent_name} onChange={(e) => handleFormChange("agent_name", e.target.value)} placeholder="Agent name" className={inputCls} /></div>
+                      <div className="sm:col-span-2 lg:col-span-3"><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Consignee Details (Ship To)</label><textarea value={form.consignee_details} onChange={(e) => handleFormChange("consignee_details", e.target.value)} placeholder="Ship-to address, name, contact — type 'Same as Buyer' if applicable" rows={3} className={inputCls + " resize-none"} /></div>
                     </div>
                   </div>
 

@@ -101,32 +101,6 @@ function GoldDivider({ position = "top" }) {
     <div className={`absolute ${posCls} left-0 w-full h-px bg-gradient-to-r from-transparent via-[#d4af37]/30 to-transparent pointer-events-none`} />
   );
 }
-
-// ── Data ──────────────────────────────────────────────────────────────────────
-const testimonials = [
-  {
-    name: "Rakesh Sharma",
-    role: "Principal, Delhi Public School, Jaipur",
-    initials: "RS",
-    meta: "Annual orders since 2018 · 8,000+ meters",
-    text: "Saikripa Textiles has been our uniform fabric supplier for 6 years. The GSM consistency and color retention even after repeated washes is exceptional.",
-  },
-  {
-    name: "Anjali Mehta",
-    role: "Purchase Manager, Marriott Hotels, Mumbai",
-    initials: "AM",
-    meta: "Hospitality uniforms · 5,500 meters / quarter",
-    text: "Gold Club fabric is our preferred choice for all housekeeping and front-desk uniforms. The lustrous finish and durability have exceeded expectations.",
-  },
-  {
-    name: "Suresh Patel",
-    role: "Wholesale Dealer, Surat",
-    initials: "SP",
-    meta: "Wholesale partner · 12,000+ meters / month",
-    text: "Best wholesale rates in Bhilwara. Sample dispatch within 48 hours and bulk orders always on time. Highly recommended for dealers across Gujarat.",
-  },
-];
-
 const faqs = [
   { q: "What is the minimum order quantity?", a: "MOQ varies by collection — starting from 50 meters for select fabrics and 100 meters for our premium suiting range. Contact us for custom requirements." },
   { q: "Do you dispatch fabric samples?", a: "Yes. We offer free sample swatches (up to 3 designs) with shipping charges. Samples are dispatched within 48 hours of order confirmation." },
@@ -511,7 +485,7 @@ export default function LuxuryTextileWebsite() {
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
           {[
             { num: 1000, suffix: "+", label: "Wholesale Clients" },
-            { num: 380, suffix: " GSM", label: "Premium Quality" },
+            { num: 260, suffix: " GSM", label: "Premium Quality" },
             { text: "Pan India", label: "Supply Network" },
             { num: 350, suffix: "+", label: "Shade Options" },
           ].map((stat) => (
@@ -626,7 +600,7 @@ export default function LuxuryTextileWebsite() {
             </p>
 
             <p className="text-[#cbd5e1] leading-relaxed mb-8">
-              We offer the full range — from premium suiting at 380 GSM down to budget-friendly options — so every institution, wholesaler, and dealer can find something that fits their order. And we stand behind every meter we ship.
+              We offer the full range — from premium suiting at 260 GSM down to budget-friendly options — so every institution, wholesaler, and dealer can find something that fits their order. And we stand behind every meter we ship.
             </p>
 
             {/* Our promises — replaces generic stat tiles */}
@@ -686,39 +660,8 @@ export default function LuxuryTextileWebsite() {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ── */}
-      <section className="relative py-28 px-6 bg-[#020817]">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-14" data-aos="fade-up">
-            <p className="uppercase tracking-[0.3em] text-xs text-[#d4af37] font-bold mb-3">Testimonials</p>
-            <h2 className="text-4xl md:text-5xl font-black text-white">What Our Clients Say</h2>
-          </div>
-          <div className="grid md:grid-cols-3 gap-7">
-            {testimonials.map((t) => (
-              <div key={t.name} data-aos="zoom-in" className="bg-[#0a1124] border border-[#1a2233] rounded-[24px] p-7 hover:border-[#d4af37]/40 transition relative overflow-hidden">
-                <span className="absolute top-2 right-4 text-7xl text-[#d4af37]/10 font-serif leading-none select-none pointer-events-none">"</span>
-                <div className="flex items-center gap-3 mb-4 relative">
-                  <div className="w-11 h-11 rounded-full bg-[#d4af37]/20 flex items-center justify-center text-[#d4af37] font-black text-sm flex-shrink-0">{t.initials}</div>
-                  <div>
-                    <p className="text-white font-bold text-sm">{t.name}</p>
-                    <p className="text-[#7a8499] text-xs">{t.role}</p>
-                  </div>
-                </div>
-                <p className="text-[10px] text-[#d4af37]/70 font-medium tracking-widest mb-3 relative uppercase">{t.meta}</p>
-                <div className="flex gap-0.5 mb-4 relative">
-                  {[...Array(5)].map((_, j) => <span key={j} className="text-[#d4af37] text-sm">★</span>)}
-                </div>
-                <p className="text-[#cbd5e1] text-sm leading-relaxed relative">"{t.text}"</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── FAQ ── */}
-      <section className="relative py-28 px-6 bg-[#0a1124]">
-        <GoldDivider position="top" />
-        <GoldDivider position="bottom" />
+      <section className="relative py-28 px-6 bg-[#020817]">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <p className="uppercase tracking-[0.3em] text-xs text-[#d4af37] font-bold mb-3">FAQ</p>
@@ -727,6 +670,13 @@ export default function LuxuryTextileWebsite() {
           <div className="space-y-3">{faqs.map((f, i) => <FAQItem key={i} q={f.q} a={f.a} />)}</div>
         </div>
       </section>
+
+      {/* ── DIVIDER LINE between FAQ and Contact ── */}
+      <div className="bg-[#020817] py-2">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="h-px bg-gradient-to-r from-transparent via-[#d4af37]/30 to-transparent" />
+        </div>
+      </div>
 
       {/* ── CONTACT ── */}
       <section id="contact" className="relative py-28 px-6 bg-[#020817]">

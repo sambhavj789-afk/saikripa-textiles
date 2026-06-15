@@ -159,13 +159,12 @@ export default function BillExport() {
       <div className="bill-page">
 
         {/* ── HEADER: checkbox row + company + GSTIN grid; QR box is ONE tall cell spanning the right from the checkbox row down (single left border) ── */}
-        <table className="grid" style={{ fontSize: "7.5pt", tableLayout: "fixed" }}>
+        <table className="grid" style={{ fontSize: "7.5pt", tableLayout: "fixed", width: "100%" }}>
           <colgroup>
             <col style={{ width: "10%" }} />
-            <col style={{ width: "33%" }} />
-            <col style={{ width: "11%" }} />
-            <col style={{ width: "29%" }} />
-            <col style={{ width: "17%" }} />
+            <col style={{ width: "40%" }} />
+            <col style={{ width: "13%" }} />
+            <col style={{ width: "37%" }} />
           </colgroup>
           <tbody>
             <tr>
@@ -180,9 +179,7 @@ export default function BillExport() {
                   );
                 })}
               </td>
-              {/* Empty QR box — spans from the checkbox row down through the ACK row */}
-              <td rowSpan={5} style={{ textAlign: "center", verticalAlign: "middle" }}></td>
-            </tr>
+              </tr>
             <tr>
               <td colSpan={4} style={{ padding: "4px 8px" }}>
                 <h1 style={{ fontSize: 16, fontWeight: "bold", margin: "0 0 1px 0", lineHeight: 1.1 }}>SAIKRIPA TEXTILES</h1>
@@ -211,15 +208,14 @@ export default function BillExport() {
             </tr>
             <tr>
               <td className="bold">IRN</td>
-              <td colSpan={4} style={{ wordBreak: "break-all" }}>: {irn}</td>
+              <td colSpan={3} style={{ wordBreak: "break-all", fontSize: "7pt" }}>: {irn}</td>
             </tr>
           </tbody>
         </table>
 
         {/* ── TAX INVOICE TITLE STRIP ── */}
         <div className="strip center bold" style={{ fontSize: 11, padding: "4px 0", letterSpacing: 3, borderBottom: "1px solid #000" }}>TAX INVOICE</div>
-        <div className="strip center bold xsmall" style={{ padding: "2px 0", letterSpacing: 1, borderBottom: "1px solid #000" }}>FINISH FABRIC SALES (GSTIN BILLING)</div>
-
+        <div className="center bold xsmall" style={{ padding: "2px 0", letterSpacing: 1, borderBottom: "1px solid #000", background: "white" }}>FINISH FABRIC SALES (GSTIN BILLING)</div>
         {/* ── BUYER + INVOICE DETAILS ── */}
         <table>
           <tbody>
@@ -303,7 +299,7 @@ export default function BillExport() {
                 </table>
 
                 <div className="strip center b-top" style={{ marginTop: 8, padding: "2px 0", fontSize: "8pt" }}>Details of Consignee (Ship To)</div>
-                <p className="bold" style={{ margin: "3px 0 0 0", fontSize: "8.5pt", paddingLeft: 4 }}>Same as Buyer</p>
+                <p className="bold" style={{ margin: "3px 0 0 0", fontSize: "8.5pt", paddingLeft: 4, whiteSpace: "pre-line" }}>{bill.consignee_details || ""}</p>
               </td>
             </tr>
           </tbody>
@@ -425,7 +421,7 @@ export default function BillExport() {
               <td className="right">{fmtMoney(subtotal)}</td>
             </tr>
             <tr>
-              <td className="bold" rowSpan={4} style={{ verticalAlign: "middle" }}><span style={{ display: "block" }}>OUT</span><span style={{ display: "block" }}>TAX</span></td>
+              <td className="bold" rowSpan={4} style={{ verticalAlign: "middle", fontSize: "7pt", textDecoration: "underline" }}><span style={{ display: "block" }}>OUT</span><span style={{ display: "block" }}>TAX</span></td>
               <td colSpan={2}>CGST</td>
               <td className="right">{fmtPct(bill.cgst_percent)}</td>
               <td className="right">{cgst > 0 ? fmtMoney(cgst) : ""}</td>
