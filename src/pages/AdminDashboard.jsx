@@ -7,6 +7,7 @@ import AdminNav from "../components/AdminNav";
 const ADMIN_NAMES = {
   "sambhavj789@gmail.com": "Sambhav",
   "rucheetpatil@gmail.com": "Rucheet",
+  "jainaabhas96@gmail.com": "Aabhas",
 };
 
 const getDisplayName = (email) => {
