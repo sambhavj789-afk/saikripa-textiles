@@ -4,6 +4,8 @@ const dotenv = require("dotenv");
 const { createClient } = require("@supabase/supabase-js");
 const { createCalendarEvent, deleteCalendarEvent } = require("./utils/googleCalendar");
 const { apiLimiter } = require("./middleware/rateLimit");
+const { validate, schemas } = require("./middleware/validate");
+const { requireAuth, requireAdmin } = require("./middleware/auth");
 
 dotenv.config();
 
@@ -36,13 +38,12 @@ app.get("/", (req, res) => {
   res.json({ message: "Saikripa Textiles Backend is running!" });
 });
 
-app.post("/api/appointments", async (req, res) => {
+// Public, by design: this is the customer booking endpoint (no login required).
+// It is hardened by rate limiting + input validation. The DELETE routes below,
+// which act on existing resources, require an authenticated admin.
+app.post("/api/appointments", validate({ body: schemas.appointmentSchema }), async (req, res) => {
   try {
     const { name, phone, email, city, state, appointment_type, preferred_date, preferred_time } = req.body;
-
-    if (!name || !phone || !preferred_date || !preferred_time || !appointment_type) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
 
     const { data: appointment, error: dbError } = await supabase
       .from("appointments")
@@ -90,7 +91,7 @@ app.post("/api/appointments", async (req, res) => {
     res.status(500).json({ error: "Failed to book appointment" });
   }
 });
-app.delete("/api/appointments/:id", async (req, res) => {
+app.delete("/api/appointments/:id", requireAuth, requireAdmin, validate({ params: schemas.idParamSchema }), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -131,7 +132,7 @@ app.delete("/api/appointments/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to delete appointment" });
   }
 });
-app.delete("/api/calendar/:eventId", async (req, res) => {
+app.delete("/api/calendar/:eventId", requireAuth, requireAdmin, validate({ params: schemas.eventIdParamSchema }), async (req, res) => {
   try {
     const result = await deleteCalendarEvent(req.params.eventId);
     res.json(result);
