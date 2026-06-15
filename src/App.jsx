@@ -443,53 +443,63 @@ export default function LuxuryTextileWebsite() {
 
       {/* ── HERO ── */}
       <section id="home" className={`relative min-h-screen flex items-center text-white px-6 overflow-hidden ${navTopOffset}`}>
-        {/* Clean solid dark base */}
-        <div className="absolute inset-0 z-0 bg-[#020817]" />
-        {/* Single diffuse gold halo behind image side — no visible edges */}
-        <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[900px] h-[900px] bg-[#d4af37]/10 blur-[200px] rounded-full pointer-events-none" />
-        {/* Soft corner warmth bottom-left */}
-        <div className="absolute -bottom-40 -left-40 w-[600px] h-[600px] bg-[#d4af37]/5 blur-[180px] rounded-full pointer-events-none" />
+        {/* Full-bleed fabric color wheel background */}
+        <div 
+          className="absolute inset-0 z-0" 
+          style={{ 
+            backgroundImage: "url('/new2.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center 20%",
+            backgroundRepeat: "no-repeat"
+          }} 
+        />
+        
+        {/* Dark overlay — lighter so fabric colors show through */}
+        <div className="absolute inset-0 z-0 bg-black/35" />
+        
+        {/* Vertical gradient — fades darker at bottom for stats transition */}
+        <div className="absolute inset-0 z-0" style={{ background: "linear-gradient(180deg, rgba(2,8,23,0.2) 0%, rgba(2,8,23,0.35) 50%, rgba(2,8,23,0.9) 100%)" }} />
+        
+        {/* Center darkening — slight vignette so text reads */}
+        <div className="absolute inset-0 z-0" style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0.4) 0%, transparent 70%)" }} />
+        
+        {/* Subtle gold center glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] pointer-events-none" style={{ background: "radial-gradient(ellipse at center, rgba(212, 175, 55, 0.12) 0%, rgba(212, 175, 55, 0.04) 50%, transparent 80%)" }} />
 
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center py-16 relative z-10">
-          <div data-aos="fade-right">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#d4af37]/30 bg-[#d4af37]/10 text-[#d4af37] text-xs tracking-[0.2em] uppercase font-bold backdrop-blur mb-7">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]"></span>
+        <div className="max-w-5xl mx-auto py-20 relative z-10 text-center">
+          <div data-aos="fade-up">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#d4af37]/40 bg-black/40 backdrop-blur-md text-[#d4af37] text-xs tracking-[0.2em] uppercase font-bold mb-7">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37] animate-pulse"></span>
               Bhilwara Premium Textile Manufacturer
             </div>
-            <h1 className="text-5xl md:text-6xl font-black leading-[1.05] tracking-tight text-white">
-              Premium Uniform Fabrics For Modern Institutions
+            
+            <h1 className="text-5xl md:text-7xl font-black leading-[1.05] tracking-tight text-white" style={{ textShadow: "0 4px 40px rgba(0,0,0,1), 0 2px 8px rgba(0,0,0,0.9)" }}>
+              Premium Uniform <span style={{ color: "#f4d77a", textShadow: "0 4px 40px rgba(0,0,0,1), 0 2px 8px rgba(0,0,0,0.9), 0 0 30px rgba(244, 215, 122, 0.4)" }}>Fabrics</span><br />For Modern Institutions
             </h1>
-            <p className="mt-7 text-lg text-[#cbd5e1] leading-relaxed max-w-xl">
+            
+            <p className="mt-7 text-lg md:text-xl text-white leading-relaxed max-w-2xl mx-auto font-medium" style={{ textShadow: "0 2px 15px rgba(0,0,0,1), 0 1px 4px rgba(0,0,0,0.9)" }}>
               Trusted by 1000+ schools, corporates, hotels, and wholesalers across India. Direct factory pricing. 48-hour sample dispatch.
             </p>
 
-            <div className="mt-7 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap gap-3 justify-center">
               {["GSM Certified", "Pan-India Delivery", "350+ Shades", "48hr Sample"].map((b) => (
-                <span key={b} className="inline-flex items-center gap-2 bg-[#0a1124] border border-[#1a2233] text-[#a8b0c0] text-xs px-3 py-1.5 rounded-full">
-                  <span className="w-1 h-1 rounded-full bg-[#d4af37]"></span>
+                <span key={b} className="inline-flex items-center gap-2 bg-black/60 backdrop-blur-md border border-[#d4af37]/40 text-white text-sm px-5 py-2.5 rounded-full font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]"></span>
                   {b}
                 </span>
               ))}
             </div>
 
-            <div className="mt-10 flex flex-wrap gap-4">
-              <a href="#collections" className="bg-gradient-to-r from-[#f4d77a] via-[#d4af37] to-[#a8842c] text-[#020817] px-8 py-4 rounded-2xl font-bold hover:scale-105 hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] transition-all duration-300">Explore Collections</a>
-              <a href="https://wa.me/918949881253" target="_blank" rel="noreferrer" className="border border-[#1a2233] bg-[#0a1124] hover:bg-[#0e1730] transition-all duration-300 px-8 py-4 rounded-2xl font-semibold text-white">WhatsApp Inquiry</a>
+            <div className="mt-10 flex flex-wrap gap-4 justify-center">
+              <a href="#collections" className="bg-gradient-to-r from-[#f4d77a] via-[#d4af37] to-[#a8842c] text-[#020817] px-10 py-4 rounded-2xl font-bold hover:scale-105 hover:shadow-[0_0_40px_rgba(212,175,55,0.5)] transition-all duration-300">
+                Explore Collections
+              </a>
+              <a href="https://wa.me/918949881253" target="_blank" rel="noreferrer" className="border border-white/30 bg-black/40 backdrop-blur-md hover:bg-black/60 transition-all duration-300 px-10 py-4 rounded-2xl font-semibold text-white">
+                WhatsApp Inquiry
+              </a>
             </div>
-          </div>
 
-          <div className="relative hidden lg:block" data-aos="fade-left">
-            <div className="absolute -inset-4 bg-gradient-to-r from-[#d4af37]/20 to-[#d4af37]/10 blur-3xl rounded-[40px]" />
-            <img src="/new.jpg" alt="Premium suiting fabric texture" className="relative rounded-[32px] shadow-[0_30px_80px_rgba(0,0,0,0.5),0_0_80px_rgba(212,175,55,0.15)] w-full h-[620px] object-cover border border-[#1a2233]" />
-            <a href="#collections" className="absolute -bottom-6 -left-6 bg-[#0a1124]/95 backdrop-blur-xl border border-[#d4af37]/30 rounded-2xl px-6 py-5 hover:border-[#d4af37]/60 hover:-translate-y-1 transition-all duration-300 cursor-pointer group overflow-hidden" style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(212, 175, 55, 0.2)" }}>
-              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#d4af37]/60 to-transparent" />
-              <div className="flex items-center gap-2 mb-2.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37] animate-pulse"></span>
-                <p className="text-[9px] text-[#d4af37]/80 font-bold uppercase tracking-[0.3em]">Current Bestseller</p>
-              </div>
-              <p className="text-base font-black text-white group-hover:text-[#d4af37] transition-colors mb-1.5">Superior Collection →</p>
-              <p className="text-[11px] text-[#d4af37]/80 font-medium tracking-wider">380 GSM · 65/35 PV</p>
-            </a>
+            
           </div>
         </div>
       </section>

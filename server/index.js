@@ -3,11 +3,17 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const { createClient } = require("@supabase/supabase-js");
 const { createCalendarEvent, deleteCalendarEvent } = require("./utils/googleCalendar");
+const { apiLimiter } = require("./middleware/rateLimit");
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Trust the first proxy hop so req.ip reflects the real client IP behind a
+// reverse proxy / host platform (Render, Railway, Nginx, etc.). Required for
+// the IP-based rate limiters below to key on the correct address.
+app.set("trust proxy", 1);
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -16,6 +22,15 @@ const supabase = createClient(
 
 app.use(cors());
 app.use(express.json());
+
+// Rate limiting — every /api route is capped at 60 req/min/IP (returns 429 +
+// Retry-After when exceeded). When auth / AI / upload routes are added, import
+// the matching limiter from ./middleware/rateLimit and attach it on that route:
+//   const { authLimiter } = require("./middleware/rateLimit");
+//   app.post("/api/auth/login", authLimiter, handler);   // 5 / 15 min / IP
+//   app.post("/api/ai/chat",    aiLimiter,   handler);   // 10 / min / user
+//   app.post("/api/upload",     uploadLimiter, handler); // 5 / min / IP
+app.use("/api", apiLimiter);
 
 app.get("/", (req, res) => {
   res.json({ message: "Saikripa Textiles Backend is running!" });
