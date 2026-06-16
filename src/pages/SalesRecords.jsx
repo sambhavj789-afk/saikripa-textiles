@@ -19,7 +19,7 @@ const FABRIC_QUALITIES = [
 
 const emptyItem = () => ({ 
   quality: "", meter: "", rate: "", amount: "", _touched: false,
-  hsn_code: "5515", case_no: "", pcs: "1", cut_type: "Lump"
+  hsn_code: "5515", case_no: "", pcs: "1", cut_type: "Lump", des_no: "WHITE"
 });
 
 const emptyInvoiceFields = () => ({
@@ -27,6 +27,7 @@ const emptyInvoiceFields = () => ({
   buyer_gstin: "", buyer_pan: "", buyer_address: "", buyer_state_code: "",
   buyer_adhar: "", buyer_mobile: "", buyer_email: "", buyer_cin: "",
   agent_name: "", consignee_details: "",
+  ack_no: "", ack_date: "", irn: "",
   transport_name: "", transport_gstin: "", lr_no: "", lr_date: "", despatch_to: "",
   eway_bill_no: "", eway_bill_date: "", place_of_supply: "",
   cgst_percent: "0", sgst_percent: "0", igst_percent: "0",
@@ -168,6 +169,9 @@ export default function SalesRecords() {
       buyer_cin: bill.buyer_cin || "",
       agent_name: bill.agent_name || "",
       consignee_details: bill.consignee_details || "",
+      ack_no: bill.ack_no || "",
+      ack_date: bill.ack_date || "",
+      irn: bill.irn || "",
       transport_name: bill.transport_name || "",
       transport_gstin: bill.transport_gstin || "",
       lr_no: bill.lr_no || "",
@@ -198,6 +202,7 @@ export default function SalesRecords() {
       case_no: it.case_no || "",
       pcs: String(it.pcs ?? 1),
       cut_type: it.cut_type || "Lump",
+      des_no: it.des_no || "WHITE",
     })));
     if ((bill.bill_items || []).length === 0) setItems([emptyItem()]);
     setEditingId(bill.id);
@@ -242,6 +247,9 @@ export default function SalesRecords() {
       buyer_cin: form.buyer_cin.trim() || null,
       agent_name: form.agent_name.trim() || null,
       consignee_details: form.consignee_details.trim() || null,
+      ack_no: form.ack_no.trim() || null,
+      ack_date: form.ack_date || null,
+      irn: form.irn.trim() || null,
       transport_name: form.transport_name.trim() || null,
       transport_gstin: form.transport_gstin.trim() || null,
       lr_no: form.lr_no.trim() || null,
@@ -286,6 +294,7 @@ export default function SalesRecords() {
       case_no: it.case_no || null,
       pcs: parseInt(it.pcs, 10) || 1,
       cut_type: it.cut_type || "Lump",
+      des_no: it.des_no || "WHITE",
     }));
     const { error: itemsError } = await supabase.from("bill_items").insert(itemsPayload);
     if (itemsError) { alert("Bill saved but items failed: " + itemsError.message); return; }
@@ -505,6 +514,10 @@ export default function SalesRecords() {
                             <option value="Piece">Piece</option>
                           </select>
                         </div>
+                        <div className="sm:col-span-3">
+                        <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Des No</label>
+                        <input type="text" value={it.des_no} onChange={(e) => handleItemChange(idx, "des_no", e.target.value)} placeholder="WHITE" className={inputCls} />
+                        </div>
                       </>
                     )}
                   </div>
@@ -582,7 +595,14 @@ export default function SalesRecords() {
                       <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Eway Bill Date</label><input type="date" value={form.eway_bill_date} onChange={(e) => handleFormChange("eway_bill_date", e.target.value)} className={inputCls + " [color-scheme:dark]"} /></div>
                     </div>
                   </div>
-
+                  <div>
+                 <p className="text-[10px] font-bold text-[#d4af37] uppercase tracking-[0.3em] mb-3">E-Invoice (IRN / ACK)</p>
+  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+    <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">ACK No.</label><input type="text" value={form.ack_no} onChange={(e) => handleFormChange("ack_no", e.target.value)} placeholder="From e-invoice portal" className={inputCls} /></div>
+    <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">ACK Date</label><input type="date" value={form.ack_date} onChange={(e) => handleFormChange("ack_date", e.target.value)} className={inputCls + " [color-scheme:dark]"} /></div>
+    <div className="lg:col-span-3"><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">IRN</label><input type="text" value={form.irn} onChange={(e) => handleFormChange("irn", e.target.value)} placeholder="64-character IRN from portal" className={inputCls} /></div>
+  </div>
+</div>
                   <div>
                     <p className="text-[10px] font-bold text-[#d4af37] uppercase tracking-[0.3em] mb-3">GST & Adjustments</p>
                     <p className="text-xs text-[#7a8499] mb-3 italic">For inter-state sales (different state from yours), use IGST. For intra-state, use CGST + SGST.</p>

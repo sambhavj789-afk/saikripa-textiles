@@ -39,9 +39,6 @@ const fmtMoney = (n) => {
   return new Intl.NumberFormat("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 };
 
-// show a tax % with two decimals (e.g. "5.00 %"); blank when zero/absent
-const fmtPct = (p) => (Number(p) > 0 ? `${Number(p).toFixed(2)} %` : " %");
-
 const BUSINESS_GSTIN = "08ACNPG4471G1ZH";
 const BUSINESS_PAN = "ACNPG4471G";
 const BUSINESS_TIN = "CIN";
@@ -95,11 +92,9 @@ export default function BillExport() {
 
   const totalMeters = items.reduce((s, it) => s + Number(it.meter || 0), 0);
   const totalPcs = items.reduce((s, it) => s + Number(it.pcs || 0), 0);
-
-  const ackNo = `1${Date.now().toString().slice(-14)}`;
-  const ackDate = fmtDate(bill.created_at || bill.bill_date);
-  const irn = `${(bill.id || '').replace(/-/g, '').toLowerCase()}${"0".repeat(Math.max(0, 64 - ((bill.id || '').replace(/-/g, '').length || 0)))}`.slice(0, 64);
-
+  const ackNo = bill.ack_no || "";
+  const ackDate = bill.ack_date ? fmtDate(bill.ack_date) : "";
+  const irn = bill.irn || "";
   return (
     <>
       <style>{`
@@ -107,7 +102,7 @@ export default function BillExport() {
         @media print {
           .no-print { display: none !important; }
           body { background: white !important; }
-          .bill-page { box-shadow: none !important; margin: 0 !important; border: 1px solid #000 !important; }
+          .bill-page { box-shadow: none !important; margin: 0 !important; }
         }
         body { margin: 0; background: #f5f5f5; font-family: Arial, Helvetica, sans-serif; }
         .bill-page {
@@ -120,7 +115,6 @@ export default function BillExport() {
           line-height: 1.2;
           box-shadow: 0 0 12px rgba(0,0,0,0.15);
           box-sizing: border-box;
-          border: 1px solid #000;
         }
         .bill-page table { border-collapse: collapse; width: 100%; }
         .items-table { 
@@ -145,6 +139,11 @@ export default function BillExport() {
         .strip { background: #d0d0d0; font-weight: bold; }
         .buyer-tbl td { padding: 4px 4px !important; line-height: 1.35; }
         .gst-tbl td { padding-top: 3px !important; padding-bottom: 3px !important; }
+        /* GST band as its own table inside the items grid: internal lines only, edges come from the items cell */
+        .gst-grid { border-collapse: collapse; width: 100%; font-size: 8pt; }
+        .gst-grid td { border-right: 1px solid #000; border-bottom: 1px solid #000; padding: 3px 4px; vertical-align: top; }
+        .gst-grid tr td:last-child { border-right: none; }
+        .gst-grid tr:last-child td { border-bottom: none; }
         .xsmall { font-size: 7pt; }
         .small { font-size: 7.5pt; }
         .pad { padding: 5px 8px; }
@@ -158,11 +157,11 @@ export default function BillExport() {
 
       <div className="bill-page">
 
-        {/* ── HEADER: checkbox row + company + GSTIN grid; QR box is ONE tall cell spanning the right from the checkbox row down (single left border) ── */}
-        <table className="grid" style={{ fontSize: "7.5pt", tableLayout: "fixed", width: "100%" }}>
+        {/* ── HEADER: checkbox row + company + GSTIN grid (full width, no QR box) ── */}
+        <table className="grid items-table" style={{ fontSize: "7.5pt", width: "100%" }}>
           <colgroup>
-            <col style={{ width: "10%" }} />
-            <col style={{ width: "40%" }} />
+            <col style={{ width: "12%" }} />
+            <col style={{ width: "38%" }} />
             <col style={{ width: "13%" }} />
             <col style={{ width: "37%" }} />
           </colgroup>
@@ -179,7 +178,7 @@ export default function BillExport() {
                   );
                 })}
               </td>
-              </tr>
+            </tr>
             <tr>
               <td colSpan={4} style={{ padding: "4px 8px" }}>
                 <h1 style={{ fontSize: 16, fontWeight: "bold", margin: "0 0 1px 0", lineHeight: 1.1 }}>SAIKRIPA TEXTILES</h1>
@@ -208,16 +207,17 @@ export default function BillExport() {
             </tr>
             <tr>
               <td className="bold">IRN</td>
-              <td colSpan={3} style={{ wordBreak: "break-all", fontSize: "7pt" }}>: {irn}</td>
+              <td colSpan={3} style={{ wordBreak: "break-all" }}>: {irn}</td>
             </tr>
           </tbody>
         </table>
 
         {/* ── TAX INVOICE TITLE STRIP ── */}
-        <div className="strip center bold" style={{ fontSize: 11, padding: "4px 0", letterSpacing: 3, borderBottom: "1px solid #000" }}>TAX INVOICE</div>
-        <div className="center bold xsmall" style={{ padding: "2px 0", letterSpacing: 1, borderBottom: "1px solid #000", background: "white" }}>FINISH FABRIC SALES (GSTIN BILLING)</div>
+        <div className="strip center bold" style={{ fontSize: 11, padding: "4px 0", letterSpacing: 3, borderBottom: "1px solid #000", borderLeft: "1px solid #000", borderRight: "1px solid #000" }}>TAX INVOICE</div>
+        <div className="strip center bold xsmall" style={{ padding: "2px 0", letterSpacing: 1, borderBottom: "1px solid #000", borderLeft: "1px solid #000", borderRight: "1px solid #000" }}>FINISH FABRIC SALES (GSTIN BILLING)</div>
+
         {/* ── BUYER + INVOICE DETAILS ── */}
-        <table>
+        <table style={{ borderLeft: "1px solid #000", borderRight: "1px solid #000" }}>
           <tbody>
             <tr>
               <td className="strip center" style={{ width: "55%", borderRight: "1px solid #000", borderBottom: "1px solid #000", padding: 3 }}>Details of Buyer (Billed To)</td>
@@ -338,7 +338,7 @@ export default function BillExport() {
                 <td className="center">{it.case_no || ""}</td>
                 <td>{it.quality}</td>
                 <td className="center">{it.hsn_code || "5515"}</td>
-                <td className="center">WHITE</td>
+                <td className="center">{it.des_no || "WHITE"}</td>
                 <td className="center">{it.cut_type || "Lump"}</td>
                 <td className="center">{it.pcs || 1}</td>
                 <td className="right">{Number(it.meter).toFixed(2)} Mtrs</td>
@@ -363,9 +363,9 @@ export default function BillExport() {
               <td className="right">{fmtMoney(subtotal)}</td>
             </tr>
 
-            {/* ── Bank details (cols 1-4) + GST (cols 5-9) merged into the items grid so every divider is a real column border running unbroken to the bottom ── */}
+            {/* ── Bank details (cols 1-4) + GST band (cols 5-9) as ONE row; GST is its own table sharing the Cut divider, with consistent columns ── */}
             <tr>
-              <td colSpan={4} rowSpan={14} style={{ padding: 0, verticalAlign: "top" }}>
+              <td colSpan={4} style={{ padding: 0, verticalAlign: "top" }}>
                 <div className="strip center" style={{ padding: 3, borderBottom: "1px solid #000", fontSize: "9pt" }}>Bank Details</div>
                 <table style={{ tableLayout: "fixed", width: "100%" }}>
                   <tbody>
@@ -389,86 +389,101 @@ export default function BillExport() {
                   Note :- GARMENT बनाने के पहले <span style={{ fontWeight: "bold" }}>FABRICS</span> सभी प्रकार से <span style={{ fontWeight: "bold" }}>CHECK</span> कर लें। I <span style={{ fontWeight: "bold" }}>GARMENT/LUMP CUTTING</span> हो जाने के बाद हमारी किसी भी प्रकार की कोई जवाबदारी नहीं रहेगी।
                 </div>
               </td>
-              {/* Less row → cols 5-9 (Less line attaches to Add, so border-bottom hidden) */}
-              <td className="bold" style={{ borderBottom: "hidden" }}>Less</td>
-              <td colSpan={2} className="bold" style={{ borderBottom: "hidden" }}>Discount Comm.</td>
-              <td className="right" style={{ borderBottom: "hidden" }}></td>
-              <td className="right" style={{ borderBottom: "hidden" }}>{Number(bill.discount) > 0 ? fmtMoney(bill.discount) : ""}</td>
-            </tr>
-            <tr>
-              <td className="bold" rowSpan={4} style={{ verticalAlign: "top" }}>Add</td>
-              <td colSpan={2}>Cartage</td>
-              <td className="right"></td>
-              <td className="right">{Number(bill.cartage) > 0 ? fmtMoney(bill.cartage) : ""}</td>
-            </tr>
-            <tr>
-              <td colSpan={2}>Insurance</td>
-              <td className="right"></td>
-              <td className="right">{Number(bill.insurance) > 0 ? fmtMoney(bill.insurance) : ""}</td>
-            </tr>
-            <tr>
-              <td colSpan={2}>Sp.Pack Chg.</td>
-              <td className="right"></td>
-              <td className="right">{Number(bill.sp_pack_chg) > 0 ? fmtMoney(bill.sp_pack_chg) : ""}</td>
-            </tr>
-            <tr>
-              <td colSpan={2}>Others</td>
-              <td className="right"></td>
-              <td className="right">{Number(bill.others) > 0 ? fmtMoney(bill.others) : ""}</td>
-            </tr>
-            <tr className="bold">
-              <td colSpan={4}>GST Apllicable Amount</td>
-              <td className="right">{fmtMoney(subtotal)}</td>
-            </tr>
-            <tr>
-              <td className="bold" rowSpan={4} style={{ verticalAlign: "middle", fontSize: "7pt", textDecoration: "underline" }}><span style={{ display: "block" }}>OUT</span><span style={{ display: "block" }}>TAX</span></td>
-              <td colSpan={2}>CGST</td>
-              <td className="right">{fmtPct(bill.cgst_percent)}</td>
-              <td className="right">{cgst > 0 ? fmtMoney(cgst) : ""}</td>
-            </tr>
-            <tr>
-              <td colSpan={2}>SGST</td>
-              <td className="right">{fmtPct(bill.sgst_percent)}</td>
-              <td className="right">{sgst > 0 ? fmtMoney(sgst) : ""}</td>
-            </tr>
-            <tr>
-              <td colSpan={2}>IGST</td>
-              <td className="right">{fmtPct(bill.igst_percent)}</td>
-              <td className="right">{igst > 0 ? fmtMoney(igst) : ""}</td>
-            </tr>
-            <tr>
-              <td colSpan={2}>CESS</td>
-              <td className="right"> %</td>
-              <td className="right"></td>
-            </tr>
-            <tr className="bold">
-              <td colSpan={4}>Total GST Value</td>
-              <td className="right">{totalGst > 0 ? fmtMoney(totalGst) : ""}</td>
-            </tr>
-            <tr>
-              <td colSpan={3}>TCS</td>
-              <td className="right"> %</td>
-              <td className="right">{Number(bill.tcs) || 0}</td>
-            </tr>
-            <tr className="bold">
-              <td colSpan={4}>Round of</td>
-              <td className="right">{fmtMoney(roundOff)}</td>
-            </tr>
-            <tr className="bold" style={{ fontSize: "9pt" }}>
-              <td colSpan={4}>Net Amount (R/O)</td>
-              <td className="right">₹ {fmtMoney(finalTotal)}</td>
+              <td colSpan={5} style={{ padding: 0, verticalAlign: "top" }}>
+                <table className="gst-grid">
+                  <colgroup>
+                    <col style={{ width: "14%" }} />
+                    <col style={{ width: "40%" }} />
+                    <col style={{ width: "16%" }} />
+                    <col style={{ width: "30%" }} />
+                  </colgroup>
+                  <tbody>
+                    <tr>
+                      <td className="bold" style={{ borderBottom: "none" }}>Less</td>
+                      <td className="bold" style={{ borderBottom: "none" }}>Discount Comm.</td>
+                      <td style={{ borderBottom: "none" }}></td>
+                      <td className="right" style={{ borderBottom: "none" }}>{Number(bill.discount) > 0 ? fmtMoney(bill.discount) : ""}</td>
+                    </tr>
+                    <tr>
+                      <td className="bold" rowSpan={4} style={{ verticalAlign: "top" }}>Add</td>
+                      <td>Cartage</td>
+                      <td></td>
+                      <td className="right">{Number(bill.cartage) > 0 ? fmtMoney(bill.cartage) : ""}</td>
+                    </tr>
+                    <tr>
+                      <td>Insurance</td>
+                      <td></td>
+                      <td className="right">{Number(bill.insurance) > 0 ? fmtMoney(bill.insurance) : ""}</td>
+                    </tr>
+                    <tr>
+                      <td>Sp.Pack Chg.</td>
+                      <td></td>
+                      <td className="right">{Number(bill.sp_pack_chg) > 0 ? fmtMoney(bill.sp_pack_chg) : ""}</td>
+                    </tr>
+                    <tr>
+                      <td>Others</td>
+                      <td></td>
+                      <td className="right">{Number(bill.others) > 0 ? fmtMoney(bill.others) : ""}</td>
+                    </tr>
+                    <tr className="bold">
+                      <td colSpan={3}>GST Apllicable Amount</td>
+                      <td className="right">{fmtMoney(subtotal)}</td>
+                    </tr>
+                    <tr>
+                      <td className="bold" rowSpan={4} style={{ verticalAlign: "middle" }}><span style={{ display: "block" }}>OUT</span><span style={{ display: "block" }}>TAX</span></td>
+                      <td>CGST<span style={{ float: "right" }}>%</span></td>
+                      <td className="right">{Number(bill.cgst_percent) > 0 ? Number(bill.cgst_percent).toFixed(2) : ""}</td>
+                      <td className="right">{cgst > 0 ? fmtMoney(cgst) : ""}</td>
+                    </tr>
+                    <tr>
+                      <td>SGST<span style={{ float: "right" }}>%</span></td>
+                      <td className="right">{Number(bill.sgst_percent) > 0 ? Number(bill.sgst_percent).toFixed(2) : ""}</td>
+                      <td className="right">{sgst > 0 ? fmtMoney(sgst) : ""}</td>
+                    </tr>
+                    <tr>
+                      <td>IGST<span style={{ float: "right" }}>%</span></td>
+                      <td className="right">{Number(bill.igst_percent) > 0 ? Number(bill.igst_percent).toFixed(2) : ""}</td>
+                      <td className="right">{igst > 0 ? fmtMoney(igst) : ""}</td>
+                    </tr>
+                    <tr>
+                      <td>CESS<span style={{ float: "right" }}>%</span></td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                    <tr className="bold">
+                      <td colSpan={3}>Total GST Value</td>
+                      <td className="right">{totalGst > 0 ? fmtMoney(totalGst) : ""}</td>
+                    </tr>
+                    <tr className="bold">
+                     <td colSpan={2} style={{ paddingLeft: "14%" }}>TCS<span style={{ float: "right", fontWeight: "normal" }}>%</span></td>
+                      <td className="right">{Number(bill.tcs) || 0}</td>
+                      <td className="right"></td>
+                    </tr>
+                    <tr className="bold">
+                      <td colSpan={2} style={{ paddingLeft: "14%" }}>Round of</td>
+                      <td></td>
+                      <td className="right">{fmtMoney(roundOff)}</td>
+                    </tr>
+                    <tr className="bold" style={{ fontSize: "9pt" }}>
+                      <td colSpan={2} style={{ borderRight: "hidden" }}>Net Amount (R/O)</td>
+                      <td className="center" style={{ borderRight: "hidden" }}>₹</td>
+                      <td className="right">{fmtMoney(finalTotal)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
             </tr>
           </tbody>
         </table>
         </div>
 
         {/* ── AMOUNT IN WORDS ── */}
-        <div style={{ padding: "4px 8px", fontSize: "8.5pt", fontWeight: "bold", borderTop: "1px solid #000", borderBottom: "1px solid #000" }}>
+        <div style={{ padding: "4px 8px", fontSize: "8.5pt", fontWeight: "bold", borderTop: "1px solid #000", borderBottom: "1px solid #000", borderLeft: "1px solid #000", borderRight: "1px solid #000" }}>
           RUPEES :- {numberToWords(Math.round(finalTotal))}
         </div>
 
         {/* ── DESPATCH + EWAY ── */}
-        <table style={{ marginTop: "-1px", tableLayout: "fixed" }}>
+        <table style={{ marginTop: "-1px", tableLayout: "fixed", borderLeft: "1px solid #000", borderRight: "1px solid #000" }}>
           <colgroup>
             <col style={{ width: "55%" }} />
             <col style={{ width: "45%" }} />
@@ -536,7 +551,7 @@ export default function BillExport() {
         </table>
 
         {/* ── TERMS + SIGNATORY ── */}
-        <table>
+        <table style={{ borderLeft: "1px solid #000", borderRight: "1px solid #000" }}>
           <tbody>
             <tr>
               <td style={{ width: "65%", verticalAlign: "top", fontSize: "7.5pt", padding: "5px 8px" }}>
@@ -556,7 +571,7 @@ export default function BillExport() {
         </table>
 
         {/* ── FOOTER BAR ── */}
-        <table style={{ fontSize: "7.5pt" }}>
+        <table style={{ fontSize: "7.5pt", borderLeft: "1px solid #000", borderRight: "1px solid #000" }}>
           <tbody>
             <tr>
               <td style={{ width: "33%", padding: "3px 8px" }}><span className="bold">ADMIN</span> <br /><span className="bold">Prepared By..........</span></td>
@@ -564,7 +579,7 @@ export default function BillExport() {
               <td style={{ width: "33%", padding: "3px 8px" }} className="right"></td>
             </tr>
             <tr>
-              <td colSpan={3} className="center" style={{ fontSize: "8pt", padding: "7px 0", borderTop: "1px solid #000" }}>
+              <td colSpan={3} className="center" style={{ fontSize: "8pt", padding: "7px 0", borderTop: "1px solid #000", borderBottom: "1px solid #000" }}>
                 WE &nbsp;&nbsp; RUN &nbsp;&nbsp; ON &nbsp;&nbsp; TEX &nbsp;&nbsp; ERP 8.5
               </td>
             </tr>
