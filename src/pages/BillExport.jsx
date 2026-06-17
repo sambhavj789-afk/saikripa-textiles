@@ -72,18 +72,21 @@ export default function BillExport() {
 
   const items = bill.bill_items || [];
   const subtotal = Number(bill.subtotal) || items.reduce((s, it) => s + Number(it.amount || 0), 0);
-  const cgst = (subtotal * Number(bill.cgst_percent || 0)) / 100;
-  const sgst = (subtotal * Number(bill.sgst_percent || 0)) / 100;
-  const igst = (subtotal * Number(bill.igst_percent || 0)) / 100;
-  const totalGst = cgst + sgst + igst;
-
-  // --- Net Amount & Round-off computed properly for GST bills ---
-  // (previously this fell back to just `subtotal`, ignoring GST/charges)
   const charges =
     (Number(bill.cartage) || 0) +
     (Number(bill.insurance) || 0) +
     (Number(bill.sp_pack_chg) || 0) +
     (Number(bill.others) || 0);
+  const gstBase = subtotal - (Number(bill.discount) || 0) + charges;
+  const cgst = (gstBase * Number(bill.cgst_percent || 0)) / 100;
+  const sgst = (gstBase * Number(bill.sgst_percent || 0)) / 100;
+  const igst = (gstBase * Number(bill.igst_percent || 0)) / 100;
+  const totalGst = Number(bill.total_gst_percent) > 0
+    ? (gstBase * Number(bill.total_gst_percent)) / 100
+    : cgst + sgst + igst;
+
+  // --- Net Amount & Round-off computed properly for GST bills ---
+  // (previously this fell back to just `subtotal`, ignoring GST/charges)
   const grossTotal =
     subtotal - (Number(bill.discount) || 0) + charges + totalGst + (Number(bill.tcs) || 0);
   const finalTotal = Number(bill.final_total) || Math.round(grossTotal);
@@ -107,7 +110,7 @@ export default function BillExport() {
         body { margin: 0; background: #f5f5f5; font-family: Arial, Helvetica, sans-serif; }
         .bill-page {
           width: 210mm;
-          min-height: 290mm;
+          min-height: 287mm;
           margin: 12px auto;
           background: white;
           color: #000;
@@ -137,7 +140,7 @@ export default function BillExport() {
         .checkbox { display: inline-block; width: 10px; height: 10px; border: 1px solid #000; margin-right: 4px; vertical-align: middle; text-align: center; line-height: 8px; font-size: 8pt; background: white; }
         .checked { background: #000; color: white; }
         .strip { background: #d0d0d0; font-weight: bold; }
-        .buyer-tbl td { padding: 4px 4px !important; line-height: 1.35; }
+        .buyer-tbl td { padding: 2px 4px !important; line-height: 1.25; }
         .gst-tbl td { padding-top: 3px !important; padding-bottom: 3px !important; }
         /* GST band as its own table inside the items grid: internal lines only, edges come from the items cell */
         .gst-grid { border-collapse: collapse; width: 100%; font-size: 8pt; }
@@ -214,7 +217,7 @@ export default function BillExport() {
 
         {/* ── TAX INVOICE TITLE STRIP ── */}
         <div className="strip center bold" style={{ fontSize: 11, padding: "4px 0", letterSpacing: 3, borderBottom: "1px solid #000", borderLeft: "1px solid #000", borderRight: "1px solid #000" }}>TAX INVOICE</div>
-        <div className="strip center bold xsmall" style={{ padding: "2px 0", letterSpacing: 1, borderBottom: "1px solid #000", borderLeft: "1px solid #000", borderRight: "1px solid #000" }}>FINISH FABRIC SALES (GSTIN BILLING)</div>
+        <div className="strip center bold xsmall" style={{ padding: "2px 0", letterSpacing: 1, borderBottom: "1px solid #000", borderLeft: "1px solid #000", borderRight: "1px solid #000", background: "#fff" }}>FINISH FABRIC SALES (GSTIN BILLING)</div>
 
         {/* ── BUYER + INVOICE DETAILS ── */}
         <table style={{ borderLeft: "1px solid #000", borderRight: "1px solid #000" }}>
@@ -238,10 +241,13 @@ export default function BillExport() {
                       <td className="bold">M/s:</td>
                       <td className="bold" colSpan={3}>{bill.party}</td>
                     </tr>
-                    {bill.buyer_address && (
+                    {(bill.buyer_address || bill.buyer_state) && (
                       <tr>
                         <td></td>
-                        <td colSpan={3}>{bill.buyer_address}</td>
+                        <td colSpan={3}>
+                          {bill.buyer_address || ""}
+                          {bill.buyer_state ? (bill.buyer_address ? ", " : "") + bill.buyer_state : ""}
+                        </td>
                       </tr>
                     )}
                     <tr>
@@ -250,6 +256,18 @@ export default function BillExport() {
                       <td className="bold">Email</td>
                       <td>{bill.buyer_email || ""}</td>
                     </tr>
+                    {bill.buyer_city && (
+                      <tr>
+                        <td></td>
+                        <td className="bold" colSpan={3}>{bill.buyer_city}</td>
+                      </tr>
+                    )}
+                    {bill.buyer_state && (
+                      <tr>
+                        <td></td>
+                        <td className="bold" colSpan={3}>{bill.buyer_state}</td>
+                      </tr>
+                    )}
                     <tr>
                       <td></td>
                       <td></td>
@@ -346,8 +364,8 @@ export default function BillExport() {
                 <td className="right">{fmtMoney(it.amount)}</td>
               </tr>
             ))}
-            {Array.from({ length: Math.max(0, 8 - items.length) }).map((_, i) => (
-              <tr key={`empty-${i}`} style={{ height: 15 }}>
+            {Array.from({ length: Math.max(0, 5 - items.length) }).map((_, i) => (
+              <tr key={`empty-${i}`} style={{ height: 12 }}>
                 <td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
               </tr>
             ))}
@@ -401,54 +419,59 @@ export default function BillExport() {
                     <tr>
                       <td className="bold" style={{ borderBottom: "none" }}>Less</td>
                       <td className="bold" style={{ borderBottom: "none" }}>Discount Comm.</td>
-                      <td style={{ borderBottom: "none" }}></td>
                       <td className="right" style={{ borderBottom: "none" }}>{Number(bill.discount) > 0 ? fmtMoney(bill.discount) : ""}</td>
+                      <td className="right" rowSpan={5} style={{ verticalAlign: "middle" }}>
+                        {(() => {
+                          const anyFilled =
+                            Number(bill.discount) || Number(bill.cartage) ||
+                            Number(bill.insurance) || Number(bill.sp_pack_chg) ||
+                            Number(bill.others);
+                          if (!anyFilled) return "";
+                          const t =
+                            -(Number(bill.discount) || 0) +
+                            (Number(bill.cartage) || 0) +
+                            (Number(bill.insurance) || 0) +
+                            (Number(bill.sp_pack_chg) || 0) +
+                            (Number(bill.others) || 0);
+                          return fmtMoney(t);
+                        })()}
+                      </td>
                     </tr>
                     <tr>
                       <td className="bold" rowSpan={4} style={{ verticalAlign: "top" }}>Add</td>
                       <td>Cartage</td>
-                      <td></td>
                       <td className="right">{Number(bill.cartage) > 0 ? fmtMoney(bill.cartage) : ""}</td>
                     </tr>
                     <tr>
                       <td>Insurance</td>
-                      <td></td>
                       <td className="right">{Number(bill.insurance) > 0 ? fmtMoney(bill.insurance) : ""}</td>
                     </tr>
                     <tr>
                       <td>Sp.Pack Chg.</td>
-                      <td></td>
                       <td className="right">{Number(bill.sp_pack_chg) > 0 ? fmtMoney(bill.sp_pack_chg) : ""}</td>
                     </tr>
                     <tr>
                       <td>Others</td>
-                      <td></td>
                       <td className="right">{Number(bill.others) > 0 ? fmtMoney(bill.others) : ""}</td>
                     </tr>
                     <tr className="bold">
                       <td colSpan={3}>GST Apllicable Amount</td>
-                      <td className="right">{fmtMoney(subtotal)}</td>
+                      <td className="right">{fmtMoney(gstBase)}</td>
                     </tr>
                     <tr>
                       <td className="bold" rowSpan={4} style={{ verticalAlign: "middle" }}><span style={{ display: "block" }}>OUT</span><span style={{ display: "block" }}>TAX</span></td>
-                      <td>CGST<span style={{ float: "right" }}>%</span></td>
-                      <td className="right">{Number(bill.cgst_percent) > 0 ? Number(bill.cgst_percent).toFixed(2) : ""}</td>
-                      <td className="right">{cgst > 0 ? fmtMoney(cgst) : ""}</td>
+                      <td>CGST<span style={{ float: "right" }}>{Number(bill.cgst_percent) > 0 ? Number(bill.cgst_percent).toFixed(2) : ""} %</span></td>
+                      <td className="right" rowSpan={4} style={{ verticalAlign: "middle" }}>{Number(bill.total_gst_percent) > 0 ? Number(bill.total_gst_percent).toFixed(2) : ""}</td>
+                      <td className="right" rowSpan={4} style={{ verticalAlign: "middle" }}>{totalGst > 0 ? fmtMoney(totalGst) : ""}</td>
                     </tr>
                     <tr>
-                      <td>SGST<span style={{ float: "right" }}>%</span></td>
-                      <td className="right">{Number(bill.sgst_percent) > 0 ? Number(bill.sgst_percent).toFixed(2) : ""}</td>
-                      <td className="right">{sgst > 0 ? fmtMoney(sgst) : ""}</td>
+                      <td>SGST<span style={{ float: "right" }}>{Number(bill.sgst_percent) > 0 ? Number(bill.sgst_percent).toFixed(2) : ""} %</span></td>
                     </tr>
                     <tr>
-                      <td>IGST<span style={{ float: "right" }}>%</span></td>
-                      <td className="right">{Number(bill.igst_percent) > 0 ? Number(bill.igst_percent).toFixed(2) : ""}</td>
-                      <td className="right">{igst > 0 ? fmtMoney(igst) : ""}</td>
+                      <td>IGST<span style={{ float: "right" }}>{Number(bill.igst_percent) > 0 ? Number(bill.igst_percent).toFixed(2) : ""} %</span></td>
                     </tr>
                     <tr>
                       <td>CESS<span style={{ float: "right" }}>%</span></td>
-                      <td></td>
-                      <td></td>
                     </tr>
                     <tr className="bold">
                       <td colSpan={3}>Total GST Value</td>
@@ -456,8 +479,8 @@ export default function BillExport() {
                     </tr>
                     <tr className="bold">
                      <td colSpan={2} style={{ paddingLeft: "14%" }}>TCS<span style={{ float: "right", fontWeight: "normal" }}>%</span></td>
-                      <td className="right">{Number(bill.tcs) || 0}</td>
-                      <td className="right"></td>
+                      <td className="right">{Number(bill.tcs) > 0 ? Number(bill.tcs).toFixed(2) : ""}</td>
+                      <td className="right">{Number(bill.tcs) > 0 ? fmtMoney((subtotal * Number(bill.tcs)) / 100) : ""}</td>
                     </tr>
                     <tr className="bold">
                       <td colSpan={2} style={{ paddingLeft: "14%" }}>Round of</td>
@@ -514,8 +537,8 @@ export default function BillExport() {
                       <td>{bill.lr_no || ""}</td>
                     </tr>
                     <tr>
-                      <td className="bold">Lr Date</td>
-                      <td>{bill.lr_date ? fmtDate(bill.lr_date) : ""}<span style={{ marginLeft: 20 }} className="bold">DocThru.</span> {bill.agent_name ? "Agent" : ""}</td>
+                    <td className="bold">Lr Date</td>
+                    <td>{bill.lr_date ? fmtDate(bill.lr_date) : ""}<span style={{ marginLeft: 20 }} className="bold">DocThru.</span> {bill.sale_type || ""}</td>
                     </tr>
                   </tbody>
                 </table>

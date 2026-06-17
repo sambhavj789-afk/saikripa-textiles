@@ -9,8 +9,10 @@ import AdminLogin from "./pages/AdminLogin.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import SalesRecords from "./pages/SalesRecords";
 import PurchaseRecords from "./pages/PurchaseRecords";
+import StockReceived from "./pages/StockReceived";
 import Analytics from "./pages/Analytics";
 import BillExport from "./pages/BillExport";
+import OfferRecords from "./pages/OfferRecords";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -24,6 +26,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/admin/sales" element={<SalesRecords />} />
         <Route path="/admin/sales/:id/bill" element={<BillExport />} />
         <Route path="/admin/purchases" element={<PurchaseRecords />} />
+        <Route path="/admin/offers" element={<OfferRecords />} />
+        <Route path="/admin/stock" element={<StockReceived />} />
         <Route path="/admin/analytics" element={<Analytics />} />
       </Routes>
     </BrowserRouter>

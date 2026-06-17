@@ -32,6 +32,16 @@ const InsightsIcon = ({ className = "w-7 h-7" }) => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6m0 0V5m0 8h6m-6 0H3m12 6v-4m0 0V5m0 8h6m-6 0h-2" />
   </svg>
 );
+const TagIcon = ({ className = "w-7 h-7" }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 9V4a1 1 0 011-1z" />
+  </svg>
+);
+const StockIcon = ({ className = "w-7 h-7" }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10m0-10l8-4M4 7v10l8 4" />
+  </svg>
+);
 
 const inr = (n) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n || 0);
@@ -39,7 +49,7 @@ const inr = (n) =>
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState("");
-  const [stats, setStats] = useState({ salesCount: 0, salesRevenue: 0, purchasesCount: 0, loading: true });
+  const [stats, setStats] = useState({ salesCount: 0, salesRevenue: 0, purchasesCount: 0, offersCount: 0, stockCount: 0, loading: true });
 
   useEffect(() => {
     const init = async () => {
@@ -72,7 +82,15 @@ export default function AdminDashboard() {
       .from("purchase_records")
       .select("*", { count: "exact", head: true });
 
-    setStats({ salesCount, salesRevenue, purchasesCount: purchasesCount || 0, loading: false });
+    // Fetch offer + stock counts
+    const { count: offersCount } = await supabase
+      .from("offer_records")
+      .select("*", { count: "exact", head: true });
+    const { count: stockCount } = await supabase
+      .from("stock_received")
+      .select("*", { count: "exact", head: true });
+
+    setStats({ salesCount, salesRevenue, purchasesCount: purchasesCount || 0, offersCount: offersCount || 0, stockCount: stockCount || 0, loading: false });
   };
 
   const goldGlow = { boxShadow: "0 0 40px rgba(212, 175, 55, 0.08), inset 0 0 0 1px rgba(212, 175, 55, 0.3)" };
@@ -89,6 +107,18 @@ export default function AdminDashboard() {
       label: "Purchase Records",
       desc: "Track inventory and supplier purchases",
       Icon: CartIcon,
+    },
+    {
+      to: "/admin/offers",
+      label: "Offer Records",
+      desc: "Mill offers, shades & grey receipts",
+      Icon: TagIcon,
+    },
+    {
+      to: "/admin/stock",
+      label: "Stock Received",
+      desc: "Monthly process vs finish — shrinkage",
+      Icon: StockIcon,
     },
     {
       to: "/admin/analytics",
@@ -131,13 +161,16 @@ export default function AdminDashboard() {
 
       <main className="max-w-7xl mx-auto px-6 py-10 relative">
         {/* Welcome */}
-        <div className="mb-10">
-          <h2 className="text-4xl font-bold tracking-tight text-white">
-            Welcome back{userEmail ? "," : ""} <span className="text-[#d4af37]">{userEmail ? getDisplayName(userEmail) : ""}</span>
-          </h2>
-          <p className="text-xs text-[#7a8499] mt-2 uppercase tracking-[0.25em] font-medium">
-            {userEmail || "Loading..."}
-          </p>
+        <div className="mb-10 flex items-center gap-4">
+          <div className="w-1 h-12 rounded-full bg-gradient-to-b from-[#f4d77a] via-[#d4af37] to-[#a8842c]" />
+          <div>
+            <h2 className="text-4xl font-bold tracking-tight text-white">
+              Welcome back{userEmail ? "," : ""} <span style={{ background: "linear-gradient(135deg, #f4d77a 0%, #d4af37 60%, #a8842c 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{userEmail ? getDisplayName(userEmail) : ""}</span>
+            </h2>
+            <p className="text-xs text-[#7a8499] mt-2 uppercase tracking-[0.25em] font-medium">
+              {userEmail || "Loading..."}
+            </p>
+          </div>
         </div>
 
         {/* Quick stats */}

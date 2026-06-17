@@ -26,7 +26,16 @@ const InsightsIcon = ({ className = "w-5 h-5" }) => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6m0 0V5m0 8h6m-6 0H3m12 6v-4m0 0V5m0 8h6m-6 0h-2" />
   </svg>
 );
-
+const TagIcon = ({ className = "w-5 h-5" }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5a2 2 0 011.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 9V4a1 1 0 011-1z" />
+  </svg>
+);
+const StockIcon = ({ className = "w-5 h-5" }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10m0-10l8-4M4 7v10l8 4" />
+  </svg>
+);
 export default function AdminNav({ userEmail, className = "" }) {
   const [open, setOpen] = useState(false);
   const location = useLocation();
@@ -49,6 +58,8 @@ export default function AdminNav({ userEmail, className = "" }) {
     { path: "/admin/dashboard", label: "Dashboard", Icon: HomeIcon },
     { path: "/admin/sales", label: "Sales Records", Icon: ChartIcon },
     { path: "/admin/purchases", label: "Purchase Records", Icon: CartIcon },
+    { path: "/admin/offers", label: "Offer Records", Icon: TagIcon },
+    { path: "/admin/stock", label: "Stock Received", Icon: StockIcon },
     { path: "/admin/analytics", label: "Analytics", Icon: InsightsIcon },
   ];
 

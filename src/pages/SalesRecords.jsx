@@ -26,11 +26,12 @@ const emptyInvoiceFields = () => ({
   bill_type: "Original",
   buyer_gstin: "", buyer_pan: "", buyer_address: "", buyer_state_code: "",
   buyer_adhar: "", buyer_mobile: "", buyer_email: "", buyer_cin: "",
+  buyer_city: "", buyer_state: "",
   agent_name: "", consignee_details: "",
   ack_no: "", ack_date: "", irn: "",
   transport_name: "", transport_gstin: "", lr_no: "", lr_date: "", despatch_to: "",
   eway_bill_no: "", eway_bill_date: "", place_of_supply: "",
-  cgst_percent: "0", sgst_percent: "0", igst_percent: "0",
+  cgst_percent: "0", sgst_percent: "0", igst_percent: "0", total_gst_percent: "0",
   discount: "0", cartage: "0", insurance: "0", sp_pack_chg: "0", others: "0",
   round_off: "0", tcs: "0",
 });
@@ -46,6 +47,7 @@ export default function SalesRecords() {
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     bill_date: new Date().toISOString().split("T")[0],
     bill_number: "", party: "", sale_type: "Direct", agency_name: "", notes: "",
@@ -108,6 +110,19 @@ export default function SalesRecords() {
   };
 
   const handleFormChange = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
+  // When CGST/SGST/IGST change, auto-fill Total GST % with their sum
+  // (still editable directly afterward)
+  const handleGstChange = (field, value) => {
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      const sum =
+        (parseFloat(next.cgst_percent) || 0) +
+        (parseFloat(next.sgst_percent) || 0) +
+        (parseFloat(next.igst_percent) || 0);
+      next.total_gst_percent = String(sum);
+      return next;
+    });
+  };
 
   const handleItemChange = (index, field, value) => {
     setItems((prev) => {
@@ -135,20 +150,17 @@ export default function SalesRecords() {
 
   // Live calculations
   const formSubtotal = items.reduce((sum, it) => sum + num(it.amount), 0);
-  const cgstAmount = (formSubtotal * num(form.cgst_percent)) / 100;
-  const sgstAmount = (formSubtotal * num(form.sgst_percent)) / 100;
-  const igstAmount = (formSubtotal * num(form.igst_percent)) / 100;
-  const totalGst = cgstAmount + sgstAmount + igstAmount;
-  const formFinalTotal = 
-    formSubtotal
-    - num(form.discount)
-    + num(form.cartage)
-    + num(form.insurance)
-    + num(form.sp_pack_chg)
-    + num(form.others)
-    + totalGst
-    - num(form.tcs)
-    + num(form.round_off);
+  const formChargesPreview = num(form.cartage) + num(form.insurance) + num(form.sp_pack_chg) + num(form.others);
+  const formGstBase = formSubtotal - num(form.discount) + formChargesPreview;
+  const cgstAmount = (formGstBase * num(form.cgst_percent)) / 100;
+  const sgstAmount = (formGstBase * num(form.sgst_percent)) / 100;
+  const igstAmount = (formGstBase * num(form.igst_percent)) / 100;
+  const totalGst = num(form.total_gst_percent) > 0
+    ? (formGstBase * num(form.total_gst_percent)) / 100
+    : cgstAmount + sgstAmount + igstAmount;
+  const formFinalTotal = Math.round(
+    formGstBase + totalGst + (formGstBase * num(form.tcs)) / 100
+  );
 
   const startEdit = (bill) => {
     setForm({
@@ -167,6 +179,8 @@ export default function SalesRecords() {
       buyer_mobile: bill.buyer_mobile || "",
       buyer_email: bill.buyer_email || "",
       buyer_cin: bill.buyer_cin || "",
+      buyer_city: bill.buyer_city || "",
+      buyer_state: bill.buyer_state || "",
       agent_name: bill.agent_name || "",
       consignee_details: bill.consignee_details || "",
       ack_no: bill.ack_no || "",
@@ -183,6 +197,7 @@ export default function SalesRecords() {
       cgst_percent: String(bill.cgst_percent ?? 0),
       sgst_percent: String(bill.sgst_percent ?? 0),
       igst_percent: String(bill.igst_percent ?? 0),
+      total_gst_percent: String(bill.total_gst_percent ?? 0),
       discount: String(bill.discount ?? 0),
       cartage: String(bill.cartage ?? 0),
       insurance: String(bill.insurance ?? 0),
@@ -214,94 +229,109 @@ export default function SalesRecords() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
+    if (saving) return;
     if (!form.bill_number || !form.party) { alert("Please fill in Bill # and Party."); return; }
     const validItems = items.filter((it) => it.quality && it.meter && it.rate);
     if (validItems.length === 0) { alert("Please add at least one fabric line."); return; }
 
-    const subtotal = validItems.reduce((s, it) => 
-      s + (parseFloat(it.amount) || parseFloat(it.meter) * parseFloat(it.rate)), 0);
-    const cgst = (subtotal * num(form.cgst_percent)) / 100;
-    const sgst = (subtotal * num(form.sgst_percent)) / 100;
-    const igst = (subtotal * num(form.igst_percent)) / 100;
-    const final = subtotal - num(form.discount) + num(form.cartage) + num(form.insurance)
-      + num(form.sp_pack_chg) + num(form.others) + cgst + sgst + igst
-      - num(form.tcs) + num(form.round_off);
+    setSaving(true);
+    try {
+      const subtotal = validItems.reduce((s, it) =>
+        s + (parseFloat(it.amount) || parseFloat(it.meter) * parseFloat(it.rate)), 0);
+      const formCharges = num(form.cartage) + num(form.insurance) + num(form.sp_pack_chg) + num(form.others);
+      const gstBase = subtotal - num(form.discount) + formCharges;
+      const cgst = (gstBase * num(form.cgst_percent)) / 100;
+      const sgst = (gstBase * num(form.sgst_percent)) / 100;
+      const igst = (gstBase * num(form.igst_percent)) / 100;
+      const gstTotal = num(form.total_gst_percent) > 0
+        ? (gstBase * num(form.total_gst_percent)) / 100
+        : cgst + sgst + igst;
+      const tcsAmount = (gstBase * num(form.tcs)) / 100;
+      const grossBeforeRound = gstBase + gstTotal + tcsAmount;
+      const final = Math.round(grossBeforeRound);
+      const autoRoundOff = final - grossBeforeRound;
 
-    const billPayload = {
-      bill_date: form.bill_date,
-      bill_number: form.bill_number.trim(),
-      party: form.party.trim(),
-      sale_type: form.sale_type,
-      agency_name: form.sale_type === "Agency" ? (form.agency_name.trim() || null) : null,
-      notes: form.notes.trim() || null,
-      bill_type: form.bill_type || "Original",
-      buyer_gstin: form.buyer_gstin.trim() || null,
-      buyer_pan: form.buyer_pan.trim() || null,
-      buyer_address: form.buyer_address.trim() || null,
-      buyer_state_code: form.buyer_state_code.trim() || null,
-      buyer_adhar: form.buyer_adhar.trim() || null,
-      buyer_mobile: form.buyer_mobile.trim() || null,
-      buyer_email: form.buyer_email.trim() || null,
-      buyer_cin: form.buyer_cin.trim() || null,
-      agent_name: form.agent_name.trim() || null,
-      consignee_details: form.consignee_details.trim() || null,
-      ack_no: form.ack_no.trim() || null,
-      ack_date: form.ack_date || null,
-      irn: form.irn.trim() || null,
-      transport_name: form.transport_name.trim() || null,
-      transport_gstin: form.transport_gstin.trim() || null,
-      lr_no: form.lr_no.trim() || null,
-      lr_date: form.lr_date || null,
-      despatch_to: form.despatch_to.trim() || null,
-      eway_bill_no: form.eway_bill_no.trim() || null,
-      eway_bill_date: form.eway_bill_date || null,
-      place_of_supply: form.place_of_supply.trim() || null,
-      cgst_percent: num(form.cgst_percent),
-      sgst_percent: num(form.sgst_percent),
-      igst_percent: num(form.igst_percent),
-      discount: num(form.discount),
-      cartage: num(form.cartage),
-      insurance: num(form.insurance),
-      sp_pack_chg: num(form.sp_pack_chg),
-      others: num(form.others),
-      round_off: num(form.round_off),
-      tcs: num(form.tcs),
-      subtotal,
-      final_total: final,
-    };
+      const billPayload = {
+        bill_date: form.bill_date,
+        bill_number: form.bill_number.trim(),
+        party: form.party.trim(),
+        sale_type: form.sale_type,
+        agency_name: form.sale_type === "Agency" ? (form.agency_name.trim() || null) : null,
+        notes: form.notes.trim() || null,
+        bill_type: form.bill_type || "Original",
+        buyer_gstin: form.buyer_gstin.trim() || null,
+        buyer_pan: form.buyer_pan.trim() || null,
+        buyer_address: form.buyer_address.trim() || null,
+        buyer_state_code: form.buyer_state_code.trim() || null,
+        buyer_adhar: form.buyer_adhar.trim() || null,
+        buyer_mobile: form.buyer_mobile.trim() || null,
+        buyer_email: form.buyer_email.trim() || null,
+        buyer_cin: form.buyer_cin.trim() || null,
+        buyer_city: form.buyer_city.trim() || null,
+        buyer_state: form.buyer_state.trim() || null,
+        agent_name: (form.sale_type === "Agency" ? form.agency_name.trim() : "") || null,
+        consignee_details: form.consignee_details.trim() || null,
+        ack_no: form.ack_no.trim() || null,
+        ack_date: form.ack_date || null,
+        irn: form.irn.trim() || null,
+        transport_name: form.transport_name.trim() || null,
+        transport_gstin: form.transport_gstin.trim() || null,
+        lr_no: form.lr_no.trim() || null,
+        lr_date: form.lr_date || null,
+        despatch_to: form.despatch_to.trim() || null,
+        eway_bill_no: form.eway_bill_no.trim() || null,
+        eway_bill_date: form.eway_bill_date || null,
+        place_of_supply: form.place_of_supply.trim() || null,
+        cgst_percent: num(form.cgst_percent),
+        sgst_percent: num(form.sgst_percent),
+        igst_percent: num(form.igst_percent),
+        total_gst_percent: num(form.total_gst_percent),
+        discount: num(form.discount),
+        cartage: num(form.cartage),
+        insurance: num(form.insurance),
+        sp_pack_chg: num(form.sp_pack_chg),
+        others: num(form.others),
+        round_off: autoRoundOff,
+        tcs: num(form.tcs),
+        subtotal,
+        final_total: final,
+      };
 
-    let billId;
-    if (editingId) {
-      const { error: dbError } = await supabase.from("sales_records").update(billPayload).eq("id", editingId);
-      if (dbError) { alert("Could not update: " + dbError.message); return; }
-      billId = editingId;
-      await supabase.from("bill_items").delete().eq("sales_record_id", billId);
-    } else {
-      const { data, error: dbError } = await supabase.from("sales_records").insert([billPayload]).select().single();
-      if (dbError) { alert("Could not save: " + dbError.message); return; }
-      billId = data.id;
+      let billId;
+      if (editingId) {
+        const { error: dbError } = await supabase.from("sales_records").update(billPayload).eq("id", editingId);
+        if (dbError) { alert("Could not update: " + dbError.message); return; }
+        billId = editingId;
+        await supabase.from("bill_items").delete().eq("sales_record_id", billId);
+      } else {
+        const { data, error: dbError } = await supabase.from("sales_records").insert([billPayload]).select().single();
+        if (dbError) { alert("Could not save: " + dbError.message); return; }
+        billId = data.id;
+      }
+
+      const itemsPayload = validItems.map((it) => ({
+        sales_record_id: billId,
+        quality: it.quality.trim(),
+        meter: parseFloat(it.meter),
+        rate: parseFloat(it.rate),
+        amount: parseFloat(it.amount) || parseFloat(it.meter) * parseFloat(it.rate),
+        hsn_code: it.hsn_code || "5515",
+        case_no: it.case_no || null,
+        pcs: parseInt(it.pcs, 10) || 1,
+        cut_type: it.cut_type || "Lump",
+        des_no: it.des_no || "WHITE",
+      }));
+      const { error: itemsError } = await supabase.from("bill_items").insert(itemsPayload);
+      if (itemsError) { alert("Bill saved but items failed: " + itemsError.message); return; }
+
+      resetForm();
+      setShowForm(false);
+      fetchBills();
+    } finally {
+      setSaving(false);
     }
-
-    const itemsPayload = validItems.map((it) => ({
-      sales_record_id: billId,
-      quality: it.quality.trim(),
-      meter: parseFloat(it.meter),
-      rate: parseFloat(it.rate),
-      amount: parseFloat(it.amount) || parseFloat(it.meter) * parseFloat(it.rate),
-      hsn_code: it.hsn_code || "5515",
-      case_no: it.case_no || null,
-      pcs: parseInt(it.pcs, 10) || 1,
-      cut_type: it.cut_type || "Lump",
-      des_no: it.des_no || "WHITE",
-    }));
-    const { error: itemsError } = await supabase.from("bill_items").insert(itemsPayload);
-    if (itemsError) { alert("Bill saved but items failed: " + itemsError.message); return; }
-
-    resetForm();
-    setShowForm(false);
-    fetchBills();
   };
 
   const handleDelete = async (id) => {
@@ -373,9 +403,12 @@ export default function SalesRecords() {
 
       <main className="max-w-7xl mx-auto px-6 py-10 relative">
         <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
-          <div>
-            <h2 className="text-4xl font-bold tracking-tight text-white">Sales Records</h2>
-            <p className="text-xs text-[#7a8499] mt-2 uppercase tracking-[0.25em] font-medium">Bill log — supports GST invoice export</p>
+          <div className="flex items-center gap-4">
+            <div className="w-1 h-12 rounded-full bg-gradient-to-b from-[#f4d77a] via-[#d4af37] to-[#a8842c]" />
+            <div>
+              <h2 className="text-4xl font-bold tracking-tight" style={{ background: "linear-gradient(135deg, #ffffff 0%, #f4d77a 60%, #d4af37 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Sales Records</h2>
+              <p className="text-xs text-[#7a8499] mt-2 uppercase tracking-[0.25em] font-medium">Bill log — supports GST invoice export</p>
+            </div>
           </div>
           <button
             onClick={() => { resetForm(); setShowForm(!showForm); }}
@@ -417,6 +450,8 @@ export default function SalesRecords() {
                       setForm((prev) => ({
                         ...prev,
                         party: v,
+                        sale_type: matchingBill.sale_type || prev.sale_type,
+                        agency_name: matchingBill.agency_name || prev.agency_name,
                         buyer_gstin: matchingBill.buyer_gstin || prev.buyer_gstin,
                         buyer_pan: matchingBill.buyer_pan || prev.buyer_pan,
                         buyer_address: matchingBill.buyer_address || prev.buyer_address,
@@ -425,11 +460,20 @@ export default function SalesRecords() {
                         buyer_mobile: matchingBill.buyer_mobile || prev.buyer_mobile,
                         buyer_email: matchingBill.buyer_email || prev.buyer_email,
                         buyer_cin: matchingBill.buyer_cin || prev.buyer_cin,
+                        buyer_city: matchingBill.buyer_city || prev.buyer_city,
+                        buyer_state: matchingBill.buyer_state || prev.buyer_state,
                         agent_name: matchingBill.agent_name || prev.agent_name,
                         consignee_details: matchingBill.consignee_details || prev.consignee_details,
                         place_of_supply: matchingBill.place_of_supply || prev.place_of_supply,
+                        transport_name: matchingBill.transport_name || prev.transport_name,
+                        transport_gstin: matchingBill.transport_gstin || prev.transport_gstin,
+                        despatch_to: matchingBill.despatch_to || prev.despatch_to,
+                        cgst_percent: String(matchingBill.cgst_percent ?? prev.cgst_percent),
+                        sgst_percent: String(matchingBill.sgst_percent ?? prev.sgst_percent),
+                        igst_percent: String(matchingBill.igst_percent ?? prev.igst_percent),
+                        total_gst_percent: String(matchingBill.total_gst_percent ?? prev.total_gst_percent),
+                        tcs: String(matchingBill.tcs ?? prev.tcs),
                       }));
-                      // Auto-open invoice section if we filled anything
                       if (matchingBill.buyer_gstin || matchingBill.buyer_address) {
                         setShowInvoiceFields(true);
                       }
@@ -577,7 +621,8 @@ export default function SalesRecords() {
                       <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Buyer Email</label><input type="email" value={form.buyer_email} onChange={(e) => handleFormChange("buyer_email", e.target.value)} placeholder="buyer@example.com" className={inputCls} /></div>
                       <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Aadhar</label><input type="text" value={form.buyer_adhar} onChange={(e) => handleFormChange("buyer_adhar", e.target.value)} placeholder="Optional" className={inputCls} /></div>
                       <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Buyer CIN</label><input type="text" value={form.buyer_cin} onChange={(e) => handleFormChange("buyer_cin", e.target.value)} placeholder="Corporate ID (optional)" className={inputCls} /></div>
-                      <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Agent</label><input type="text" value={form.agent_name} onChange={(e) => handleFormChange("agent_name", e.target.value)} placeholder="Agent name" className={inputCls} /></div>
+                      <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">City</label><input type="text" value={form.buyer_city} onChange={(e) => handleFormChange("buyer_city", e.target.value)} placeholder="City" className={inputCls} /></div>
+                      <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">State</label><input type="text" value={form.buyer_state} onChange={(e) => handleFormChange("buyer_state", e.target.value)} placeholder="State" className={inputCls} /></div>
                       <div className="sm:col-span-2 lg:col-span-3"><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Consignee Details (Ship To)</label><textarea value={form.consignee_details} onChange={(e) => handleFormChange("consignee_details", e.target.value)} placeholder="Ship-to address, name, contact — type 'Same as Buyer' if applicable" rows={3} className={inputCls + " resize-none"} /></div>
                     </div>
                   </div>
@@ -607,16 +652,16 @@ export default function SalesRecords() {
                     <p className="text-[10px] font-bold text-[#d4af37] uppercase tracking-[0.3em] mb-3">GST & Adjustments</p>
                     <p className="text-xs text-[#7a8499] mb-3 italic">For inter-state sales (different state from yours), use IGST. For intra-state, use CGST + SGST.</p>
                     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                      <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">CGST %</label><input type="number" step="0.01" value={form.cgst_percent} onChange={(e) => handleFormChange("cgst_percent", e.target.value)} placeholder="0" className={inputCls} /></div>
-                      <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">SGST %</label><input type="number" step="0.01" value={form.sgst_percent} onChange={(e) => handleFormChange("sgst_percent", e.target.value)} placeholder="0" className={inputCls} /></div>
-                      <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">IGST %</label><input type="number" step="0.01" value={form.igst_percent} onChange={(e) => handleFormChange("igst_percent", e.target.value)} placeholder="e.g. 5" className={inputCls} /></div>
+                      <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">CGST %</label><input type="number" step="0.01" value={form.cgst_percent} onChange={(e) => handleGstChange("cgst_percent", e.target.value)} placeholder="0" className={inputCls} /></div>
+                      <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">SGST %</label><input type="number" step="0.01" value={form.sgst_percent} onChange={(e) => handleGstChange("sgst_percent", e.target.value)} placeholder="0" className={inputCls} /></div>
+                      <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">IGST %</label><input type="number" step="0.01" value={form.igst_percent} onChange={(e) => handleGstChange("igst_percent", e.target.value)} placeholder="e.g. 5" className={inputCls} /></div>
                       <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Discount ₹</label><input type="number" step="0.01" value={form.discount} onChange={(e) => handleFormChange("discount", e.target.value)} placeholder="0" className={inputCls} /></div>
                       <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Cartage ₹</label><input type="number" step="0.01" value={form.cartage} onChange={(e) => handleFormChange("cartage", e.target.value)} placeholder="0" className={inputCls} /></div>
                       <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Insurance ₹</label><input type="number" step="0.01" value={form.insurance} onChange={(e) => handleFormChange("insurance", e.target.value)} placeholder="0" className={inputCls} /></div>
                       <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Sp. Pack Chg. ₹</label><input type="number" step="0.01" value={form.sp_pack_chg} onChange={(e) => handleFormChange("sp_pack_chg", e.target.value)} placeholder="0" className={inputCls} /></div>
                       <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Others ₹</label><input type="number" step="0.01" value={form.others} onChange={(e) => handleFormChange("others", e.target.value)} placeholder="0" className={inputCls} /></div>
-                      <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Round Off ₹</label><input type="number" step="0.01" value={form.round_off} onChange={(e) => handleFormChange("round_off", e.target.value)} placeholder="0" className={inputCls} /></div>
-                      <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">TCS ₹</label><input type="number" step="0.01" value={form.tcs} onChange={(e) => handleFormChange("tcs", e.target.value)} placeholder="0" className={inputCls} /></div>
+                      <div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">TCS %</label><input type="number" step="0.01" value={form.tcs} onChange={(e) => handleFormChange("tcs", e.target.value)} placeholder="0" className={inputCls} /></div>
+<div><label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Total GST %</label><input type="number" step="0.01" value={form.total_gst_percent} onChange={(e) => handleFormChange("total_gst_percent", e.target.value)} placeholder="e.g. 5" className={inputCls} /></div>
                     </div>
                   </div>
                 </div>
@@ -638,8 +683,8 @@ export default function SalesRecords() {
             </div>
 
             <div className="flex gap-3">
-              <button type="submit" className="bg-gradient-to-br from-[#d4af37] to-[#a8842c] text-[#020817] px-6 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition">
-                {editingId ? "Update Bill" : "Save Bill"}
+              <button type="submit" disabled={saving} className="bg-gradient-to-br from-[#d4af37] to-[#a8842c] text-[#020817] px-6 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition disabled:opacity-50 disabled:cursor-not-allowed">
+                {saving ? "Saving..." : (editingId ? "Update Bill" : "Save Bill")}
               </button>
               <button type="button" onClick={() => { resetForm(); setShowForm(false); }} className="bg-[#020817] border border-[#1a2233] text-[#a8b0c0] px-6 py-2.5 rounded-lg font-medium text-xs uppercase tracking-wider hover:border-[#d4af37]/40 hover:text-[#e8edf5] transition">
                 Cancel
@@ -712,6 +757,7 @@ export default function SalesRecords() {
                     <th className="text-left px-3 py-3 font-bold text-[10px] text-[#7a8499] uppercase tracking-[0.2em]">Agency / Direct</th>
                     <th className="text-center px-3 py-3 font-bold text-[10px] text-[#7a8499] uppercase tracking-[0.2em]">Fabrics</th>
                     <th className="text-right px-3 py-3 font-bold text-[10px] text-[#7a8499] uppercase tracking-[0.2em]">Meters</th>
+                    <th className="text-right px-3 py-3 font-bold text-[10px] text-[#7a8499] uppercase tracking-[0.2em]">Rate</th>
                     <th className="text-right px-3 py-3 font-bold text-[10px] text-[#7a8499] uppercase tracking-[0.2em]">Amount</th>
                     <th className="text-center px-3 py-3 font-bold text-[10px] text-[#7a8499] uppercase tracking-[0.2em]">Actions</th>
                   </tr>
@@ -750,11 +796,9 @@ export default function SalesRecords() {
                             {itemCount === 0 ? "—" : `${itemCount} ${itemCount === 1 ? "fabric" : "fabrics"}`}
                           </td>
                           <td className="px-3 py-3 text-right font-mono text-[#a8b0c0]">{billMeters(b).toFixed(2)}</td>
+                          <td className="px-3 py-3 text-right font-mono text-[#a8b0c0]">{billMeters(b) > 0 ? (finalTotal / billMeters(b)).toFixed(2) : "—"}</td>
                           <td className="px-3 py-3 text-right font-mono">
                             <p className="font-bold text-[#d4af37]">{inr(finalTotal)}</p>
-                            {hasAdjustments && (
-                              <p className="text-[10px] text-[#7a8499] mt-0.5">sub: {inr(subtotal)}</p>
-                            )}
                           </td>
                           <td className="px-3 py-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                             <button onClick={() => handleExport(b)} className="text-xs font-medium text-emerald-400 hover:text-emerald-300 mr-3 transition">Export</button>
@@ -764,7 +808,7 @@ export default function SalesRecords() {
                         </tr>
                         {isOpen && (
                           <tr className="bg-[#020817]/60 border-t border-[#1a2233]">
-                            <td colSpan={9} className="px-6 py-4">
+                            <td colSpan={10} className="px-6 py-4">
                               {itemCount === 0 ? (
                                 <p className="text-xs text-[#7a8499] italic">No fabric line items recorded.</p>
                               ) : (
@@ -774,7 +818,7 @@ export default function SalesRecords() {
                                       <th className="text-left font-medium py-2">Quality</th>
                                       <th className="text-right font-medium py-2">Meter</th>
                                       <th className="text-right font-medium py-2">Rate</th>
-                                      <th className="text-right font-medium py-2">Amount</th>
+                                      <th className="text-right font-medium py-2">Total Amount</th>
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -783,29 +827,10 @@ export default function SalesRecords() {
                                         <td className="py-2 text-[#e8edf5] font-semibold">{it.quality}</td>
                                         <td className="py-2 text-right font-mono text-[#a8b0c0]">{Number(it.meter).toFixed(2)}</td>
                                         <td className="py-2 text-right font-mono text-[#a8b0c0]">{Number(it.rate).toFixed(2)}</td>
-                                        <td className="py-2 text-right font-mono text-[#a8b0c0]">{inr(it.amount)}</td>
+                                        <td className="py-2 text-right font-mono text-[#a8b0c0]">{inr(Number(it.amount) || Number(it.meter) * Number(it.rate))}</td>
                                       </tr>
                                     ))}
-                                    <tr className="border-t-2 border-[#1a2233]">
-                                      <td colSpan={3} className="py-2 text-[#7a8499] font-bold uppercase tracking-[0.2em] text-[11px] text-right">Subtotal</td>
-                                      <td className="py-2 text-right font-mono font-bold text-white">{inr(subtotal)}</td>
-                                    </tr>
-                                    {hasAdjustments && (
-                                      <>
-                                        {Number(b.discount) > 0 && <tr><td colSpan={3} className="py-1 text-rose-300/80 text-right text-[11px]">− Discount</td><td className="py-1 text-right font-mono text-rose-300">{inr(b.discount)}</td></tr>}
-                                        {Number(b.cartage) > 0 && <tr><td colSpan={3} className="py-1 text-emerald-300/80 text-right text-[11px]">+ Cartage</td><td className="py-1 text-right font-mono text-emerald-300">{inr(b.cartage)}</td></tr>}
-                                        {Number(b.insurance) > 0 && <tr><td colSpan={3} className="py-1 text-emerald-300/80 text-right text-[11px]">+ Insurance</td><td className="py-1 text-right font-mono text-emerald-300">{inr(b.insurance)}</td></tr>}
-                                        {Number(b.cgst_percent) > 0 && <tr><td colSpan={3} className="py-1 text-emerald-300/80 text-right text-[11px]">+ CGST {b.cgst_percent}%</td><td className="py-1 text-right font-mono text-emerald-300">{inr(subtotal * b.cgst_percent / 100)}</td></tr>}
-                                        {Number(b.sgst_percent) > 0 && <tr><td colSpan={3} className="py-1 text-emerald-300/80 text-right text-[11px]">+ SGST {b.sgst_percent}%</td><td className="py-1 text-right font-mono text-emerald-300">{inr(subtotal * b.sgst_percent / 100)}</td></tr>}
-                                        {Number(b.igst_percent) > 0 && <tr><td colSpan={3} className="py-1 text-emerald-300/80 text-right text-[11px]">+ IGST {b.igst_percent}%</td><td className="py-1 text-right font-mono text-emerald-300">{inr(subtotal * b.igst_percent / 100)}</td></tr>}
-                                        {Number(b.tcs) > 0 && <tr><td colSpan={3} className="py-1 text-rose-300/80 text-right text-[11px]">− TCS</td><td className="py-1 text-right font-mono text-rose-300">{inr(b.tcs)}</td></tr>}
-                                        {Number(b.round_off) !== 0 && <tr><td colSpan={3} className="py-1 text-[#7a8499] text-right text-[11px]">± Round Off</td><td className="py-1 text-right font-mono text-[#d4af37]">{inr(b.round_off)}</td></tr>}
-                                      </>
-                                    )}
-                                    <tr className="border-t-2 border-[#d4af37]/40">
-                                      <td colSpan={3} className="py-2 text-[#d4af37] font-bold uppercase tracking-[0.2em] text-[11px] text-right">Final Total</td>
-                                      <td className="py-2 text-right font-mono font-bold text-[#d4af37]">{inr(finalTotal)}</td>
-                                    </tr>
+                                    
                                   </tbody>
                                 </table>
                               )}

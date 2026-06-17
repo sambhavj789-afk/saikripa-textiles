@@ -229,9 +229,12 @@ export default function Analytics() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-10 relative">
-        <div className="mb-8">
-          <h2 className="text-4xl font-bold tracking-tight text-white">Business Analytics</h2>
-          <p className="text-xs text-[#7a8499] mt-2 uppercase tracking-[0.25em] font-medium">Use the controls below to slice your data</p>
+        <div className="mb-8 flex items-center gap-4">
+          <div className="w-1 h-12 rounded-full bg-gradient-to-b from-[#f4d77a] via-[#d4af37] to-[#a8842c]" />
+          <div>
+            <h2 className="text-4xl font-bold tracking-tight" style={{ background: "linear-gradient(135deg, #ffffff 0%, #f4d77a 60%, #d4af37 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Business Analytics</h2>
+            <p className="text-xs text-[#7a8499] mt-2 uppercase tracking-[0.25em] font-medium">Use the controls below to slice your data</p>
+          </div>
         </div>
 
         {error && <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded-xl p-4 text-sm mb-4">{error}</div>}
@@ -288,10 +291,10 @@ export default function Analytics() {
                     </select>
                   </Field>
                 )}
-                <Field label="From Date">
+                <Field label="Date Range — From (optional)">
                   <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className={selectCls + " [color-scheme:dark]"} />
                 </Field>
-                <Field label="To Date">
+                <Field label="Date Range — To (optional)">
                   <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className={selectCls + " [color-scheme:dark]"} />
                 </Field>
               </div>
@@ -330,7 +333,7 @@ export default function Analytics() {
                 </p>
               </div>
               {useBreakdown ? (
-                chartData.arr.length === 0 ? <div className="py-16 text-center text-[#7a8499] text-sm">No data matches your filters.</div> : (
+                chartData.arr.length === 0 ? <div className="py-16 text-center text-[#7a8499] text-sm">No data matches your filters.<br /><button onClick={resetFilters} className="mt-3 text-xs font-bold text-[#d4af37] hover:text-[#f4d77a] uppercase tracking-wider transition">Reset all filters</button></div> : (
                   <ResponsiveContainer width="100%" height={Math.max(400, chartData.arr.length * 45)}>
                     <BarChart data={chartData.arr} layout="vertical">
                       <CartesianGrid strokeDasharray="3 3" stroke="#1a2233" />
@@ -342,7 +345,7 @@ export default function Analytics() {
                     </BarChart>
                   </ResponsiveContainer>
                 )
-              ) : chartData.length === 0 ? <div className="py-16 text-center text-[#7a8499] text-sm">No data matches your filters.</div>
+              ) : chartData.length === 0 ? <div className="py-16 text-center text-[#7a8499] text-sm">No data matches your filters.<br /><button onClick={resetFilters} className="mt-3 text-xs font-bold text-[#d4af37] hover:text-[#f4d77a] uppercase tracking-wider transition">Reset all filters</button></div>
                 : isTimeChart ? (
                   <ResponsiveContainer width="100%" height={400}>
                     <LineChart data={chartData}>

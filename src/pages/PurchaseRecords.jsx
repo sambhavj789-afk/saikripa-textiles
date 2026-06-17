@@ -149,9 +149,12 @@ export default function PurchaseRecords() {
 
       <main className="max-w-7xl mx-auto px-6 py-10 relative">
         <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
-          <div>
-            <h2 className="text-4xl font-bold tracking-tight text-white">Purchase Records</h2>
-            <p className="text-xs text-[#7a8499] mt-2 uppercase tracking-[0.25em] font-medium">Purchase bills — Plus = underweight · Minus = overweight</p>
+          <div className="flex items-center gap-4">
+            <div className="w-1 h-12 rounded-full bg-gradient-to-b from-[#f4d77a] via-[#d4af37] to-[#a8842c]" />
+            <div>
+              <h2 className="text-4xl font-bold tracking-tight" style={{ background: "linear-gradient(135deg, #ffffff 0%, #f4d77a 60%, #d4af37 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Purchase Records</h2>
+              <p className="text-xs text-[#7a8499] mt-2 uppercase tracking-[0.25em] font-medium">Purchase bills — Plus = underweight · Minus = overweight</p>
+            </div>
           </div>
           <button onClick={() => { resetForm(); setShowForm(!showForm); }} className="bg-gradient-to-br from-[#d4af37] to-[#a8842c] text-[#020817] px-5 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition">
             {showForm ? "Close Form" : "+ New Purchase Bill"}
@@ -231,6 +234,7 @@ export default function PurchaseRecords() {
                     <th className="text-left px-3 py-3 font-bold text-[10px] text-[#7a8499] uppercase tracking-[0.2em]">Party</th>
                     <th className="text-left px-3 py-3 font-bold text-[10px] text-[#7a8499] uppercase tracking-[0.2em]">Quality</th>
                     <th className="text-right px-3 py-3 font-bold text-[10px] text-[#7a8499] uppercase tracking-[0.2em]">Meter</th>
+                    <th className="text-right px-3 py-3 font-bold text-[10px] text-[#7a8499] uppercase tracking-[0.2em]">Rate</th>
                     <th className="text-right px-3 py-3 font-bold text-[10px] text-[#7a8499] uppercase tracking-[0.2em]">Plus (+)</th>
                     <th className="text-right px-3 py-3 font-bold text-[10px] text-[#7a8499] uppercase tracking-[0.2em]">Minus (−)</th>
                     <th className="text-right px-3 py-3 font-bold text-[10px] text-[#7a8499] uppercase tracking-[0.2em]">Amount</th>
@@ -245,6 +249,7 @@ export default function PurchaseRecords() {
                       <td className="px-3 py-3 text-[#e8edf5]">{b.party}</td>
                       <td className="px-3 py-3 text-[#a8b0c0]">{b.quality}</td>
                       <td className="px-3 py-3 text-right font-mono text-[#a8b0c0]">{Number(b.meter).toFixed(2)}</td>
+                      <td className="px-3 py-3 text-right font-mono text-[#a8b0c0]">{Number(b.meter) > 0 ? (Number(b.amount) / Number(b.meter)).toFixed(2) : "—"}</td>
                       <td className="px-3 py-3 text-right font-mono text-rose-300">{Number(b.plus) > 0 ? Number(b.plus).toFixed(2) : "—"}</td>
                       <td className="px-3 py-3 text-right font-mono text-emerald-300">{Number(b.minus) > 0 ? Number(b.minus).toFixed(2) : "—"}</td>
                       <td className="px-3 py-3 text-right font-mono font-bold text-[#d4af37]">{inr(b.amount)}</td>
