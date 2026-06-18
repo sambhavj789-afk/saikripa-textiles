@@ -157,8 +157,6 @@ export default function FabricDetail() {
               {[
                 ["MOQ", item.moq],
                 ["Available Shades", item.colors],
-                ["Fabric Finish", item.finish],
-                ["Best For", item.uses],
               ].map(([label, value]) => (
                 <div key={label} className="bg-[#0a1124] rounded-2xl p-4 border border-[#1a2233]">
                   <p className="text-[10px] text-[#7a8499] uppercase tracking-widest font-bold mb-1">

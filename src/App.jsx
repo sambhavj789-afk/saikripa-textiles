@@ -264,7 +264,7 @@ function ProductModal({ item, onClose }) {
           <h3 className="text-3xl font-black text-white mb-3">{item.title}</h3>
           <p className="text-[#cbd5e1] leading-relaxed mb-6">{item.description}</p>
           <div className="grid grid-cols-2 gap-4 mb-8">
-            {[["MOQ", item.moq], ["Available Colors", item.colors], ["Fabric Finish", item.finish], ["Best For", item.uses]].map(([label, value]) => (
+            {[["MOQ", item.moq], ["Available Colors", item.colors]].map(([label, value]) => (
               <div key={label} className="bg-[#020817] border border-[#1a2233] rounded-2xl p-4">
                 <p className="text-xs text-[#7a8499] uppercase tracking-widest mb-1">{label}</p>
                 <p className="text-sm font-bold text-white">{value}</p>

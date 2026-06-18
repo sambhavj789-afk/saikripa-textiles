@@ -252,10 +252,8 @@ export default function Catalogue() {
                   ["Category", "category"],
                   ["GSM", "gsm"],
                   ["Construction", "construction"],
-                  ["Finish", "finish"],
                   ["MOQ", "moq"],
                   ["Shades", "colors"],
-                  ["Best For", "uses"],
                 ].map(([label, key]) => (
                   <React.Fragment key={key}>
                     <div className="text-xs font-bold text-[#d4af37] uppercase tracking-widest py-3 self-center">
