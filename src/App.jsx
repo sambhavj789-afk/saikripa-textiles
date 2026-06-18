@@ -465,7 +465,7 @@ export default function LuxuryTextileWebsite() {
             </div>
 
             <div className="mt-10 flex flex-wrap gap-4 justify-center">
-              <a href="#collections" className="bg-gradient-to-r from-[#f4d77a] via-[#d4af37] to-[#a8842c] text-[#020817] px-10 py-4 rounded-2xl font-bold hover:scale-105 hover:shadow-[0_0_40px_rgba(212,175,55,0.5)] transition-all duration-300">
+              <a href="#collections" className="bg-gradient-to-br from-[#f4d77a] via-[#d4af37] to-[#a8842c] text-[#020817] px-10 py-4 rounded-2xl font-bold hover:scale-105 hover:shadow-[0_0_40px_rgba(212,175,55,0.5)] transition-all duration-300">
                 Explore Collections
               </a>
               <a href="https://wa.me/918949881253" target="_blank" rel="noreferrer" className="border border-white/30 bg-black/40 backdrop-blur-md hover:bg-black/60 transition-all duration-300 px-10 py-4 rounded-2xl font-semibold text-white">

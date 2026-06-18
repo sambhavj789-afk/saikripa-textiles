@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import AdminNav from "../components/AdminNav";
 import Autocomplete from "../components/Autocomplete";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const inr = (n) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n || 0);
 
@@ -22,6 +25,7 @@ export default function PurchaseRecords() {
   const [userEmail, setUserEmail] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [exportOpen, setExportOpen] = useState(false);
   const [form, setForm] = useState(emptyForm());
   const [search, setSearch] = useState("");
   const [partyFilter, setPartyFilter] = useState("all");
@@ -135,6 +139,70 @@ export default function PurchaseRecords() {
   const goldGlow = { boxShadow: "0 0 40px rgba(212, 175, 55, 0.08), inset 0 0 0 1px rgba(212, 175, 55, 0.3)" };
   const partyChips = ["all", ...supplierOptions];
 
+  const exportFileName = (ext) => `saikripa-purchases-${new Date().toISOString().slice(0, 10)}.${ext}`;
+
+  const exportToExcel = () => {
+    if (filteredBills.length === 0) { alert("No purchases to export. Try clearing your filters."); return; }
+    const rows = filteredBills.map((b) => ({
+      Date: new Date(b.bill_date).toLocaleDateString("en-IN"),
+      "Bill #": b.bill_number,
+      Party: b.party,
+      Quality: b.quality,
+      Meter: Number(b.meter).toFixed(2),
+      Rate: Number(b.meter) > 0 ? (Number(b.amount) / Number(b.meter)).toFixed(2) : "",
+      "Plus (+)": Number(b.plus) > 0 ? Number(b.plus).toFixed(2) : "",
+      "Minus (−)": Number(b.minus) > 0 ? Number(b.minus).toFixed(2) : "",
+      Amount: Number(b.amount).toFixed(2),
+      Notes: b.notes || "",
+    }));
+    rows.push({});
+    rows.push({
+      Date: "TOTAL", "Bill #": filteredBills.length + " bills",
+      Meter: totals.meter.toFixed(2),
+      "Plus (+)": totals.plus.toFixed(2),
+      "Minus (−)": totals.minus.toFixed(2),
+      Amount: totals.amount.toFixed(2),
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws["!cols"] = [{ wch: 12 }, { wch: 10 }, { wch: 18 }, { wch: 22 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 13 }, { wch: 30 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Purchase Records");
+    XLSX.writeFile(wb, exportFileName("xlsx"));
+  };
+
+  const exportToPDF = () => {
+    if (filteredBills.length === 0) { alert("No purchases to export. Try clearing your filters."); return; }
+    const doc = new jsPDF("landscape");
+    doc.setFontSize(14); doc.setTextColor(40, 40, 40);
+    doc.text("SAIKRIPA TEXTILES — Purchase Records", 14, 15);
+    doc.setFontSize(9); doc.setTextColor(100, 100, 100);
+    doc.text(`Generated: ${new Date().toLocaleString("en-IN")}  |  ${filteredBills.length} bills`, 14, 21);
+    const body = filteredBills.map((b) => [
+      new Date(b.bill_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }),
+      b.bill_number, b.party, b.quality,
+      Number(b.meter).toFixed(2),
+      Number(b.meter) > 0 ? (Number(b.amount) / Number(b.meter)).toFixed(2) : "—",
+      Number(b.plus) > 0 ? Number(b.plus).toFixed(2) : "—",
+      Number(b.minus) > 0 ? Number(b.minus).toFixed(2) : "—",
+      "Rs " + Number(b.amount).toFixed(2),
+    ]);
+    autoTable(doc, {
+      startY: 26,
+      head: [["Date", "Bill #", "Party", "Quality", "Meter", "Rate", "Plus", "Minus", "Amount"]],
+      body,
+      foot: [["", "TOTAL", filteredBills.length + " bills", "",
+        totals.meter.toFixed(2), "",
+        totals.plus.toFixed(2), totals.minus.toFixed(2),
+        "Rs " + totals.amount.toFixed(2)]],
+      headStyles: { fillColor: [212, 175, 55], textColor: [2, 8, 23], fontStyle: "bold", fontSize: 8 },
+      footStyles: { fillColor: [10, 17, 36], textColor: [212, 175, 55], fontStyle: "bold", fontSize: 9 },
+      bodyStyles: { fontSize: 8 },
+      columnStyles: { 4: { halign: "right" }, 5: { halign: "right" }, 6: { halign: "right" }, 7: { halign: "right" }, 8: { halign: "right" } },
+      margin: { left: 14, right: 14 },
+    });
+    doc.save(exportFileName("pdf"));
+  };
+
   return (
     <div className="min-h-screen bg-[#020817] text-[#e8edf5] relative overflow-x-hidden">
       <div className="fixed top-0 right-0 w-[600px] h-[600px] pointer-events-none opacity-50" style={{ background: "radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0) 70%)" }} />
@@ -156,9 +224,52 @@ export default function PurchaseRecords() {
               <p className="text-xs text-[#7a8499] mt-2 uppercase tracking-[0.25em] font-medium">Purchase bills — Plus = underweight · Minus = overweight</p>
             </div>
           </div>
-          <button onClick={() => { resetForm(); setShowForm(!showForm); }} className="bg-gradient-to-br from-[#d4af37] to-[#a8842c] text-[#020817] px-5 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition">
-            {showForm ? "Close Form" : "+ New Purchase Bill"}
-          </button>
+          <div className="flex gap-2 flex-wrap">
+            <div className="relative">
+              <button
+                onClick={() => setExportOpen(!exportOpen)}
+                className="bg-[#020817] border border-[#d4af37]/40 text-[#d4af37] px-5 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-[#d4af37]/10 hover:border-[#d4af37]/60 transition flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 12V4m0 0l-4 4m4-4l4 4" />
+                </svg>
+                Export
+                <svg className={`w-3 h-3 transition-transform ${exportOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {exportOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setExportOpen(false)} />
+                  <div className="absolute right-0 mt-1 w-44 bg-[#0a1124] border border-[#1a2233] rounded-lg shadow-xl z-20 overflow-hidden">
+                    <button
+                      onClick={() => { setExportOpen(false); exportToExcel(); }}
+                      className="w-full text-left px-4 py-2.5 text-xs font-semibold text-[#e8edf5] hover:bg-emerald-500/10 hover:text-emerald-300 transition flex items-center gap-2.5 border-b border-[#1a2233]"
+                    >
+                      <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l6 6M15 9l-6 6" />
+                      </svg>
+                      Excel (.xlsx)
+                    </button>
+                    <button
+                      onClick={() => { setExportOpen(false); exportToPDF(); }}
+                      className="w-full text-left px-4 py-2.5 text-xs font-semibold text-[#e8edf5] hover:bg-rose-500/10 hover:text-rose-300 transition flex items-center gap-2.5"
+                    >
+                      <svg className="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14 2v6h6M9 14h6M9 18h4" />
+                      </svg>
+                      PDF (.pdf)
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+            <button onClick={() => { resetForm(); setShowForm(!showForm); }} className="bg-gradient-to-br from-[#d4af37] to-[#a8842c] text-[#020817] px-5 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition">
+              {showForm ? "Close Form" : "+ New Purchase Bill"}
+            </button>
+          </div>
         </div>
 
         {error && <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded-xl p-4 text-sm mb-4">{error}</div>}
