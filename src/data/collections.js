@@ -17,7 +17,7 @@ export const collections = [
     image: "/catalogue/cover.jpg",
     category: "2/18 Matty",
     moq: "150 meters",
-    colors: "40+ shades",
+    colors: "60+ shades",
     finish: "Anti-wrinkle finish",
     uses: "School & Corporate Uniforms",
     description:
