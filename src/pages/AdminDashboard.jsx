@@ -5,7 +5,7 @@ import AdminNav from "../components/AdminNav";
 
 // Map admin emails to display names
 const ADMIN_NAMES = {
-  "sambhavj789@gmail.com": "Sambhav",
+  "sambhavg789@gmail.com": "Sambhav",
   "rucheetpatil@gmail.com": "Rucheet",
   "jainaabhas96@gmail.com": "Aabhas",
 };
