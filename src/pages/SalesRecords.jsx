@@ -236,9 +236,7 @@ export default function SalesRecords() {
 const handleSubmit = async (e) => {
     e.preventDefault();
     if (saving) return;
-    if (!form.bill_number || !form.party) { alert("Please fill in Bill # and Party."); return; }
     const validItems = items.filter((it) => it.quality && it.meter && it.rate);
-    if (validItems.length === 0) { alert("Please add at least one fabric line."); return; }
 
     setSaving(true);
     try {
@@ -327,8 +325,10 @@ const handleSubmit = async (e) => {
         cut_type: it.cut_type || "Lump",
         des_no: it.des_no || "WHITE",
       }));
-      const { error: itemsError } = await supabase.from("bill_items").insert(itemsPayload);
-      if (itemsError) { alert("Bill saved but items failed: " + itemsError.message); return; }
+      if (itemsPayload.length > 0) {
+        const { error: itemsError } = await supabase.from("bill_items").insert(itemsPayload);
+        if (itemsError) { alert("Bill saved but items failed: " + itemsError.message); return; }
+      }
 
       resetForm();
       setShowForm(false);
@@ -547,16 +547,16 @@ const handleSubmit = async (e) => {
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <div>
-                <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Date *</label>
-                <input type="date" value={form.bill_date} onChange={(e) => handleFormChange("bill_date", e.target.value)} required className={inputCls + " [color-scheme:dark]"} />
+                <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Date</label>
+                <input type="date" value={form.bill_date} onChange={(e) => handleFormChange("bill_date", e.target.value)} className={inputCls + " [color-scheme:dark]"} />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Bill # *</label>
-                <input type="text" value={form.bill_number} onChange={(e) => handleFormChange("bill_number", e.target.value)} placeholder="e.g. 1024" required className={inputCls} />
+                <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Bill #</label>
+                <input type="text" value={form.bill_number} onChange={(e) => handleFormChange("bill_number", e.target.value)} placeholder="e.g. 1024" className={inputCls} />
               </div>
               <div className="sm:col-span-2">
                 <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">
-                  Party * <span className="text-[#d4af37]/60 normal-case tracking-normal text-[10px]">(auto-fills past buyer details)</span>
+                  Party <span className="text-[#d4af37]/60 normal-case tracking-normal text-[10px]">(auto-fills past buyer details)</span>
                 </label>
                 <Autocomplete 
                   value={form.party} 
@@ -601,13 +601,12 @@ const handleSubmit = async (e) => {
                     }
                   }} 
                   suggestions={partyOptions} 
-                  placeholder="Buyer name / firm" 
-                  required 
-                  className={inputCls} 
+                  placeholder="Buyer name / firm"
+                  className={inputCls}
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Sale Type *</label>
+                <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Sale Type</label>
                 <select value={form.sale_type} onChange={(e) => handleFormChange("sale_type", e.target.value)} className={inputCls + " cursor-pointer"}>
                   <option value="Direct">Direct</option>
                   <option value="Agency">Agency</option>
@@ -634,15 +633,15 @@ const handleSubmit = async (e) => {
                 {items.map((it, idx) => (
                   <div key={idx} className="bg-[#020817] border border-[#1a2233] rounded-lg p-4 grid sm:grid-cols-12 gap-3 items-end">
                     <div className="sm:col-span-4">
-                      <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Quality *</label>
+                      <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Quality</label>
                       <Autocomplete value={it.quality} onChange={(v) => handleItemChange(idx, "quality", v)} suggestions={FABRIC_QUALITIES} placeholder="e.g. Superior Collection" className={inputCls} />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Meter *</label>
+                      <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Meter</label>
                       <input type="number" step="0.01" value={it.meter} onChange={(e) => handleItemChange(idx, "meter", e.target.value)} placeholder="0.00" className={inputCls} />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Rate *</label>
+                      <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Rate</label>
                       <input type="number" step="0.01" value={it.rate} onChange={(e) => handleItemChange(idx, "rate", e.target.value)} placeholder="0.00" className={inputCls} />
                     </div>
                     <div className="sm:col-span-3">

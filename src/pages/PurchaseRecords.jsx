@@ -74,9 +74,6 @@ export default function PurchaseRecords() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.bill_number || !form.party || !form.quality || !form.meter || !form.amount) {
-      alert("Please fill in Bill #, Party, Quality, Meter, and Amount."); return;
-    }
     const payload = {
       bill_date: form.bill_date, bill_number: form.bill_number.trim(), party: form.party.trim(),
       quality: form.quality.trim(), meter: parseFloat(form.meter),
@@ -278,11 +275,11 @@ export default function PurchaseRecords() {
           <form onSubmit={handleSubmit} className="bg-[#0a1124] rounded-xl p-6 mb-6 border border-[#d4af37]/30" style={goldGlow}>
             <h3 className="font-bold text-white text-lg mb-5">{editingId ? "Edit Purchase Bill" : "New Purchase Bill"}</h3>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Field label="Date *"><input type="date" value={form.bill_date} onChange={(e) => handleChange("bill_date", e.target.value)} required className={inputCls + " [color-scheme:dark]"} /></Field>
-              <Field label="Bill # *"><input type="text" value={form.bill_number} onChange={(e) => handleChange("bill_number", e.target.value)} placeholder="e.g. 2293" required className={inputCls} /></Field>
-              <Field label="Party (Supplier) *"><Autocomplete value={form.party} onChange={(v) => handleChange("party", v)} suggestions={supplierOptions} placeholder="Suzuki / Saileela" required className={inputCls} /></Field>
-              <Field label="Quality *"><Autocomplete value={form.quality} onChange={(v) => handleChange("quality", v)} suggestions={FABRIC_QUALITIES} placeholder="e.g. Superior Collection" required className={inputCls} /></Field>
-              <Field label="Meter *"><input type="number" step="0.01" value={form.meter} onChange={(e) => handleChange("meter", e.target.value)} placeholder="0.00" required className={inputCls} /></Field>
+              <Field label="Date"><input type="date" value={form.bill_date} onChange={(e) => handleChange("bill_date", e.target.value)} className={inputCls + " [color-scheme:dark]"} /></Field>
+              <Field label="Bill #"><input type="text" value={form.bill_number} onChange={(e) => handleChange("bill_number", e.target.value)} placeholder="e.g. 2293" className={inputCls} /></Field>
+              <Field label="Party (Supplier)"><Autocomplete value={form.party} onChange={(v) => handleChange("party", v)} suggestions={supplierOptions} placeholder="Suzuki / Saileela" className={inputCls} /></Field>
+              <Field label="Quality"><Autocomplete value={form.quality} onChange={(v) => handleChange("quality", v)} suggestions={FABRIC_QUALITIES} placeholder="e.g. Superior Collection" className={inputCls} /></Field>
+              <Field label="Meter"><input type="number" step="0.01" value={form.meter} onChange={(e) => handleChange("meter", e.target.value)} placeholder="0.00" className={inputCls} /></Field>
               <div>
                 <label className="block text-[10px] font-medium uppercase tracking-[0.25em] mb-2 text-rose-300">Plus (+) — Underweight</label>
                 <input type="number" step="0.01" value={form.plus} onChange={(e) => handleChange("plus", e.target.value)} placeholder="0.00" className={inputCls} />
@@ -291,7 +288,7 @@ export default function PurchaseRecords() {
                 <label className="block text-[10px] font-medium uppercase tracking-[0.25em] mb-2 text-emerald-300">Minus (−) — Overweight</label>
                 <input type="number" step="0.01" value={form.minus} onChange={(e) => handleChange("minus", e.target.value)} placeholder="0.00" className={inputCls} />
               </div>
-              <Field label="Amount *"><input type="number" step="0.01" value={form.amount} onChange={(e) => handleChange("amount", e.target.value)} placeholder="0" required className={inputCls} /></Field>
+              <Field label="Amount"><input type="number" step="0.01" value={form.amount} onChange={(e) => handleChange("amount", e.target.value)} placeholder="0" className={inputCls} /></Field>
               <div className="sm:col-span-2 lg:col-span-4">
                 <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Notes</label>
                 <Autocomplete value={form.notes} onChange={(v) => handleChange("notes", v)} suggestions={notesOptions} placeholder="Optional" className={inputCls} />

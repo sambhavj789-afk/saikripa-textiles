@@ -108,7 +108,6 @@ const handleSubmit = async (e) => {
     e.preventDefault();
     if (saving) return;
     const validItems = items.filter((it) => it.quality && (it.process_rec || it.finish_rec));
-    if (validItems.length === 0) { alert("Please add at least one quality line."); return; }
 
     setSaving(true);
     try {
@@ -135,8 +134,10 @@ const handleSubmit = async (e) => {
         process_rec: num(it.process_rec),
         finish_rec: num(it.finish_rec),
       }));
-      const { error: itErr } = await supabase.from("stock_received_items").insert(itemsPayload);
-      if (itErr) { alert("Month saved but lines failed: " + itErr.message); return; }
+      if (itemsPayload.length > 0) {
+        const { error: itErr } = await supabase.from("stock_received_items").insert(itemsPayload);
+        if (itErr) { alert("Month saved but lines failed: " + itErr.message); return; }
+      }
 
       resetForm();
       setShowForm(false);
@@ -439,8 +440,8 @@ const submitAdd = async (month) => {
 
             <div className="grid sm:grid-cols-2 gap-4 mb-6">
               <div>
-                <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Month *</label>
-                <input type="date" value={form.period_date} onChange={(e) => handleFormChange("period_date", e.target.value)} required className={inputCls + " [color-scheme:dark]"} />
+                <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Month</label>
+                <input type="date" value={form.period_date} onChange={(e) => handleFormChange("period_date", e.target.value)} className={inputCls + " [color-scheme:dark]"} />
                 <p className="text-[10px] text-[#7a8499] mt-1">Pick any day in the month — display shows month &amp; year.</p>
               </div>
               <div>

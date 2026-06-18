@@ -116,9 +116,7 @@ export default function OfferRecords() {
 const handleSubmit = async (e) => {
     e.preventDefault();
     if (saving) return;
-    if (!form.offer_no) { alert("Please fill in Offer No."); return; }
     const validShades = shades.filter((s) => s.shade || s.quantity);
-    if (validShades.length === 0) { alert("Please add at least one shade line."); return; }
 
     setSaving(true);
     try {
@@ -151,8 +149,10 @@ const handleSubmit = async (e) => {
         grey_rec: s.grey_rec === "" ? null : num(s.grey_rec),
         not_rec_pct: num(s.not_rec_pct),
       }));
-      const { error: shErr } = await supabase.from("offer_shades").insert(shadesPayload);
-      if (shErr) { alert("Offer saved but shades failed: " + shErr.message); return; }
+      if (shadesPayload.length > 0) {
+        const { error: shErr } = await supabase.from("offer_shades").insert(shadesPayload);
+        if (shErr) { alert("Offer saved but shades failed: " + shErr.message); return; }
+      }
 
       resetForm();
       setShowForm(false);
@@ -409,8 +409,8 @@ const handleSubmit = async (e) => {
                 <input type="date" value={form.offer_date} onChange={(e) => handleFormChange("offer_date", e.target.value)} className={inputCls + " [color-scheme:dark]"} />
               </div>
               <div>
-                <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Offer No. *</label>
-                <input type="text" value={form.offer_no} onChange={(e) => handleFormChange("offer_no", e.target.value)} placeholder="e.g. 140732" required className={inputCls} />
+                <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Offer No.</label>
+                <input type="text" value={form.offer_no} onChange={(e) => handleFormChange("offer_no", e.target.value)} placeholder="e.g. 140732" className={inputCls} />
               </div>
               <div>
                 <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Mill</label>
