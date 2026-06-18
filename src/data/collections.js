@@ -18,8 +18,8 @@ export const collections = [
     category: "2/18 Matty",
     moq: "150 meters",
     colors: "60+ shades",
-    finish: "Anti-wrinkle finish",
-    uses: "School & Corporate Uniforms",
+    finish: "Lustrous finish",
+    uses: "School & Corporate Uniforms and Hospital",
     description:
       "Our flagship suiting fabric engineered for durability and sharp drape. Ideal for school uniforms, corporate blazers, and hotel staff attire.",
     longDescription:
@@ -38,7 +38,7 @@ export const collections = [
     moq: "150 meters",
     colors: "30+ shades",
     finish: "Lustrous finish",
-    uses: "Hospitality & Hotel Uniforms",
+    uses: "School & Corporate Uniforms and Hospital",
     description:
       "Executive-grade fabric with a premium lustrous finish. Preferred by leading hotel chains and hospitality groups across India.",
     longDescription:
@@ -56,8 +56,8 @@ export const collections = [
     category: "2/18 Matty",
     moq: "150 meters",
     colors: "50+ shades",
-    finish: "Soft-touch finish",
-    uses: "Premium Institutional Wear",
+    finish: "Lustrous finish",
+    uses: "School & Corporate Uniforms and Hospital",
     description:
       "Crafted with premium PV blend for a soft-touch feel without compromising on structural integrity. Perfect for premium institutional uniforms.",
     longDescription:
@@ -75,8 +75,8 @@ export const collections = [
     category: "Gaberdine",
     moq: "150 meters",
     colors: "16+ shades",
-    finish: "Gaberdine weave",
-    uses: "Corporate & Hotel Uniforms",
+    finish: "Lustrous finish",
+    uses: "School & Corporate Uniforms and Hospital",
     description:
       "Premium gaberdine-weave fabric with a refined drape. Built for high-wear corporate and hospitality environments.",
     longDescription:
@@ -94,8 +94,8 @@ export const collections = [
     category: "PV Trovin",
     moq: "150 meters",
     colors: "25+ shades",
-    finish: "Breathable weave",
-    uses: "Summer Uniforms & Industrial Wear",
+    finish: "Lustrous finish",
+    uses: "School & Corporate Uniforms and Hospital",
     description:
       "Lightweight breathable fabric designed for warm climates. Widely used for summer school uniforms and industrial workwear across Rajasthan.",
     longDescription:
@@ -113,8 +113,8 @@ export const collections = [
     category: "PV Trovin",
     moq: "150 meters",
     colors: "14+ shades",
-    finish: "Smooth weave",
-    uses: "Summer & Everyday Uniforms",
+    finish: "Lustrous finish",
+    uses: "School & Corporate Uniforms and Hospital",
     description:
       "Lightweight 270 GSM blend designed for everyday wear and warm climates. Smooth finish and reliable color retention.",
     longDescription:
