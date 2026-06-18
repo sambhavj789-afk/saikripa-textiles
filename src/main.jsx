@@ -1,7 +1,29 @@
-import React from "react";
+import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import "./index.css";
+
+// Keep admin pages out of search engines: add <meta name="robots" content=
+// "noindex, nofollow"> while on any /admin route, and remove it elsewhere so
+// the public marketing pages stay indexable.
+function RobotsMeta() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const isAdmin = pathname.startsWith("/admin");
+    let tag = document.querySelector('meta[name="robots"]');
+    if (isAdmin) {
+      if (!tag) {
+        tag = document.createElement("meta");
+        tag.setAttribute("name", "robots");
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute("content", "noindex, nofollow");
+    } else if (tag) {
+      tag.remove();
+    }
+  }, [pathname]);
+  return null;
+}
 import LuxuryTextileWebsite from "./App.jsx";
 import Catalogue from "./pages/Catalogue.jsx";
 import FabricDetail from "./pages/FabricDetail.jsx";
@@ -17,6 +39,7 @@ import OfferRecords from "./pages/OfferRecords";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
+      <RobotsMeta />
       <Routes>
         <Route path="/" element={<LuxuryTextileWebsite />} />
         <Route path="/catalogue" element={<Catalogue />} />

@@ -1,0 +1,5 @@
+# Saikripa Textiles
+# Public marketing site: search engines are welcome to index it.
+# Admin area: keep it out of search results entirely.
+User-agent: *
+Disallow: /admin
