@@ -23,7 +23,7 @@ const FLOWS = {
     ],
   },
   pricing: {
-    botMsg: "Here's a quick overview 💰\n\n• MOQ: 50m for select fabrics, 100m for premium suiting\n• Pricing depends on fabric, quantity, and shade\n• Direct factory pricing — no middleman\n• Bulk discounts available on 500m+ orders\n\nFor an accurate quote, please share your requirement on WhatsApp.",
+    botMsg: "Here's a quick overview 💰\n\n• MOQ: 150m across our fabrics\n• Pricing depends on fabric, quantity, and shade\n• Direct factory pricing — no middleman\n• Bulk discounts available on 500m+ orders\n\nFor an accurate quote, please share your requirement on WhatsApp.",
     options: [
       { label: "💬 Get a Detailed Quote", action: "whatsapp", message: "Hi, I'd like a price quote.\nFabric: ___\nQuantity: ___ meters\nCity: ___" },
       { label: "🔙 Back to Menu", next: "start" },
@@ -88,7 +88,7 @@ export default function Chatbot() {
       let reply = "";
 
       if (lower.includes("price") || lower.includes("cost") || lower.includes("rate") || lower.includes("moq")) {
-        reply = "For pricing details 💰\n\n• MOQ starts at 50m for select fabrics\n• Pricing depends on fabric, quantity & shade\n• Bulk discounts on 500m+ orders\n\nFor an accurate quote, please WhatsApp us!";
+        reply = "For pricing details 💰\n\n• MOQ is 150m for our fabrics\n• Pricing depends on fabric, quantity & shade\n• Bulk discounts on 500m+ orders\n\nFor an accurate quote, please WhatsApp us!";
       } else if (lower.includes("sample")) {
         reply = "We dispatch free fabric samples within 48 hours! 📦\n\nShare your name, city, and fabrics you'd like on WhatsApp and we'll send swatches right away.";
       } else if (lower.includes("fabric") || lower.includes("collection") || lower.includes("gsm")) {

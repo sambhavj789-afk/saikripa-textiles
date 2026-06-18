@@ -102,7 +102,7 @@ function GoldDivider({ position = "top" }) {
   );
 }
 const faqs = [
-  { q: "What is the minimum order quantity?", a: "MOQ varies by collection — starting from 50 meters for select fabrics and 100 meters for our premium suiting range. Contact us for custom requirements." },
+  { q: "What is the minimum order quantity?", a: "MOQ is 150 meters across our collections. Contact us for custom requirements." },
   { q: "Do you dispatch fabric samples?", a: "Yes. We offer free sample swatches (up to 3 designs) with shipping charges. Samples are dispatched within 48 hours of order confirmation." },
   { q: "What does 65/35 PV blend mean?", a: "65% Polyester and 35% Viscose. This blend provides the durability of polyester with the soft, breathable drape of viscose — ideal for uniform-grade suiting." },
   { q: "Do you supply pan-India?", a: "Yes. We ship to all major cities and wholesale markets across India via reputed transport partners. Custom logistics arrangements available for large orders." },
