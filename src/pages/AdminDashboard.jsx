@@ -49,7 +49,7 @@ const inr = (n) =>
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState("");
-  const [stats, setStats] = useState({ salesCount: 0, salesRevenue: 0, purchasesCount: 0, offersCount: 0, stockCount: 0, loading: true });
+  const [stats, setStats] = useState({ salesRevenue: 0, purchasesTotal: 0, loading: true });
 
   useEffect(() => {
     const init = async () => {
@@ -73,7 +73,6 @@ export default function AdminDashboard() {
       .from("sales_records")
       .select("id, final_total, bill_items(amount)");
 
-    const salesCount = salesData?.length || 0;
     const salesRevenue =
       salesData?.reduce((sum, b) => {
         const subtotal = b.bill_items?.reduce((s, it) => s + Number(it.amount || 0), 0) || 0;
@@ -81,20 +80,14 @@ export default function AdminDashboard() {
         return sum + finalTotal;
       }, 0) || 0;
 
-    // Fetch purchase records count
-    const { count: purchasesCount } = await supabase
+    // Fetch purchase records and sum their amounts (matches Purchase Records page Total Amount)
+    const { data: purchaseData } = await supabase
       .from("purchase_records")
-      .select("*", { count: "exact", head: true });
+      .select("amount");
 
-    // Fetch offer + stock counts
-    const { count: offersCount } = await supabase
-      .from("offer_records")
-      .select("*", { count: "exact", head: true });
-    const { count: stockCount } = await supabase
-      .from("stock_received")
-      .select("*", { count: "exact", head: true });
+    const purchasesTotal = purchaseData?.reduce((sum, b) => sum + Number(b.amount || 0), 0) || 0;
 
-    setStats({ salesCount, salesRevenue, purchasesCount: purchasesCount || 0, offersCount: offersCount || 0, stockCount: stockCount || 0, loading: false });
+    setStats({ salesRevenue, purchasesTotal, loading: false });
   };
 
   const goldGlow = { boxShadow: "0 0 40px rgba(212, 175, 55, 0.08), inset 0 0 0 1px rgba(212, 175, 55, 0.3)" };
@@ -178,7 +171,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10">
           <div
             className="rounded-xl p-6 bg-gradient-to-br from-[#0d1530] to-[#0a1124] relative overflow-hidden"
             style={goldGlow}
@@ -199,18 +192,10 @@ export default function AdminDashboard() {
           </div>
           <div className="bg-[#0a1124] rounded-xl p-6 border border-[#1a2233]">
             <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">
-              Sales Bills
+              Total Purchases
             </p>
             <p className="text-3xl font-bold text-white mt-3 tracking-tight">
-              {stats.loading ? "—" : stats.salesCount}
-            </p>
-          </div>
-          <div className="bg-[#0a1124] rounded-xl p-6 border border-[#1a2233]">
-            <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">
-              Purchase Records
-            </p>
-            <p className="text-3xl font-bold text-white mt-3 tracking-tight">
-              {stats.loading ? "—" : stats.purchasesCount}
+              {stats.loading ? "—" : inr(stats.purchasesTotal)}
             </p>
           </div>
         </div>
