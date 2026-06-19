@@ -192,7 +192,7 @@ export default function AdminDashboard() {
           </div>
           <div className="bg-[#0a1124] rounded-xl p-6 border border-[#1a2233]">
             <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">
-              Total Purchases
+              Total Gray Purchased
             </p>
             <p className="text-3xl font-bold text-white mt-3 tracking-tight">
               {stats.loading ? "—" : inr(stats.purchasesTotal)}
