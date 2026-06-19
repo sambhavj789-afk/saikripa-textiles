@@ -32,3 +32,6 @@ server/.env
 backend/.env
 service-account.json
 server/service-account.json
+
+# Vercel recovery codes / secrets
+Vercel(recovery-codes).txt

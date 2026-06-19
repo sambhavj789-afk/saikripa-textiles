@@ -65,17 +65,21 @@ export default function AdminDashboard() {
   }, [navigate]);
 
   const fetchStats = async () => {
-    // Fetch sales records with bill_items to compute total revenue
+    // Fetch sales records with bill_items to compute total revenue.
+    // Revenue matches the Sales Records page: use the stored final_total
+    // (includes GST, charges, discount, TCS, round-off) and fall back to the
+    // line-item subtotal only when final_total is missing.
     const { data: salesData } = await supabase
       .from("sales_records")
-      .select("id, bill_items(amount)");
+      .select("id, final_total, bill_items(amount)");
 
     const salesCount = salesData?.length || 0;
     const salesRevenue =
-      salesData?.reduce(
-        (sum, b) => sum + (b.bill_items?.reduce((s, it) => s + Number(it.amount || 0), 0) || 0),
-        0
-      ) || 0;
+      salesData?.reduce((sum, b) => {
+        const subtotal = b.bill_items?.reduce((s, it) => s + Number(it.amount || 0), 0) || 0;
+        const finalTotal = b.final_total && Number(b.final_total) > 0 ? Number(b.final_total) : subtotal;
+        return sum + finalTotal;
+      }, 0) || 0;
 
     // Fetch purchase records count
     const { count: purchasesCount } = await supabase
