@@ -172,6 +172,14 @@ export default function AdminDashboard() {
 
         {/* Quick stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10">
+          <div className="bg-[#0a1124] rounded-xl p-6 border border-[#1a2233]">
+            <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">
+              Total Gray Purchased
+            </p>
+            <p className="text-3xl font-bold text-white mt-3 tracking-tight">
+              {stats.loading ? "—" : inr(stats.purchasesTotal)}
+            </p>
+          </div>
           <div
             className="rounded-xl p-6 bg-gradient-to-br from-[#0d1530] to-[#0a1124] relative overflow-hidden"
             style={goldGlow}
@@ -188,14 +196,6 @@ export default function AdminDashboard() {
             </p>
             <p className="text-3xl font-bold text-[#d4af37] mt-3 tracking-tight relative">
               {stats.loading ? "—" : inr(stats.salesRevenue)}
-            </p>
-          </div>
-          <div className="bg-[#0a1124] rounded-xl p-6 border border-[#1a2233]">
-            <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">
-              Total Gray Purchased
-            </p>
-            <p className="text-3xl font-bold text-white mt-3 tracking-tight">
-              {stats.loading ? "—" : inr(stats.purchasesTotal)}
             </p>
           </div>
         </div>
