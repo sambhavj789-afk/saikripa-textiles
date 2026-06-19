@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import AdminNav from "../components/AdminNav";
 import Autocomplete from "../components/Autocomplete";
+import { useFinancialYear, applyFyRange } from "../context/FinancialYearContext";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -41,6 +42,7 @@ const emptyInvoiceFields = () => ({
 
 export default function SalesRecords() {
   const navigate = useNavigate();
+  const { range, label } = useFinancialYear();
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -72,13 +74,16 @@ export default function SalesRecords() {
       await fetchBills();
     };
     init();
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate, range?.start, range?.end]);
 
   const fetchBills = async () => {
     setLoading(true);
-    const { data, error: dbError } = await supabase
-      .from("sales_records").select("*, bill_items(*)")
-      .order("bill_date", { ascending: false });
+    const { data, error: dbError } = await applyFyRange(
+      supabase.from("sales_records").select("*, bill_items(*)").order("bill_date", { ascending: false }),
+      "bill_date",
+      range
+    );
     setLoading(false);
     if (dbError) { setError(dbError.message); return; }
     setBills(data || []);
@@ -485,7 +490,10 @@ const handleSubmit = async (e) => {
             <div className="w-1 h-12 rounded-full bg-gradient-to-b from-[#f4d77a] via-[#d4af37] to-[#a8842c]" />
             <div>
               <h2 className="text-4xl font-bold tracking-tight" style={{ background: "linear-gradient(135deg, #ffffff 0%, #f4d77a 60%, #d4af37 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Sales Records</h2>
-              <p className="text-xs text-[#7a8499] mt-2 uppercase tracking-[0.25em] font-medium">Bill log — supports GST invoice export</p>
+              <div className="flex items-center gap-2 mt-2">
+                <p className="text-xs text-[#7a8499] uppercase tracking-[0.25em] font-medium">Bill log — supports GST invoice export</p>
+                <span className="text-[10px] bg-[#d4af37]/15 text-[#d4af37] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border border-[#d4af37]/30 whitespace-nowrap">{label}</span>
+              </div>
             </div>
           </div>
           <div className="flex gap-2 flex-wrap">

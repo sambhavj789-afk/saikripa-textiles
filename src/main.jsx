@@ -24,6 +24,7 @@ function RobotsMeta() {
   }, [pathname]);
   return null;
 }
+import { FinancialYearProvider } from "./context/FinancialYearContext.jsx";
 import LuxuryTextileWebsite from "./App.jsx";
 import Catalogue from "./pages/Catalogue.jsx";
 import FabricDetail from "./pages/FabricDetail.jsx";
@@ -40,6 +41,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <RobotsMeta />
+      <FinancialYearProvider>
       <Routes>
         <Route path="/" element={<LuxuryTextileWebsite />} />
         <Route path="/catalogue" element={<Catalogue />} />
@@ -53,6 +55,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/admin/stock" element={<StockReceived />} />
         <Route path="/admin/analytics" element={<Analytics />} />
       </Routes>
+      </FinancialYearProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

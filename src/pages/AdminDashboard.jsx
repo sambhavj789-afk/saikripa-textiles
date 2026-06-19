@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import AdminNav from "../components/AdminNav";
+import { useFinancialYear, applyFyRange } from "../context/FinancialYearContext";
 
 // Map admin emails to display names
 const ADMIN_NAMES = {
@@ -48,9 +49,11 @@ const inr = (n) =>
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const { fy, setFy, years, range } = useFinancialYear();
   const [userEmail, setUserEmail] = useState("");
   const [stats, setStats] = useState({ salesRevenue: 0, purchasesTotal: 0, loading: true });
 
+  // Re-run whenever the selected financial year changes so the cards reflect it.
   useEffect(() => {
     const init = async () => {
       const { data } = await supabase.auth.getSession();
@@ -62,16 +65,21 @@ export default function AdminDashboard() {
       await fetchStats();
     };
     init();
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate, range?.start, range?.end]);
 
   const fetchStats = async () => {
+    setStats((s) => ({ ...s, loading: true }));
+
     // Fetch sales records with bill_items to compute total revenue.
     // Revenue matches the Sales Records page: use the stored final_total
     // (includes GST, charges, discount, TCS, round-off) and fall back to the
     // line-item subtotal only when final_total is missing.
-    const { data: salesData } = await supabase
-      .from("sales_records")
-      .select("id, final_total, bill_items(amount)");
+    const { data: salesData } = await applyFyRange(
+      supabase.from("sales_records").select("id, final_total, bill_items(amount)"),
+      "bill_date",
+      range
+    );
 
     const salesRevenue =
       salesData?.reduce((sum, b) => {
@@ -81,9 +89,11 @@ export default function AdminDashboard() {
       }, 0) || 0;
 
     // Fetch purchase records and sum their amounts (matches Purchase Records page Total Amount)
-    const { data: purchaseData } = await supabase
-      .from("purchase_records")
-      .select("amount");
+    const { data: purchaseData } = await applyFyRange(
+      supabase.from("purchase_records").select("amount"),
+      "bill_date",
+      range
+    );
 
     const purchasesTotal = purchaseData?.reduce((sum, b) => sum + Number(b.amount || 0), 0) || 0;
 
@@ -167,6 +177,29 @@ export default function AdminDashboard() {
             <p className="text-xs text-[#7a8499] mt-2 uppercase tracking-[0.25em] font-medium">
               {userEmail || "Loading..."}
             </p>
+          </div>
+        </div>
+
+        {/* Financial year selector — drives every record page */}
+        <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
+          <div>
+            <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">Financial Year</p>
+            <p className="text-xs text-[#a8b0c0] mt-1">1 April – 31 March · applies to Sales, Purchases, Offers & Stock</p>
+          </div>
+          <div className="flex items-center gap-2 bg-[#0a1124] border border-[#d4af37]/40 rounded-lg px-3 py-2">
+            <svg className="w-4 h-4 text-[#d4af37]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <select
+              value={fy}
+              onChange={(e) => setFy(e.target.value === "all" ? "all" : parseInt(e.target.value, 10))}
+              className="bg-[#0a1124] text-sm font-bold text-[#e8edf5] focus:outline-none cursor-pointer pr-1"
+            >
+              <option value="all">All Years</option>
+              {years.map((y) => (
+                <option key={y} value={y}>{`FY ${y}–${String((y + 1) % 100).padStart(2, "0")}`}</option>
+              ))}
+            </select>
           </div>
         </div>
 
