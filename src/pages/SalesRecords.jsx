@@ -840,7 +840,7 @@ const handleSubmit = async (e) => {
           <button onClick={fetchBills} className="text-xs font-medium text-[#d4af37] hover:text-[#f4d77a] whitespace-nowrap transition uppercase tracking-wider">Refresh</button>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-3 gap-3 mb-6">
           <div className="bg-[#0a1124] rounded-xl p-5 border border-[#1a2233]">
             <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">Bills</p>
             <p className="text-3xl font-bold text-white mt-3 tracking-tight">{filteredBills.length}</p>
@@ -848,10 +848,6 @@ const handleSubmit = async (e) => {
           <div className="bg-[#0a1124] rounded-xl p-5 border border-[#1a2233]">
             <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">Total Meters</p>
             <p className="text-3xl font-bold text-white mt-3 tracking-tight">{grandMeters.toFixed(2)}</p>
-          </div>
-          <div className="bg-[#0a1124] rounded-xl p-5 border border-[#1a2233]">
-            <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">Subtotal</p>
-            <p className="text-2xl font-bold text-white mt-3 tracking-tight">{inr(grandSubtotal)}</p>
           </div>
           <div className="rounded-xl p-5 bg-gradient-to-br from-[#0d1530] to-[#0a1124] relative overflow-hidden" style={goldGlow}>
             <div className="absolute top-0 right-0 w-32 h-32 opacity-20 pointer-events-none" style={{ background: "radial-gradient(circle at top right, rgba(212, 175, 55, 0.4) 0%, transparent 60%)" }} />
