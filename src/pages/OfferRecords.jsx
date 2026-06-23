@@ -20,6 +20,13 @@ const QUALITIES = [
 
 const emptyShade = () => ({ shade: "", quantity: "", grey_rec: "", not_rec_pct: "" });
 
+// Not Rec.(%) = (quantity − grey received) / quantity × 100. Always auto-derived.
+const notRecPct = (quantity, greyRec) => {
+  const q = parseFloat(quantity);
+  const g = parseFloat(greyRec);
+  return !isNaN(q) && q > 0 && !isNaN(g) ? (((q - g) / q) * 100).toFixed(2) : "";
+};
+
 export default function OfferRecords() {
   const navigate = useNavigate();
   const { range, label } = useFinancialYear();
@@ -90,8 +97,16 @@ export default function OfferRecords() {
   };
 
   const handleFormChange = (f, v) => setForm((p) => ({ ...p, [f]: v }));
+  // Not Rec.(%) always re-derives from quantity and grey received — not editable.
   const handleShadeChange = (i, f, v) =>
-    setShades((p) => p.map((s, idx) => (idx === i ? { ...s, [f]: v } : s)));
+    setShades((p) => p.map((s, idx) => {
+      if (idx !== i) return s;
+      const next = { ...s, [f]: v };
+      if (f === "quantity" || f === "grey_rec") {
+        next.not_rec_pct = notRecPct(next.quantity, next.grey_rec);
+      }
+      return next;
+    }));
   const addShade = () => setShades((p) => [...p, emptyShade()]);
   const removeShade = (i) => setShades((p) => (p.length > 1 ? p.filter((_, idx) => idx !== i) : p));
 
@@ -110,7 +125,7 @@ export default function OfferRecords() {
       shade: s.shade || "",
       quantity: String(s.quantity ?? ""),
       grey_rec: s.grey_rec == null ? "" : String(s.grey_rec),
-      not_rec_pct: String(s.not_rec_pct ?? ""),
+      not_rec_pct: notRecPct(s.quantity, s.grey_rec),
     })));
     if ((o.offer_shades || []).length === 0) setShades([emptyShade()]);
     setEditingId(o.id);
@@ -463,8 +478,10 @@ const handleSubmit = async (e) => {
                       <input type="number" step="0.01" value={s.grey_rec} onChange={(e) => handleShadeChange(idx, "grey_rec", e.target.value)} placeholder="blank if none" className={inputCls} />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Not Rec.(%)</label>
-                      <input type="number" step="0.01" value={s.not_rec_pct} onChange={(e) => handleShadeChange(idx, "not_rec_pct", e.target.value)} placeholder="0.00" className={inputCls} />
+                      <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">
+                        Not Rec.(%) <span className="text-[#d4af37]/60 normal-case tracking-normal">(auto)</span>
+                      </label>
+                      <input type="number" value={s.not_rec_pct} readOnly tabIndex={-1} placeholder="—" className="w-full rounded-lg px-3 py-2 text-sm bg-[#d4af37]/10 border border-[#d4af37]/40 text-[#f4d77a] focus:outline-none cursor-not-allowed" />
                     </div>
                     <div className="sm:col-span-1 flex justify-end">
                       {shades.length > 1 && (
