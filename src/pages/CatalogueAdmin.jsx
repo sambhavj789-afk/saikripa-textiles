@@ -248,7 +248,7 @@ export default function CatalogueAdmin() {
           <div className="flex items-center gap-4">
             <div className="w-1 h-12 rounded-full bg-gradient-to-b from-[#f4d77a] via-[#d4af37] to-[#a8842c]" />
             <div>
-              <h2 className="text-4xl font-bold tracking-tight" style={{ background: "linear-gradient(135deg, #ffffff 0%, #f4d77a 60%, #d4af37 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Catalogue</h2>
+              <h2 className="text-4xl font-bold tracking-tight leading-[1.2] pb-1" style={{ background: "linear-gradient(135deg, #ffffff 0%, #f4d77a 60%, #d4af37 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Catalogue</h2>
               <p className="text-xs text-[#7a8499] mt-2 uppercase tracking-[0.25em] font-medium">Fabrics shown on the public website</p>
             </div>
           </div>
