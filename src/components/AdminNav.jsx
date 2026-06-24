@@ -36,6 +36,11 @@ const StockIcon = ({ className = "w-5 h-5" }) => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10m0-10l8-4M4 7v10l8 4" />
   </svg>
 );
+const BookIcon = ({ className = "w-5 h-5" }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+  </svg>
+);
 export default function AdminNav({ userEmail, className = "" }) {
   const [open, setOpen] = useState(false);
   const location = useLocation();
@@ -60,6 +65,7 @@ export default function AdminNav({ userEmail, className = "" }) {
     { path: "/admin/purchases", label: "Purchase Records", Icon: CartIcon },
     { path: "/admin/offers", label: "Offer Records", Icon: TagIcon },
     { path: "/admin/stock", label: "Stock Received", Icon: StockIcon },
+    { path: "/admin/catalogue", label: "Catalogue", Icon: BookIcon },
     { path: "/admin/analytics", label: "Analytics", Icon: InsightsIcon },
   ];
 

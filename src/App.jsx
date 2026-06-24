@@ -3,6 +3,7 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import Chatbot from "./components/Chatbot";
 import { collections } from "./data/collections";
+import { useCatalogue } from "./lib/catalogue";
 
 // ── Custom Icons ─────────────────────────────────────────────────────────────
 function Icon({ name, className = "w-8 h-8" }) {
@@ -391,7 +392,10 @@ export default function LuxuryTextileWebsite() {
   const [barVisible, setBarVisible] = useState(true);
   const navTopOffset = barVisible ? "pt-[100px]" : "pt-[72px]";
 
-  const bestsellers = collections.filter((c) => ["superior-collection", "gold-club", "aura-plus"].includes(c.slug));
+  const { items: catalogueItems } = useCatalogue();
+  const preferred = ["superior-collection", "gold-club", "aura-plus"];
+  const picked = catalogueItems.filter((c) => preferred.includes(c.slug));
+  const bestsellers = (picked.length ? picked : catalogueItems).slice(0, 3);
 
   useEffect(() => {
     AOS.init({ duration: 500, once: true, easing: "ease-out", offset: 50 });

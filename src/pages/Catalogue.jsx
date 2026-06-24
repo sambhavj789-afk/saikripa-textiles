@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { collections, categories } from "../data/collections";
+import { useCatalogue } from "../lib/catalogue";
 
 // ── Reusable: Gold gradient section divider ─────────────────────────────────
 function GoldDivider({ position = "top", strength = "30" }) {
@@ -12,6 +12,7 @@ function GoldDivider({ position = "top", strength = "30" }) {
 
 export default function Catalogue() {
   const navigate = useNavigate();
+  const { items: collections, categories } = useCatalogue();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [compareList, setCompareList] = useState([]);
@@ -28,7 +29,7 @@ export default function Catalogue() {
         c.uses.toLowerCase().includes(q) ||
         c.description.toLowerCase().includes(q)
     );
-  }, [search]);
+  }, [search, collections]);
 
   const filtered = useMemo(() => {
     if (activeCategory === "All") return searched;
@@ -45,7 +46,7 @@ export default function Catalogue() {
       .filter((cat) => cat !== "All")
       .filter((cat) => groups[cat]);
     return orderedKeys.map((cat) => ({ name: cat, items: groups[cat] }));
-  }, [searched]);
+  }, [searched, categories]);
 
   const toggleCompare = (slug) => {
     setCompareList((prev) => {

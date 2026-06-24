@@ -1,17 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { collections, getCollectionBySlug } from "../data/collections";
+import { useCatalogue } from "../lib/catalogue";
 
 export default function FabricDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const item = getCollectionBySlug(slug);
+  const { items: collections, loading } = useCatalogue();
+  const item = collections.find((c) => c.slug === slug);
   const [imgIdx, setImgIdx] = useState(0);
 
   useEffect(() => {
     window.scrollTo(0, 0);
     setImgIdx(0);
   }, [slug]);
+
+  if (!item && loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#020817] p-6">
+        <p className="text-[#7a8499] text-sm uppercase tracking-widest font-bold">Loading…</p>
+      </div>
+    );
+  }
 
   if (!item) {
     return (
