@@ -3,8 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import AdminNav from "../components/AdminNav";
 import Autocomplete from "../components/Autocomplete";
+import ImageCropModal from "../components/ImageCropModal";
 
 const CATEGORY_SUGGESTIONS = ["Gaberdine", "2/18 Matty", "PV Trovin"];
+
+// All catalogue cards use the shared branded cover (same as the existing
+// fabrics). Uploaded photos are the shade gallery shown on the detail page.
+const SHARED_COVER = "/catalogue/cover.jpg";
 
 const slugify = (s) =>
   (s || "")
@@ -43,6 +48,8 @@ export default function CatalogueAdmin() {
   const [uploading, setUploading] = useState(false);
   const [slugEdited, setSlugEdited] = useState(false);
   const [form, setForm] = useState(emptyForm());
+  const [cropQueue, setCropQueue] = useState([]);
+  const [cropIndex, setCropIndex] = useState(0);
 
   useEffect(() => {
     const init = async () => {
@@ -95,7 +102,7 @@ export default function CatalogueAdmin() {
       uses: r.uses || "",
       description: r.description || "",
       long_description: r.long_description || "",
-      images: Array.isArray(r.images) ? r.images : [],
+      images: (Array.isArray(r.images) ? r.images : []).filter((u) => u !== SHARED_COVER),
       sort_order: r.sort_order == null ? "" : String(r.sort_order),
     });
     setEditingId(r.id);
@@ -108,36 +115,62 @@ export default function CatalogueAdmin() {
     setForm((p) => ({ ...p, title: v, slug: slugEdited ? p.slug : slugify(v) }));
   };
 
-  const handleUpload = async (e) => {
-    const files = Array.from(e.target.files || []);
+  // Selecting files opens the crop modal (one image at a time) instead of
+  // uploading immediately, so each can be auto/manually cropped first.
+  const onFilesSelected = (e) => {
+    const files = Array.from(e.target.files || []).filter((f) => f.type.startsWith("image/"));
+    e.target.value = "";
     if (files.length === 0) return;
+    setCropQueue(files);
+    setCropIndex(0);
+  };
+
+  const uploadOne = async (data, nameBase) => {
+    const folder = slugify(form.slug || form.title) || "misc";
+    const safe = (nameBase || "image").replace(/[^a-zA-Z0-9.\-_]/g, "_");
+    const path = `${folder}/${Date.now()}-${safe}`;
+    const { error: upErr } = await supabase.storage
+      .from("catalogue")
+      .upload(path, data, { upsert: true, cacheControl: "3600", contentType: data.type || "image/jpeg" });
+    if (upErr) { alert("Upload failed: " + upErr.message); return null; }
+    const { data: pub } = supabase.storage.from("catalogue").getPublicUrl(path);
+    return pub?.publicUrl || null;
+  };
+
+  const advanceCrop = () => {
+    setCropIndex((i) => {
+      const next = i + 1;
+      if (next >= cropQueue.length) { setCropQueue([]); return 0; }
+      return next;
+    });
+  };
+
+  const handleCropConfirm = async (blob) => {
     setUploading(true);
     try {
-      const folder = slugify(form.slug || form.title) || "misc";
-      const urls = [];
-      for (const file of files) {
-        const safe = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
-        const path = `${folder}/${Date.now()}-${safe}`;
-        const { error: upErr } = await supabase.storage
-          .from("catalogue")
-          .upload(path, file, { upsert: true, cacheControl: "3600" });
-        if (upErr) { alert("Upload failed: " + upErr.message); continue; }
-        const { data } = supabase.storage.from("catalogue").getPublicUrl(path);
-        if (data?.publicUrl) urls.push(data.publicUrl);
-      }
-      setForm((p) => ({ ...p, images: [...p.images, ...urls] }));
+      const file = cropQueue[cropIndex];
+      const base = (file?.name || "image").replace(/\.[^.]+$/, "") + ".jpg";
+      const url = await uploadOne(blob, base);
+      if (url) setForm((p) => ({ ...p, images: [...p.images, url] }));
     } finally {
       setUploading(false);
-      e.target.value = "";
+      advanceCrop();
+    }
+  };
+
+  const handleUseFull = async () => {
+    setUploading(true);
+    try {
+      const file = cropQueue[cropIndex];
+      const url = await uploadOne(file, file?.name);
+      if (url) setForm((p) => ({ ...p, images: [...p.images, url] }));
+    } finally {
+      setUploading(false);
+      advanceCrop();
     }
   };
 
   const removeImage = (idx) => setForm((p) => ({ ...p, images: p.images.filter((_, i) => i !== idx) }));
-  const makeCover = (idx) => setForm((p) => {
-    const imgs = [...p.images];
-    const [pick] = imgs.splice(idx, 1);
-    return { ...p, images: [pick, ...imgs] };
-  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -167,8 +200,8 @@ export default function CatalogueAdmin() {
         uses: form.uses.trim() || null,
         description: form.description.trim() || null,
         long_description: form.long_description.trim() || null,
-        image: form.images[0] || null,
-        images: form.images,
+        image: SHARED_COVER,
+        images: [SHARED_COVER, ...form.images.filter((u) => u !== SHARED_COVER)],
         sort_order: form.sort_order === "" ? rows.length + 1 : parseInt(form.sort_order, 10),
         updated_at: new Date().toISOString(),
       };
@@ -233,14 +266,12 @@ export default function CatalogueAdmin() {
 
             {/* Images */}
             <div className="mb-6">
-              <label className={labelCls}>Images <span className="text-[#d4af37]/60 normal-case tracking-normal">(first = cover)</span></label>
-              <div className="flex flex-wrap gap-3 mb-3">
+              <label className={labelCls}>Shade Photos <span className="text-[#d4af37]/60 normal-case tracking-normal">(shown on the fabric page)</span></label>
+              <div className="flex flex-wrap gap-3 mb-2">
                 {form.images.map((url, idx) => (
                   <div key={idx} className="relative group w-28 h-28 rounded-lg overflow-hidden border border-[#1a2233] bg-[#020817]">
                     <img src={url} alt="" className="w-full h-full object-cover" />
-                    {idx === 0 && <span className="absolute top-1 left-1 text-[9px] bg-[#d4af37] text-[#020817] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Cover</span>}
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-1">
-                      {idx !== 0 && <button type="button" onClick={() => makeCover(idx)} className="text-[10px] text-[#d4af37] font-bold uppercase tracking-wider hover:text-[#f4d77a]">Set cover</button>}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                       <button type="button" onClick={() => removeImage(idx)} className="text-[10px] text-rose-400 font-bold uppercase tracking-wider hover:text-rose-300">Remove</button>
                     </div>
                   </div>
@@ -248,9 +279,10 @@ export default function CatalogueAdmin() {
                 <label className="w-28 h-28 rounded-lg border-2 border-dashed border-[#1a2233] hover:border-[#d4af37]/50 flex flex-col items-center justify-center cursor-pointer text-[#7a8499] hover:text-[#d4af37] transition text-center px-2">
                   <span className="text-2xl leading-none">+</span>
                   <span className="text-[10px] uppercase tracking-wider mt-1">{uploading ? "Uploading…" : "Add image"}</span>
-                  <input type="file" accept="image/*" multiple className="hidden" onChange={handleUpload} disabled={uploading} />
+                  <input type="file" accept="image/*" multiple className="hidden" onChange={onFilesSelected} disabled={uploading} />
                 </label>
               </div>
+              <p className="text-[10px] text-[#7a8499]">The catalogue cover uses the standard Saikripa cover, same as the other fabrics.</p>
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
@@ -322,10 +354,12 @@ export default function CatalogueAdmin() {
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {rows.map((r) => (
+            {rows.map((r) => {
+              const thumb = r.image || SHARED_COVER;
+              return (
               <div key={r.id} onClick={() => startEdit(r)} className="bg-[#0a1124] rounded-xl border border-[#1a2233] overflow-hidden hover:border-[#d4af37]/40 transition cursor-pointer group">
                 <div className="aspect-[4/3] bg-[#020817] overflow-hidden">
-                  {r.image ? <img src={r.image} alt={r.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" /> : <div className="w-full h-full flex items-center justify-center text-[#4a5568] text-xs">No image</div>}
+                  {thumb ? <img src={thumb} alt={r.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" /> : <div className="w-full h-full flex items-center justify-center text-[#4a5568] text-xs">No image</div>}
                 </div>
                 <div className="p-4">
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -340,8 +374,21 @@ export default function CatalogueAdmin() {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
+        )}
+
+        {cropQueue.length > 0 && cropIndex < cropQueue.length && (
+          <ImageCropModal
+            file={cropQueue[cropIndex]}
+            index={cropIndex}
+            total={cropQueue.length}
+            busy={uploading}
+            onConfirm={handleCropConfirm}
+            onUseFull={handleUseFull}
+            onCancel={advanceCrop}
+          />
         )}
       </main>
     </div>

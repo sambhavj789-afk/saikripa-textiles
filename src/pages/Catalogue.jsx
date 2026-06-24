@@ -25,8 +25,6 @@ export default function Catalogue() {
       (c) =>
         c.title.toLowerCase().includes(q) ||
         c.category.toLowerCase().includes(q) ||
-        c.blend.toLowerCase().includes(q) ||
-        c.uses.toLowerCase().includes(q) ||
         c.description.toLowerCase().includes(q)
     );
   }, [search, collections]);
@@ -146,7 +144,7 @@ export default function Catalogue() {
         <div className="bg-[#0a1124] rounded-2xl p-5 mb-6 border border-[#1a2233]">
           <input
             type="text"
-            placeholder="Search by name, construction, use case..."
+            placeholder="Search by name or category..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-[#020817] border border-[#1a2233] rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#4a5568] focus:outline-none focus:border-[#d4af37]/60 focus:ring-2 focus:ring-[#d4af37]/20 transition"
