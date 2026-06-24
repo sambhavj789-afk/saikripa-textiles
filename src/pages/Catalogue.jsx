@@ -275,7 +275,7 @@ export default function Catalogue() {
           <div className="space-y-12">
             {groupedByCategory.map((group) => (
               <section key={group.name}>
-                <div className="flex items-center justify-between mb-5">
+                <div className="mb-5">
                   <div>
                     <p className="uppercase tracking-[0.3em] text-xs text-[#d4af37] font-bold mb-2">
                       Collection
@@ -288,12 +288,6 @@ export default function Catalogue() {
                       {group.items.length === 1 ? "fabric" : "fabrics"}
                     </p>
                   </div>
-                  <button
-                    onClick={() => setActiveCategory(group.name)}
-                    className="text-sm font-bold text-[#d4af37] hover:text-[#f4d77a] transition"
-                  >
-                    See all →
-                  </button>
                 </div>
 
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
