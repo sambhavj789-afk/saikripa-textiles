@@ -58,6 +58,16 @@ export default function Catalogue() {
     .map((slug) => collections.find((c) => c.slug === slug))
     .filter(Boolean);
 
+  // Sum the shade counts from each collection's "colors" text (e.g. "60+ shades").
+  const totalShades = useMemo(
+    () =>
+      collections.reduce((sum, c) => {
+        const m = (c.colors || "").match(/\d+/);
+        return sum + (m ? parseInt(m[0], 10) : 0);
+      }, 0),
+    [collections]
+  );
+
   const showGrouped = activeCategory === "All" && !search && view === "grid";
 
   return (
@@ -125,7 +135,7 @@ export default function Catalogue() {
             <div className="relative bg-[#0a1124]/80 backdrop-blur-xl border border-[#d4af37]/30 rounded-2xl px-5 py-4 overflow-hidden" style={{ boxShadow: "0 10px 30px rgba(0,0,0,0.4), 0 0 30px rgba(212, 175, 55, 0.1)" }}>
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#d4af37]/60 to-transparent" />
               <p className="text-[10px] text-[#d4af37]/80 font-bold uppercase tracking-[0.25em] mb-1.5">Shades</p>
-              <p className="text-3xl font-black text-white leading-none">350<span className="text-[#d4af37]">+</span></p>
+              <p className="text-3xl font-black text-white leading-none">{totalShades}<span className="text-[#d4af37]">+</span></p>
               <p className="text-[11px] text-[#a8b0c0] mt-1.5 font-medium">Across all collections</p>
             </div>
 
