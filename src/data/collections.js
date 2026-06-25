@@ -5,8 +5,8 @@ export const collections = [
   {
     slug: "superior-collection",
     title: "Superior Collection",
-    gsm: "380 GSM",
-    gsmValue: 380,
+    gsm: "258 GSM",
+    gsmValue: 258,
     blend: "65/35 PV",
     construction: "65/35 PV",
     images: [
@@ -23,15 +23,15 @@ export const collections = [
     finish: "Lustrous finish",
     uses: "School, Corporate, Hospital & Police Uniforms",
     description:
-      "Our flagship 380 GSM suiting fabric with a lustrous finish and sharp, structured drape. Trusted for school and corporate uniforms, hospital staff wear, and police and security attire.",
+      "Our flagship 258 GSM suiting fabric with a lustrous finish and sharp, structured drape. Trusted for school and corporate uniforms, hospital staff wear, and police and security attire.",
     longDescription:
-      "Superior Collection is Saikripa's flagship suiting fabric, refined over a decade for institutions that demand consistency. The 380 GSM weight gives a premium structured drape, while the 65/35 polyester-viscose blend balances durability with soft breathability. Its lustrous finish keeps school, corporate, hospital, and police uniforms looking crisp through full work-day wear and repeated industrial washes.",
+      "Superior Collection is Saikripa's flagship suiting fabric, refined over a decade for institutions that demand consistency. The 258 GSM weight gives a smart, structured drape, while the 65/35 polyester-viscose blend balances durability with soft breathability. Its lustrous finish keeps school, corporate, hospital, and police uniforms looking crisp through full work-day wear and repeated industrial washes.",
   },
   {
     slug: "gold-club",
     title: "Gold Club",
-    gsm: "345 GSM",
-    gsmValue: 345,
+    gsm: "238 GSM",
+    gsmValue: 238,
     blend: "65/35 PV",
     construction: "65/35 PV",
     images: ["/catalogue/cover.jpg", "/catalogue/goldclub1.jpg", "/catalogue/goldclub2.jpg", "/catalogue/goldclub3.jpg"],
@@ -42,15 +42,15 @@ export const collections = [
     finish: "Lustrous finish",
     uses: "School, Corporate, Hospital & Police Uniforms",
     description:
-      "Executive-grade 345 GSM fabric with a premium lustrous finish. A refined choice for corporate and school uniforms, hospital staff dress, and police and uniformed services.",
+      "Executive-grade 238 GSM fabric with a premium lustrous finish. A refined choice for corporate and school uniforms, hospital staff dress, and police and uniformed services.",
     longDescription:
-      "Gold Club delivers a refined lustrous finish that reads as premium under both daylight and indoor lighting. The 345 GSM weight makes it lighter than Superior while keeping the body needed for structured uniforms — equally at home across corporate offices, schools, hospitals, and police and security forces.",
+      "Gold Club delivers a refined lustrous finish that reads as premium under both daylight and indoor lighting. The 238 GSM weight makes it lighter than Superior while keeping the body needed for structured uniforms — equally at home across corporate offices, schools, hospitals, and police and security forces.",
   },
   {
     slug: "aura-plus",
     title: "Aura Plus",
-    gsm: "380 GSM",
-    gsmValue: 380,
+    gsm: "258 GSM",
+    gsmValue: 258,
     blend: "Premium PV",
     construction: "Premium PV",
     images: ["/catalogue/cover.jpg", "/catalogue/auraplus.jpg"],
@@ -63,13 +63,13 @@ export const collections = [
     description:
       "Crafted with a premium PV blend for a soft-touch feel and a lustrous finish, without compromising structural integrity. Built for school and corporate uniforms, hospital wear, and police and institutional dress.",
     longDescription:
-      "Aura Plus is for buyers who refuse to choose between comfort and structure. A premium polyester-viscose blend gives this 380 GSM fabric a soft-touch hand-feel and lustrous finish while maintaining the body needed for blazers and full uniforms — a popular choice across schools, corporate teams, hospitals, and police and uniformed services.",
+      "Aura Plus is for buyers who refuse to choose between comfort and structure. A premium polyester-viscose blend gives this 258 GSM fabric a soft-touch hand-feel and lustrous finish while maintaining the body needed for blazers and full uniforms — a popular choice across schools, corporate teams, hospitals, and police and uniformed services.",
   },
   {
     slug: "innova",
     title: "Innova",
-    gsm: "330 GSM",
-    gsmValue: 330,
+    gsm: "227 GSM",
+    gsmValue: 227,
     blend: "2/30×300 ROTO POLY",
     construction: "2/30×300 ROTO POLY",
     images: ["/catalogue/cover.jpg", "/catalogue/innova.jpg"],
@@ -80,15 +80,15 @@ export const collections = [
     finish: "Lustrous finish",
     uses: "School, Corporate, Hospital & Police Uniforms",
     description:
-      "Premium 330 GSM gaberdine-weave fabric with a lustrous finish and excellent crease recovery. Ideal for corporate, school, hospital, and police uniforms.",
+      "Premium 227 GSM gaberdine-weave fabric with a lustrous finish and excellent crease recovery. Ideal for corporate, school, hospital, and police uniforms.",
     longDescription:
       "Innova brings the classic gaberdine weave into the Saikripa catalogue. The diagonal twill structure gives the fabric a distinctive surface and excellent recovery from creasing — a dependable choice for high-wear school, corporate, hospital, and police uniforms where appearance matters every day.",
   },
   {
     slug: "milky-way",
     title: "Milky Way",
-    gsm: "300 GSM",
-    gsmValue: 300,
+    gsm: "204 GSM",
+    gsmValue: 204,
     blend: "2/30×2/30",
     construction: "2/30×2/30",
     images: ["/catalogue/cover.jpg", "/catalogue/milkyway1.jpg", "/catalogue/milkyway2.jpg"],
@@ -99,15 +99,15 @@ export const collections = [
     finish: "Lustrous finish",
     uses: "School, Corporate, Hospital & Police Uniforms",
     description:
-      "Lightweight 300 GSM fabric with a lustrous finish, designed for warm climates. Widely used for school, corporate, hospital, and police summer uniforms.",
+      "Lightweight 204 GSM fabric with a lustrous finish, designed for warm climates. Widely used for school, corporate, hospital, and police summer uniforms.",
     longDescription:
-      "Milky Way is engineered for Indian summers. At 300 GSM the fabric is light enough for hot-weather wear yet structured enough to hold uniform shape through a full work day. It's a go-to for schools, corporate teams, hospitals, and police and security forces across Rajasthan, Gujarat, and Madhya Pradesh.",
+      "Milky Way is engineered for Indian summers. At 204 GSM the fabric is light enough for hot-weather wear yet structured enough to hold uniform shape through a full work day. It's a go-to for schools, corporate teams, hospitals, and police and security forces across Rajasthan, Gujarat, and Madhya Pradesh.",
   },
   {
     slug: "classic-p7200",
     title: "Classic P/7200",
-    gsm: "270 GSM",
-    gsmValue: 270,
+    gsm: "190 GSM",
+    gsmValue: 190,
     blend: "2/30×1/15",
     construction: "2/30×1/15",
     images: ["/catalogue/cover.jpg", "/catalogue/classic.jpg"],
@@ -118,9 +118,9 @@ export const collections = [
     finish: "Lustrous finish",
     uses: "School, Corporate, Hospital & Police Uniforms",
     description:
-      "Lightweight 270 GSM blend with a lustrous finish and reliable colour retention — built for everyday school, corporate, hospital, and police uniforms.",
+      "Lightweight 190 GSM blend with a lustrous finish and reliable colour retention — built for everyday school, corporate, hospital, and police uniforms.",
     longDescription:
-      "Classic P/7200 is Saikripa's most lightweight institutional fabric at 270 GSM — designed for high-volume orders where comfort across long working days matters. The fabric takes dye cleanly and resists fade through commercial laundering, making it ideal for school, corporate, hospital, and police uniforms.",
+      "Classic P/7200 is Saikripa's most lightweight institutional fabric at 190 GSM — designed for high-volume orders where comfort across long working days matters. The fabric takes dye cleanly and resists fade through commercial laundering, making it ideal for school, corporate, hospital, and police uniforms.",
   },
 ];
 
