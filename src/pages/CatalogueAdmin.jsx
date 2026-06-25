@@ -50,6 +50,8 @@ export default function CatalogueAdmin() {
   const [form, setForm] = useState(emptyForm());
   const [cropQueue, setCropQueue] = useState([]);
   const [cropIndex, setCropIndex] = useState(0);
+  const [editIdx, setEditIdx] = useState(null);
+  const [editSrc, setEditSrc] = useState(null);
 
   useEffect(() => {
     const init = async () => {
@@ -172,6 +174,21 @@ export default function CatalogueAdmin() {
 
   const removeImage = (idx) => setForm((p) => ({ ...p, images: p.images.filter((_, i) => i !== idx) }));
 
+  // Re-crop an already-uploaded shade photo.
+  const onEditImage = (idx) => { setEditIdx(idx); setEditSrc(form.images[idx]); };
+  const closeEdit = () => { setEditIdx(null); setEditSrc(null); };
+  const handleEditConfirm = async (blob) => {
+    if (editIdx === null) return;
+    setUploading(true);
+    try {
+      const url = await uploadOne(blob, `edit-${Date.now()}.jpg`);
+      if (url) setForm((p) => ({ ...p, images: p.images.map((u, i) => (i === editIdx ? url : u)) }));
+    } finally {
+      setUploading(false);
+      closeEdit();
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (saving) return;
@@ -271,7 +288,8 @@ export default function CatalogueAdmin() {
                 {form.images.map((url, idx) => (
                   <div key={idx} className="relative group w-28 h-28 rounded-lg overflow-hidden border border-[#1a2233] bg-[#020817]">
                     <img src={url} alt="" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-1">
+                      <button type="button" onClick={() => onEditImage(idx)} className="text-[10px] text-[#d4af37] font-bold uppercase tracking-wider hover:text-[#f4d77a]">Edit</button>
                       <button type="button" onClick={() => removeImage(idx)} className="text-[10px] text-rose-400 font-bold uppercase tracking-wider hover:text-rose-300">Remove</button>
                     </div>
                   </div>
@@ -388,6 +406,20 @@ export default function CatalogueAdmin() {
             onConfirm={handleCropConfirm}
             onUseFull={handleUseFull}
             onCancel={advanceCrop}
+          />
+        )}
+
+        {editIdx !== null && editSrc && (
+          <ImageCropModal
+            srcUrl={editSrc}
+            title="Edit shade photo"
+            showUseFull={false}
+            index={0}
+            total={1}
+            busy={uploading}
+            onConfirm={handleEditConfirm}
+            onUseFull={closeEdit}
+            onCancel={closeEdit}
           />
         )}
       </main>

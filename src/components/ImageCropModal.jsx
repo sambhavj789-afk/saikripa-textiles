@@ -46,20 +46,24 @@ function detectShades(img) {
   }
 }
 
-export default function ImageCropModal({ file, index, total, busy, onConfirm, onUseFull, onCancel }) {
+export default function ImageCropModal({ file, srcUrl, title = "Crop image", showUseFull = true, index, total, busy, onConfirm, onUseFull, onCancel }) {
   const [src, setSrc] = useState(null);
   const [crop, setCrop] = useState({ x: 0.05, y: 0.05, w: 0.9, h: 0.9 });
   const [autoFound, setAutoFound] = useState(null); // null=pending, true/false after load
   const imgRef = useRef(null);
   const drag = useRef(null);
+  const downOnBackdrop = useRef(false);
 
   useEffect(() => {
-    const url = URL.createObjectURL(file);
-    setSrc(url);
     setAutoFound(null);
     setCrop({ x: 0.05, y: 0.05, w: 0.9, h: 0.9 });
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setSrc(url);
+      return () => URL.revokeObjectURL(url);
+    }
+    setSrc(srcUrl || null);
+  }, [file, srcUrl]);
 
   const onImgLoad = (e) => {
     const detected = detectShades(e.target);
@@ -113,8 +117,12 @@ export default function ImageCropModal({ file, index, total, busy, onConfirm, on
     canvas.width = Math.max(1, Math.round(sw));
     canvas.height = Math.max(1, Math.round(sh));
     const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-    canvas.toBlob((blob) => { if (blob) onConfirm(blob); }, "image/jpeg", 0.9);
+    try {
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((blob) => { if (blob) onConfirm(blob); }, "image/jpeg", 0.9);
+    } catch {
+      alert("Couldn't process this image (browser security). Try removing it and uploading the photo again.");
+    }
   };
 
   const handles = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
@@ -130,11 +138,15 @@ export default function ImageCropModal({ file, index, total, busy, onConfirm, on
   };
 
   return (
-    <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
+    <div
+      className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+      onPointerDown={(e) => { downOnBackdrop.current = e.target === e.currentTarget; }}
+      onClick={(e) => { if (e.target === e.currentTarget && downOnBackdrop.current) onCancel(); }}
+    >
       <div className="bg-[#0a1124] border border-[#d4af37]/30 rounded-2xl p-5 max-w-3xl w-full max-h-[92vh] overflow-y-auto" style={{ boxShadow: "0 0 40px rgba(212,175,55,0.12)" }}>
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div>
-            <h3 className="font-bold text-white text-base">Crop image{total > 1 ? ` (${index + 1} of ${total})` : ""}</h3>
+            <h3 className="font-bold text-white text-base">{title}{total > 1 ? ` (${index + 1} of ${total})` : ""}</h3>
             <p className="text-xs text-[#7a8499] mt-0.5">
               {autoFound === null && "Scanning for the shades…"}
               {autoFound === true && "Auto-cropped to the shades — drag the box to adjust."}
@@ -147,7 +159,7 @@ export default function ImageCropModal({ file, index, total, busy, onConfirm, on
         <div className="flex justify-center bg-[#020817] rounded-xl p-2 mb-4 overflow-hidden">
           <div className="relative inline-block select-none" style={{ touchAction: "none" }}>
             {src && (
-              <img ref={imgRef} src={src} alt="" onLoad={onImgLoad} draggable={false} className="block max-h-[60vh] max-w-full" />
+              <img ref={imgRef} src={src} alt="" crossOrigin={file ? undefined : "anonymous"} onLoad={onImgLoad} draggable={false} className="block max-h-[60vh] max-w-full" />
             )}
             {/* crop box */}
             <div
@@ -171,13 +183,15 @@ export default function ImageCropModal({ file, index, total, busy, onConfirm, on
         </div>
 
         <div className="flex flex-wrap gap-3 justify-end">
-          <button onClick={onCancel} disabled={busy} className="bg-[#020817] border border-[#1a2233] text-[#a8b0c0] px-4 py-2.5 rounded-lg font-medium text-xs uppercase tracking-wider hover:border-[#d4af37]/40 hover:text-[#e8edf5] transition disabled:opacity-50">
+          <button type="button" onClick={onCancel} disabled={busy} className="bg-[#020817] border border-[#1a2233] text-[#a8b0c0] px-4 py-2.5 rounded-lg font-medium text-xs uppercase tracking-wider hover:border-[#d4af37]/40 hover:text-[#e8edf5] transition disabled:opacity-50">
             Skip
           </button>
-          <button onClick={onUseFull} disabled={busy} className="bg-[#020817] border border-[#d4af37]/40 text-[#d4af37] px-4 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-[#d4af37]/10 transition disabled:opacity-50">
-            Use full image
-          </button>
-          <button onClick={doConfirm} disabled={busy} className="bg-gradient-to-br from-[#d4af37] to-[#a8842c] text-[#020817] px-5 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition disabled:opacity-50">
+          {showUseFull && (
+            <button type="button" onClick={onUseFull} disabled={busy} className="bg-[#020817] border border-[#d4af37]/40 text-[#d4af37] px-4 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider hover:bg-[#d4af37]/10 transition disabled:opacity-50">
+              Use full image
+            </button>
+          )}
+          <button type="button" onClick={doConfirm} disabled={busy} className="bg-gradient-to-br from-[#d4af37] to-[#a8842c] text-[#020817] px-5 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition disabled:opacity-50">
             {busy ? "Saving…" : "Use this crop"}
           </button>
         </div>

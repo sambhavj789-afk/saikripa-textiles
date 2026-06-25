@@ -43,9 +43,9 @@ export default function FabricDetail() {
     );
   }
 
-  const allImgs = item.images || [item.image];
-  // Skip the first image (cover/logo) — show only fabric photos in detail view
-  const imgs = allImgs.length > 1 ? allImgs.slice(1) : allImgs;
+  // Detail view shows only the fabric's own photos — never the shared cover/logo.
+  const allImgs = (item.images && item.images.length ? item.images : [item.image]).filter(Boolean);
+  const imgs = allImgs.filter((u) => u !== item.image);
   const related = collections
     .filter((c) => c.slug !== item.slug && c.category === item.category)
     .slice(0, 3);
@@ -93,6 +93,11 @@ export default function FabricDetail() {
         <div className="grid lg:grid-cols-2 gap-10">
           {/* Image gallery */}
           <div>
+            {imgs.length === 0 ? (
+              <div className="bg-[#0a1124] rounded-[24px] border border-[#1a2233] aspect-[4/3] flex items-center justify-center text-[#7a8499] text-sm uppercase tracking-widest font-bold">
+                No photos available
+              </div>
+            ) : (
             <div className="bg-[#0a1124] rounded-[24px] border border-[#1a2233] overflow-hidden relative">
               <img
                 src={imgs[imgIdx]}
@@ -120,6 +125,7 @@ export default function FabricDetail() {
                 </>
               )}
             </div>
+            )}
             {imgs.length > 1 && (
               <div className="grid grid-cols-4 gap-2 mt-3">
                 {imgs.map((src, i) => (
