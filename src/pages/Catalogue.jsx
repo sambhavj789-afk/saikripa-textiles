@@ -118,7 +118,7 @@ export default function Catalogue() {
             <div className="relative bg-[#0a1124]/80 backdrop-blur-xl border border-[#d4af37]/30 rounded-2xl px-5 py-4 overflow-hidden" style={{ boxShadow: "0 10px 30px rgba(0,0,0,0.4), 0 0 30px rgba(212, 175, 55, 0.1)" }}>
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#d4af37]/60 to-transparent" />
               <p className="text-[10px] text-[#d4af37]/80 font-bold uppercase tracking-[0.25em] mb-1.5">Collections</p>
-              <p className="text-3xl font-black text-white leading-none">6</p>
+              <p className="text-3xl font-black text-white leading-none">{collections.length}</p>
               <p className="text-[11px] text-[#a8b0c0] mt-1.5 font-medium">Premium fabric families</p>
             </div>
 

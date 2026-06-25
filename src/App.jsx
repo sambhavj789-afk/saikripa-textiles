@@ -624,7 +624,7 @@ export default function LuxuryTextileWebsite() {
 
             {/* Compact stat strip */}
             <div className="grid grid-cols-3 gap-3">
-              {[["12+", "Years"], ["1000+", "Clients"], ["6", "Collections"]].map(([val, label]) => (
+              {[["12+", "Years"], ["1000+", "Clients"], [String(catalogueItems.length), "Collections"]].map(([val, label]) => (
                 <div key={label} className="bg-[#0a1124] rounded-2xl p-3 border border-[#1a2233] text-center hover:border-[#d4af37]/30 transition">
                   <p className="text-xl font-black text-[#d4af37]">{val}</p>
                   <p className="text-[10px] text-[#a8b0c0] mt-0.5 font-semibold uppercase tracking-wider">{label}</p>
