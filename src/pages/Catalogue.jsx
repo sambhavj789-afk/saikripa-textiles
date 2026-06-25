@@ -367,6 +367,24 @@ export default function Catalogue() {
   );
 }
 
+// ── Description with inline expand ──────────────────────────────────────────
+function DescriptionWithToggle({ text }) {
+  const [expanded, setExpanded] = useState(false);
+  if (!text) return null;
+  if (text.length <= 100) return text;
+  return (
+    <>
+      {expanded ? text : text.substring(0, 100) + "..."}{" "}
+      <button
+        onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+        className="text-[#d4af37] hover:text-[#f4d77a] font-semibold transition"
+      >
+        {expanded ? "Show less" : "See more"}
+      </button>
+    </>
+  );
+}
+
 // ── Fabric Card ─────────────────────────────────────────────────────────────
 function FabricCard({ item, isCompared, onToggleCompare, onNavigate }) {
   return (
@@ -402,7 +420,7 @@ function FabricCard({ item, isCompared, onToggleCompare, onNavigate }) {
         </div>
         <h3 className="text-lg font-black text-white mb-2 group-hover:text-[#d4af37] transition-colors">{item.title}</h3>
         <p className="text-[#cbd5e1] text-sm leading-relaxed flex-grow">
-          {item.description.substring(0, 100)}...
+          <DescriptionWithToggle text={item.description} />
         </p>
 
         <div className="mt-4 grid grid-cols-2 gap-2">
