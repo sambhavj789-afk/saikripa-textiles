@@ -91,7 +91,7 @@ export const collections = [
     gsmValue: 300,
     blend: "2/30×2/30",
     construction: "2/30×2/30",
-    images: ["/catalogue/cover.jpg", "/catalogue/milkyway.jpg"],
+    images: ["/catalogue/cover.jpg", "/catalogue/milkyway1.jpg", "/catalogue/milkyway2.jpg"],
     image: "/catalogue/cover.jpg",
     category: "PV Trovin",
     moq: "150 meters",
