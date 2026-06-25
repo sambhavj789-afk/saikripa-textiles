@@ -70,11 +70,19 @@ export default function Analytics() {
   const allRows = useMemo(() => {
     const r = [];
     bills.forEach((b) => {
-      (b.bill_items || []).forEach((it) => {
+      const items = b.bill_items || [];
+      // Spread the bill's final total (incl. GST/charges/discount) across its line
+      // items in proportion to each item's amount, so Analytics revenue matches
+      // the Dashboard / Sales Records totals which use final_total.
+      const subtotal = items.reduce((s, it) => s + Number(it.amount || 0), 0);
+      const finalTotal = b.final_total && Number(b.final_total) > 0 ? Number(b.final_total) : subtotal;
+      const factor = subtotal > 0 ? finalTotal / subtotal : 1;
+      items.forEach((it) => {
         r.push({
           bill_id: b.id, bill_date: b.bill_date, bill_number: b.bill_number,
           party: b.party, sale_type: b.sale_type, agency_name: b.agency_name,
-          quality: it.quality, meter: Number(it.meter || 0), amount: Number(it.amount || 0),
+          quality: it.quality, meter: Number(it.meter || 0),
+          amount: Number(it.amount || 0) * factor,
         });
       });
     });
