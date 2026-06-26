@@ -58,15 +58,15 @@ export default function Catalogue() {
     .map((slug) => collections.find((c) => c.slug === slug))
     .filter(Boolean);
 
-  // Sum the shade counts from each collection's "colors" text (e.g. "60+ shades").
-  const totalShades = useMemo(
-    () =>
-      collections.reduce((sum, c) => {
-        const m = (c.colors || "").match(/\d+/);
-        return sum + (m ? parseInt(m[0], 10) : 0);
-      }, 0),
-    [collections]
-  );
+  // Sum the shade counts from each collection's "colors" text (e.g. "60+ shades"),
+  // then round down to the nearest 10 for a clean "190+" style figure.
+  const totalShades = useMemo(() => {
+    const sum = collections.reduce((s, c) => {
+      const m = (c.colors || "").match(/\d+/);
+      return s + (m ? parseInt(m[0], 10) : 0);
+    }, 0);
+    return Math.floor(sum / 10) * 10;
+  }, [collections]);
 
   const showGrouped = activeCategory === "All" && !search && view === "grid";
 
