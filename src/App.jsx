@@ -244,7 +244,7 @@ function ProductModal({ item, onClose }) {
     <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="bg-[#0a1124] border border-[#1a2233] w-full max-w-3xl rounded-[28px] overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="relative bg-[#020817]">
-          <img src={imgs[idx]} alt={item.title} className="w-full max-h-[60vh] object-contain" />
+          <img src={imgs[idx]} alt={item.title} className="w-full h-auto block" />
           {imgs.length > 1 && (
             <>
               <button onClick={prev} className="absolute left-3 top-1/2 -translate-y-1/2 bg-[#0a1124]/90 hover:bg-[#0a1124] border border-[#1a2233] rounded-full w-10 h-10 flex items-center justify-center text-[#d4af37] font-bold text-xl shadow-md" aria-label="Previous image">‹</button>
