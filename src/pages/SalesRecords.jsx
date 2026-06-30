@@ -40,6 +40,13 @@ const emptyInvoiceFields = () => ({
   round_off: "0", tcs: "0",
 });
 
+// Optional invoice fields — any of these filled means the bill carries extra (GST/transport/buyer/charges) detail.
+const OPTIONAL_TEXT_FIELDS = ["buyer_gstin", "buyer_pan", "buyer_address", "buyer_state_code", "buyer_adhar", "buyer_mobile", "buyer_email", "buyer_cin", "buyer_city", "buyer_state", "agent_name", "consignee_details", "ack_no", "ack_date", "irn", "transport_name", "transport_gstin", "lr_no", "lr_date", "despatch_to", "eway_bill_no", "eway_bill_date", "place_of_supply"];
+const OPTIONAL_NUM_FIELDS = ["cgst_percent", "sgst_percent", "igst_percent", "total_gst_percent", "discount", "cartage", "insurance", "sp_pack_chg", "others", "tcs"];
+const billHasOptional = (b) =>
+  OPTIONAL_TEXT_FIELDS.some((k) => b[k] && String(b[k]).trim() !== "") ||
+  OPTIONAL_NUM_FIELDS.some((k) => Number(b[k]) > 0);
+
 export default function SalesRecords() {
   const navigate = useNavigate();
   const { range, label } = useFinancialYear();
@@ -104,6 +111,12 @@ export default function SalesRecords() {
   const notesOptions = useMemo(() => {
     const set = new Set();
     bills.forEach((b) => b.notes && set.add(b.notes));
+    return Array.from(set).sort();
+  }, [bills]);
+
+  const qualityOptions = useMemo(() => {
+    const set = new Set(FABRIC_QUALITIES);
+    bills.forEach((b) => (b.bill_items || []).forEach((it) => it.quality && set.add(it.quality)));
     return Array.from(set).sort();
   }, [bills]);
 
@@ -632,7 +645,7 @@ const handleSubmit = async (e) => {
               </div>
             </div>
 
-            <div className="border-t border-[#1a2233] pt-5 mb-3">
+            <div className="border-t borde-[#1a2233] pt-5 mb-3">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-bold text-white uppercase tracking-wide">Fabrics on this bill</h4>
                 <button type="button" onClick={addItem} className="text-xs font-medium text-[#d4af37] hover:text-[#f4d77a] transition uppercase tracking-wider">+ Add another fabric</button>
@@ -642,7 +655,7 @@ const handleSubmit = async (e) => {
                   <div key={idx} className="bg-[#020817] border border-[#1a2233] rounded-lg p-4 grid sm:grid-cols-12 gap-3 items-end">
                     <div className="sm:col-span-4">
                       <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Quality</label>
-                      <Autocomplete value={it.quality} onChange={(v) => handleItemChange(idx, "quality", v)} suggestions={FABRIC_QUALITIES} placeholder="e.g. Superior Collection" className={inputCls} />
+                      <Autocomplete value={it.quality} onChange={(v) => handleItemChange(idx, "quality", v)} suggestions={qualityOptions} placeholder="e.g. Superior Collection" className={inputCls} />
                     </div>
                     <div className="sm:col-span-2">
                       <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Meter</label>
@@ -893,6 +906,7 @@ const handleSubmit = async (e) => {
                     const subtotal = billSubtotal(b);
                     const finalTotal = billFinalTotal(b);
                     const hasAdjustments = Math.abs(finalTotal - subtotal) > 0.01;
+                    const hasInvoice = billHasOptional(b);
                     return (
                       <React.Fragment key={b.id}>
                         <tr className={`border-t border-[#1a2233] hover:bg-[#020817]/60 transition cursor-pointer ${isOpen ? "bg-[#020817]/40" : ""}`} onClick={() => setExpandedBill(isOpen ? null : b.id)}>
@@ -904,7 +918,12 @@ const handleSubmit = async (e) => {
                           <td className="px-3 py-3 text-[#a8b0c0] whitespace-nowrap">
                             {new Date(b.bill_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
                           </td>
-                          <td className="px-3 py-3 font-semibold text-white">{b.bill_number}</td>
+                          <td className="px-3 py-3 font-semibold text-white whitespace-nowrap">
+                            {b.bill_number}
+                            {hasInvoice && (
+                              <span title="Optional invoice details filled (GST / transport / buyer / charges)" className="ml-2 inline-block text-[9px] bg-indigo-500/15 text-indigo-300 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider border border-indigo-400/30 align-middle">Invoice</span>
+                            )}
+                          </td>
                           <td className="px-3 py-3 text-[#e8edf5]">{b.party}</td>
                           <td className="px-3 py-3">
                             {b.sale_type === "Agency" ? (

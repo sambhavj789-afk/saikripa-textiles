@@ -63,6 +63,12 @@ export default function PurchaseRecords() {
     return Array.from(set).sort();
   }, [bills]);
 
+  const qualityOptions = useMemo(() => {
+    const set = new Set(FABRIC_QUALITIES);
+    bills.forEach((b) => b.quality && set.add(b.quality));
+    return Array.from(set).sort();
+  }, [bills]);
+
   const notesOptions = useMemo(() => Array.from(new Set(bills.map(b => b.notes).filter(Boolean))).sort(), [bills]);
 
   const handleChange = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
@@ -288,7 +294,7 @@ export default function PurchaseRecords() {
               <Field label="Date"><input type="date" value={form.bill_date} onChange={(e) => handleChange("bill_date", e.target.value)} className={inputCls + " [color-scheme:dark]"} /></Field>
               <Field label="Bill #"><input type="text" value={form.bill_number} onChange={(e) => handleChange("bill_number", e.target.value)} placeholder="e.g. 2293" className={inputCls} /></Field>
               <Field label="Party (Supplier)"><Autocomplete value={form.party} onChange={(v) => handleChange("party", v)} suggestions={supplierOptions} placeholder="Suzuki / Saileela" className={inputCls} /></Field>
-              <Field label="Quality"><Autocomplete value={form.quality} onChange={(v) => handleChange("quality", v)} suggestions={FABRIC_QUALITIES} placeholder="e.g. Superior Collection" className={inputCls} /></Field>
+              <Field label="Quality"><Autocomplete value={form.quality} onChange={(v) => handleChange("quality", v)} suggestions={qualityOptions} placeholder="e.g. Superior Collection" className={inputCls} /></Field>
               <Field label="Meter"><input type="number" step="0.01" value={form.meter} onChange={(e) => handleChange("meter", e.target.value)} placeholder="0.00" className={inputCls} /></Field>
               <div>
                 <label className="block text-[10px] font-medium uppercase tracking-[0.25em] mb-2 text-rose-300">Plus (+) — Underweight</label>
