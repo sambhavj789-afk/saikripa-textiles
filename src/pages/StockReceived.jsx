@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { fetchAllOptions, saveOptions } from "../lib/autocomplete";
+import { fetchAllOptions, saveOptions, deleteOption } from "../lib/autocomplete";
 import AdminNav from "../components/AdminNav";
 import Autocomplete from "../components/Autocomplete";
 import { useFinancialYear, applyFyRange } from "../context/FinancialYearContext";
@@ -70,6 +70,10 @@ export default function StockReceived() {
   const persistOptions = async (category, values) => {
     const clean = await saveOptions(category, values);
     if (clean.length) setOpts((p) => ({ ...p, [category]: Array.from(new Set([...(p[category] || []), ...clean])) }));
+  };
+  const removeOption = async (category, value) => {
+    await deleteOption(category, value);
+    setOpts((p) => ({ ...p, [category]: (p[category] || []).filter((v) => v !== value) }));
   };
 
   const fetchMonths = async () => {
@@ -493,7 +497,7 @@ const submitAdd = async (month) => {
                     <div key={idx} className="bg-[#020817] border border-[#1a2233] rounded-lg p-4 grid sm:grid-cols-12 gap-3 items-end">
                       <div className="sm:col-span-4">
                         <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Quality</label>
-                        <Autocomplete value={it.quality} onChange={(v) => handleItemChange(idx, "quality", v)} suggestions={qualityOptions} placeholder="e.g. Superior Collection" className={inputCls} />
+                        <Autocomplete value={it.quality} onChange={(v) => handleItemChange(idx, "quality", v)} suggestions={qualityOptions} removable={opts.quality || []} onRemove={(v) => removeOption("quality", v)} placeholder="e.g. Superior Collection" className={inputCls} />
                       </div>
                       <div className="sm:col-span-3">
                         <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Process Rec.</label>
@@ -644,7 +648,7 @@ const submitAdd = async (month) => {
                                 {addRows.map((r, ri) => (
                                   <div key={ri} className="grid grid-cols-12 gap-2 items-center">
                                     <div className="col-span-5">
-                                      <Autocomplete value={r.quality} onChange={(v) => changeAddRow(ri, "quality", v)} suggestions={qualityOptions} placeholder="Quality" className={inputCls} />
+                                      <Autocomplete value={r.quality} onChange={(v) => changeAddRow(ri, "quality", v)} suggestions={qualityOptions} removable={opts.quality || []} onRemove={(v) => removeOption("quality", v)} placeholder="Quality" className={inputCls} />
                                     </div>
                                     <div className="col-span-3">
                                       <input type="number" step="0.01" value={r.process_rec} onChange={(e) => changeAddRow(ri, "process_rec", e.target.value)} placeholder="+ Process" className={inputCls} />

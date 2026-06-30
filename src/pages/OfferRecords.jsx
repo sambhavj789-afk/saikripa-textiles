@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { fetchAllOptions, saveOptions } from "../lib/autocomplete";
+import { fetchAllOptions, saveOptions, deleteOption } from "../lib/autocomplete";
 import AdminNav from "../components/AdminNav";
 import Autocomplete from "../components/Autocomplete";
 import { useFinancialYear, applyFyRange } from "../context/FinancialYearContext";
@@ -68,6 +68,10 @@ export default function OfferRecords() {
   const persistOptions = async (category, values) => {
     const clean = await saveOptions(category, values);
     if (clean.length) setOpts((p) => ({ ...p, [category]: Array.from(new Set([...(p[category] || []), ...clean])) }));
+  };
+  const removeOption = async (category, value) => {
+    await deleteOption(category, value);
+    setOpts((p) => ({ ...p, [category]: (p[category] || []).filter((v) => v !== value) }));
   };
 
   const fetchOffers = async () => {
@@ -449,11 +453,11 @@ const handleSubmit = async (e) => {
               </div>
               <div>
                 <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Mill</label>
-                <Autocomplete value={form.mill} onChange={(v) => handleFormChange("mill", v)} suggestions={millOptions} placeholder="e.g. Sangam" className={inputCls} />
+                <Autocomplete value={form.mill} onChange={(v) => handleFormChange("mill", v)} suggestions={millOptions} removable={opts.mill || []} onRemove={(v) => removeOption("mill", v)} placeholder="e.g. Sangam" className={inputCls} />
               </div>
               <div>
                 <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Quality</label>
-                <Autocomplete value={form.quality} onChange={(v) => handleFormChange("quality", v)} suggestions={qualityOptions} placeholder="e.g. Superior Collection" className={inputCls} />
+                <Autocomplete value={form.quality} onChange={(v) => handleFormChange("quality", v)} suggestions={qualityOptions} removable={opts.quality || []} onRemove={(v) => removeOption("quality", v)} placeholder="e.g. Superior Collection" className={inputCls} />
               </div>
               <div>
                 <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">@ (Rate)</label>

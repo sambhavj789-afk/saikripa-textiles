@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { fetchAllOptions, saveOptions } from "../lib/autocomplete";
+import { fetchAllOptions, saveOptions, deleteOption } from "../lib/autocomplete";
 import AdminNav from "../components/AdminNav";
 import Autocomplete from "../components/Autocomplete";
 import { useFinancialYear, applyFyRange } from "../context/FinancialYearContext";
@@ -52,6 +52,10 @@ export default function PurchaseRecords() {
   const persistOptions = async (category, values) => {
     const clean = await saveOptions(category, values);
     if (clean.length) setOpts((p) => ({ ...p, [category]: Array.from(new Set([...(p[category] || []), ...clean])) }));
+  };
+  const removeOption = async (category, value) => {
+    await deleteOption(category, value);
+    setOpts((p) => ({ ...p, [category]: (p[category] || []).filter((v) => v !== value) }));
   };
 
   const fetchBills = async () => {
@@ -306,8 +310,8 @@ export default function PurchaseRecords() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <Field label="Date"><input type="date" value={form.bill_date} onChange={(e) => handleChange("bill_date", e.target.value)} className={inputCls + " [color-scheme:dark]"} /></Field>
               <Field label="Bill #"><input type="text" value={form.bill_number} onChange={(e) => handleChange("bill_number", e.target.value)} placeholder="e.g. 2293" className={inputCls} /></Field>
-              <Field label="Party (Supplier)"><Autocomplete value={form.party} onChange={(v) => handleChange("party", v)} suggestions={supplierOptions} placeholder="Suzuki / Saileela" className={inputCls} /></Field>
-              <Field label="Quality"><Autocomplete value={form.quality} onChange={(v) => handleChange("quality", v)} suggestions={qualityOptions} placeholder="e.g. Superior Collection" className={inputCls} /></Field>
+              <Field label="Party (Supplier)"><Autocomplete value={form.party} onChange={(v) => handleChange("party", v)} suggestions={supplierOptions} removable={opts.party || []} onRemove={(v) => removeOption("party", v)} placeholder="Suzuki / Saileela" className={inputCls} /></Field>
+              <Field label="Quality"><Autocomplete value={form.quality} onChange={(v) => handleChange("quality", v)} suggestions={qualityOptions} removable={opts.quality || []} onRemove={(v) => removeOption("quality", v)} placeholder="e.g. Superior Collection" className={inputCls} /></Field>
               <Field label="Meter"><input type="number" step="0.01" value={form.meter} onChange={(e) => handleChange("meter", e.target.value)} placeholder="0.00" className={inputCls} /></Field>
               <div>
                 <label className="block text-[10px] font-medium uppercase tracking-[0.25em] mb-2 text-rose-300">Plus (+) — Underweight</label>
@@ -320,7 +324,7 @@ export default function PurchaseRecords() {
               <Field label="Amount"><input type="number" step="0.01" value={form.amount} onChange={(e) => handleChange("amount", e.target.value)} placeholder="0" className={inputCls} /></Field>
               <div className="sm:col-span-2 lg:col-span-4">
                 <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Notes</label>
-                <Autocomplete value={form.notes} onChange={(v) => handleChange("notes", v)} suggestions={notesOptions} placeholder="Optional" className={inputCls} />
+                <Autocomplete value={form.notes} onChange={(v) => handleChange("notes", v)} suggestions={notesOptions} removable={opts.notes || []} onRemove={(v) => removeOption("notes", v)} placeholder="Optional" className={inputCls} />
               </div>
             </div>
             <div className="flex gap-3 mt-6">

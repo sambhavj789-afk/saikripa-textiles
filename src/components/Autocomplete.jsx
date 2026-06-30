@@ -15,11 +15,14 @@ export default function Autocomplete({
   placeholder,
   className,
   required,
+  removable = [],   // values that can be deleted from the shared list
+  onRemove,         // (value) => void  — delete a saved suggestion for everyone
 }) {
   const [open, setOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
   const wrapperRef = useRef(null);
   const inputRef = useRef(null);
+  const removableSet = new Set(removable);
 
   // Filter suggestions by what's typed (case-insensitive substring match)
   const matches = !value
@@ -100,18 +103,37 @@ export default function Autocomplete({
           {matches.map((m, i) => (
             <li
               key={m}
-              onMouseDown={(e) => {
-                e.preventDefault(); // prevent input blur before click registers
-                acceptSuggestion(m);
-              }}
               onMouseEnter={() => setActiveIdx(i)}
-              className={`px-3 py-2 text-sm cursor-pointer transition ${
+              className={`flex items-center gap-2 px-3 py-2 text-sm transition ${
                 i === activeIdx
                   ? "bg-[#d4af37]/15 text-[#081225] font-bold"
                   : "text-gray-700 hover:bg-gray-50"
               }`}
             >
-              {highlightMatch(m, value)}
+              <span
+                onMouseDown={(e) => {
+                  e.preventDefault(); // prevent input blur before click registers
+                  acceptSuggestion(m);
+                }}
+                className="flex-1 cursor-pointer truncate"
+              >
+                {highlightMatch(m, value)}
+              </span>
+              {onRemove && removableSet.has(m) && (
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation(); // don't accept the suggestion
+                    onRemove(m);
+                  }}
+                  title="Remove this saved suggestion for everyone"
+                  aria-label={`Remove ${m}`}
+                  className="shrink-0 text-gray-300 hover:text-rose-500 font-bold leading-none px-1 text-base"
+                >
+                  ×
+                </button>
+              )}
             </li>
           ))}
         </ul>

@@ -16,6 +16,15 @@ export async function fetchAllOptions() {
   return map;
 }
 
+export async function deleteOption(category, value) {
+  if (!value) return;
+  try {
+    await supabase.from("autocomplete_options").delete().eq("category", category).eq("value", value);
+  } catch {
+    /* non-fatal */
+  }
+}
+
 export async function saveOptions(category, values) {
   const clean = [...new Set((values || []).map((v) => (v || "").trim()).filter(Boolean))];
   if (!clean.length) return clean;

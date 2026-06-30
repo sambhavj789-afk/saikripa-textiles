@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { fetchAllOptions, saveOptions } from "../lib/autocomplete";
+import { fetchAllOptions, saveOptions, deleteOption } from "../lib/autocomplete";
 import AdminNav from "../components/AdminNav";
 import Autocomplete from "../components/Autocomplete";
 import ImageCropModal from "../components/ImageCropModal";
@@ -70,6 +70,10 @@ export default function CatalogueAdmin() {
   const persistOptions = async (category, values) => {
     const clean = await saveOptions(category, values);
     if (clean.length) setOpts((p) => ({ ...p, [category]: Array.from(new Set([...(p[category] || []), ...clean])) }));
+  };
+  const removeOption = async (category, value) => {
+    await deleteOption(category, value);
+    setOpts((p) => ({ ...p, [category]: (p[category] || []).filter((v) => v !== value) }));
   };
 
   const fetchRows = async () => {
@@ -325,7 +329,7 @@ export default function CatalogueAdmin() {
               </div>
               <div className="sm:col-span-2">
                 <label className={labelCls}>Category</label>
-                <Autocomplete value={form.category} onChange={(v) => set("category", v)} suggestions={categoryOptions} placeholder="e.g. 2/18 Matty" className={inputCls} />
+                <Autocomplete value={form.category} onChange={(v) => set("category", v)} suggestions={categoryOptions} removable={opts.category || []} onRemove={(v) => removeOption("category", v)} placeholder="e.g. 2/18 Matty" className={inputCls} />
               </div>
               <div>
                 <label className={labelCls}>Order on site <span className="text-[#d4af37]/60 normal-case tracking-normal">(optional)</span></label>

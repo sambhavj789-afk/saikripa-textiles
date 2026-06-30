@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { fetchAllOptions, saveOptions } from "../lib/autocomplete";
+import { fetchAllOptions, saveOptions, deleteOption } from "../lib/autocomplete";
 import AdminNav from "../components/AdminNav";
 import Autocomplete from "../components/Autocomplete";
 import { useFinancialYear, applyFyRange } from "../context/FinancialYearContext";
@@ -41,12 +41,9 @@ const emptyInvoiceFields = () => ({
   round_off: "0", tcs: "0",
 });
 
-// Optional invoice fields — any of these filled means the bill carries extra (GST/transport/buyer/charges) detail.
-const OPTIONAL_TEXT_FIELDS = ["buyer_gstin", "buyer_pan", "buyer_address", "buyer_state_code", "buyer_adhar", "buyer_mobile", "buyer_email", "buyer_cin", "buyer_city", "buyer_state", "agent_name", "consignee_details", "ack_no", "ack_date", "irn", "transport_name", "transport_gstin", "lr_no", "lr_date", "despatch_to", "eway_bill_no", "eway_bill_date", "place_of_supply"];
-const OPTIONAL_NUM_FIELDS = ["cgst_percent", "sgst_percent", "igst_percent", "total_gst_percent", "discount", "cartage", "insurance", "sp_pack_chg", "others", "tcs"];
-const billHasOptional = (b) =>
-  OPTIONAL_TEXT_FIELDS.some((k) => b[k] && String(b[k]).trim() !== "") ||
-  OPTIONAL_NUM_FIELDS.some((k) => Number(b[k]) > 0);
+// A bill is flagged as a GST invoice when buyer details (incl. buyer GSTIN) are filled.
+const BUYER_FIELDS = ["buyer_gstin", "buyer_pan", "buyer_address", "buyer_state_code", "buyer_adhar", "buyer_mobile", "buyer_email", "buyer_cin", "buyer_city", "buyer_state"];
+const billHasBuyer = (b) => BUYER_FIELDS.some((k) => b[k] && String(b[k]).trim() !== "");
 
 export default function SalesRecords() {
   const navigate = useNavigate();
@@ -91,6 +88,10 @@ export default function SalesRecords() {
   const persistOptions = async (category, values) => {
     const clean = await saveOptions(category, values);
     if (clean.length) setOpts((p) => ({ ...p, [category]: Array.from(new Set([...(p[category] || []), ...clean])) }));
+  };
+  const removeOption = async (category, value) => {
+    await deleteOption(category, value);
+    setOpts((p) => ({ ...p, [category]: (p[category] || []).filter((v) => v !== value) }));
   };
 
   const fetchBills = async () => {
@@ -635,7 +636,9 @@ const handleSubmit = async (e) => {
                       }
                     }
                   }} 
-                  suggestions={partyOptions} 
+                  suggestions={partyOptions}
+                  removable={opts.party || []}
+                  onRemove={(v) => removeOption("party", v)}
                   placeholder="Buyer name / firm"
                   className={inputCls}
                 />
@@ -650,12 +653,12 @@ const handleSubmit = async (e) => {
               {form.sale_type === "Agency" && (
                 <div className="sm:col-span-3">
                   <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Agency Name</label>
-                  <Autocomplete value={form.agency_name} onChange={(v) => handleFormChange("agency_name", v)} suggestions={agencyOptions} placeholder="Agent / agency" className={inputCls} />
+                  <Autocomplete value={form.agency_name} onChange={(v) => handleFormChange("agency_name", v)} suggestions={agencyOptions} removable={opts.agency || []} onRemove={(v) => removeOption("agency", v)} placeholder="Agent / agency" className={inputCls} />
                 </div>
               )}
               <div className={form.sale_type === "Agency" ? "sm:col-span-4" : "sm:col-span-3"}>
                 <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Notes</label>
-                <Autocomplete value={form.notes} onChange={(v) => handleFormChange("notes", v)} suggestions={notesOptions} placeholder="Optional — payment terms, delivery, etc." className={inputCls} />
+                <Autocomplete value={form.notes} onChange={(v) => handleFormChange("notes", v)} suggestions={notesOptions} removable={opts.notes || []} onRemove={(v) => removeOption("notes", v)} placeholder="Optional — payment terms, delivery, etc." className={inputCls} />
               </div>
             </div>
 
@@ -669,7 +672,7 @@ const handleSubmit = async (e) => {
                   <div key={idx} className="bg-[#020817] border border-[#1a2233] rounded-lg p-4 grid sm:grid-cols-12 gap-3 items-end">
                     <div className="sm:col-span-4">
                       <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Quality</label>
-                      <Autocomplete value={it.quality} onChange={(v) => handleItemChange(idx, "quality", v)} suggestions={qualityOptions} placeholder="e.g. Superior Collection" className={inputCls} />
+                      <Autocomplete value={it.quality} onChange={(v) => handleItemChange(idx, "quality", v)} suggestions={qualityOptions} removable={opts.quality || []} onRemove={(v) => removeOption("quality", v)} placeholder="e.g. Superior Collection" className={inputCls} />
                     </div>
                     <div className="sm:col-span-2">
                       <label className="block text-[10px] font-medium text-[#7a8499] uppercase tracking-[0.25em] mb-2">Meter</label>
@@ -920,7 +923,7 @@ const handleSubmit = async (e) => {
                     const subtotal = billSubtotal(b);
                     const finalTotal = billFinalTotal(b);
                     const hasAdjustments = Math.abs(finalTotal - subtotal) > 0.01;
-                    const hasInvoice = billHasOptional(b);
+                    const hasInvoice = billHasBuyer(b);
                     return (
                       <React.Fragment key={b.id}>
                         <tr className={`border-t border-[#1a2233] hover:bg-[#020817]/60 transition cursor-pointer ${isOpen ? "bg-[#020817]/40" : ""}`} onClick={() => setExpandedBill(isOpen ? null : b.id)}>
@@ -935,7 +938,7 @@ const handleSubmit = async (e) => {
                           <td className="px-3 py-3 font-semibold text-white whitespace-nowrap">
                             {b.bill_number}
                             {hasInvoice && (
-                              <span title="Optional invoice details filled (GST / transport / buyer / charges)" className="ml-2 inline-block text-[9px] bg-indigo-500/15 text-indigo-300 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider border border-indigo-400/30 align-middle">Invoice</span>
+                              <span title="Buyer details / GSTIN entered — printable GST invoice" className="ml-2 inline-block text-[9px] bg-indigo-500/15 text-indigo-300 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider border border-indigo-400/30 align-middle">Invoice</span>
                             )}
                           </td>
                           <td className="px-3 py-3 text-[#e8edf5]">{b.party}</td>

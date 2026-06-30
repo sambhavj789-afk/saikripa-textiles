@@ -25,3 +25,10 @@ create policy "autocomplete insert"
   on public.autocomplete_options for insert
   to authenticated
   with check (true);
+
+-- Only signed-in admins can remove a saved suggestion (the × in the dropdown).
+drop policy if exists "autocomplete delete" on public.autocomplete_options;
+create policy "autocomplete delete"
+  on public.autocomplete_options for delete
+  to authenticated
+  using (true);
