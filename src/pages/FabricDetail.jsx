@@ -14,6 +14,20 @@ export default function FabricDetail() {
     setImgIdx(0);
   }, [slug]);
 
+  // Arrow keys ← → shift the shade-chart gallery left/right.
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (!item) return;
+      const all = (item.images && item.images.length ? item.images : [item.image]).filter(Boolean);
+      const list = all.filter((u) => u !== item.image);
+      if (list.length < 2) return;
+      if (e.key === "ArrowRight") setImgIdx((i) => (i + 1) % list.length);
+      else if (e.key === "ArrowLeft") setImgIdx((i) => (i - 1 + list.length) % list.length);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [item]);
+
   if (!item && loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#020817] p-6">

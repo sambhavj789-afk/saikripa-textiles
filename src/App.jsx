@@ -255,14 +255,14 @@ function ProductModal({ item, onClose }) {
             </>
           )}
           <button onClick={onClose} className="absolute top-4 right-4 bg-[#0a1124]/90 border border-[#1a2233] rounded-full w-9 h-9 flex items-center justify-center text-white hover:border-[#d4af37]/40 font-bold text-lg" aria-label="Close">×</button>
-          <div className="absolute bottom-4 left-4 flex gap-2">
-            <span className="bg-[#0a1124]/90 backdrop-blur border border-[#1a2233] text-white px-3 py-1 rounded-full text-xs font-bold">{item.gsm}</span>
-            <span className="bg-[#d4af37] text-[#020817] px-3 py-1 rounded-full text-xs font-bold">{item.blend}</span>
-          </div>
         </div>
         <div className="p-8">
           <p className="text-xs text-[#d4af37] font-bold uppercase tracking-widest mb-1">{item.category}</p>
           <h3 className="text-3xl font-black text-white mb-3">{item.title}</h3>
+          <div className="flex flex-wrap gap-2 mb-4">
+            <span className="bg-[#020817] border border-[#1a2233] text-white px-3 py-1 rounded-full text-xs font-bold">{item.gsm}</span>
+            <span className="bg-[#d4af37] text-[#020817] px-3 py-1 rounded-full text-xs font-bold">{item.blend}</span>
+          </div>
           <p className="text-[#cbd5e1] leading-relaxed mb-6">{item.description}</p>
           <div className="grid grid-cols-2 gap-4 mb-8">
             {[["MOQ", item.moq], ["Available Colors", item.colors]].map(([label, value]) => (
@@ -304,6 +304,7 @@ function FAQItem({ q, a }) {
 function ContactForm() {
   const [form, setForm] = useState({ name: "", phone: "", city: "", fabric: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
+  const { items: catalogueItems } = useCatalogue();
 
   const handleSubmit = () => {
     if (!form.name || !form.phone) return;
@@ -351,7 +352,7 @@ function ContactForm() {
             <label className="block text-xs font-bold text-[#7a8499] uppercase tracking-widest mb-1">Fabric / Collection</label>
             <select value={form.fabric} onChange={(e) => setForm({ ...form, fabric: e.target.value })} className={inputCls + " cursor-pointer"}>
               <option value="">Select a fabric</option>
-              {collections.map((c) => <option key={c.title} value={c.title}>{c.title} ({c.gsm})</option>)}
+              {catalogueItems.map((c) => <option key={c.slug || c.title} value={c.title}>{c.title} ({c.gsm})</option>)}
               <option value="Shade Card Request">Shade Card Request</option>
               <option value="Custom Requirement">Custom Requirement</option>
             </select>
@@ -741,8 +742,8 @@ export default function LuxuryTextileWebsite() {
             <div>
               <h4 className="font-black text-white mb-4 text-sm uppercase tracking-widest">Collections</h4>
               <ul className="space-y-2 text-[#a8b0c0] text-sm">
-                {collections.map((c) => (
-                  <li key={c.title}><button onClick={() => setSelectedItem(c)} className="hover:text-[#d4af37] transition text-left">{c.title}</button></li>
+                {catalogueItems.map((c) => (
+                  <li key={c.slug || c.title}><button onClick={() => setSelectedItem(c)} className="hover:text-[#d4af37] transition text-left">{c.title}</button></li>
                 ))}
               </ul>
             </div>
