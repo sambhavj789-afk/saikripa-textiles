@@ -205,8 +205,18 @@ const submitAdd = async (month) => {
     setMonths((p) => p.filter((m) => m.id !== id));
   };
 
-  const totalProcess = (m) => (m.stock_received_items || []).reduce((s, it) => s + Number(it.process_rec || 0), 0);
-  const totalFinish = (m) => (m.stock_received_items || []).reduce((s, it) => s + Number(it.finish_rec || 0), 0);
+  // When searching a quality, show only that quality's rows within each month (months matched by name only keep all rows).
+  const visibleItems = (m) => {
+    const all = m.stock_received_items || [];
+    if (!search.trim()) return all;
+    const q = search.toLowerCase();
+    const matched = all.filter((it) => (it.quality || "").toLowerCase().includes(q));
+    return matched.length ? matched : all;
+  };
+  const sumProcess = (lines) => lines.reduce((s, it) => s + Number(it.process_rec || 0), 0);
+  const sumFinish = (lines) => lines.reduce((s, it) => s + Number(it.finish_rec || 0), 0);
+  const totalProcess = (m) => sumProcess(visibleItems(m));
+  const totalFinish = (m) => sumFinish(visibleItems(m));
 
   const filtered = months
     .filter((m) => {
@@ -256,7 +266,7 @@ const submitAdd = async (month) => {
     const mergeCols = [0, 5, 6, 7, 8];
 
     filtered.forEach((m) => {
-      const lines = m.stock_received_items || [];
+      const lines = visibleItems(m);
       const tP = totalProcess(m);
       const tF = totalFinish(m);
       const n = Math.max(1, lines.length);
@@ -330,7 +340,7 @@ const submitAdd = async (month) => {
     doc.text(`Generated: ${new Date().toLocaleString("en-IN")}  |  ${filtered.length} months`, 14, 21);
     const body = [];
     filtered.forEach((m) => {
-      const lines = m.stock_received_items || [];
+      const lines = visibleItems(m);
       const tP = totalProcess(m);
       const tF = totalFinish(m);
       if (lines.length === 0) {
@@ -580,7 +590,7 @@ const submitAdd = async (month) => {
                 </thead>
                 <tbody>
                   {filtered.map((m) => {
-                    const lines = m.stock_received_items || [];
+                    const lines = visibleItems(m);
                     const tP = totalProcess(m);
                     const tF = totalFinish(m);
                     const rowCount = lines.length + 1; // +1 for total row
