@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { fetchAllOptions, saveOptions } from "../lib/autocomplete";
 import AdminNav from "../components/AdminNav";
 import Autocomplete from "../components/Autocomplete";
 import { useFinancialYear, applyFyRange } from "../context/FinancialYearContext";
@@ -51,6 +52,7 @@ export default function StockReceived() {
   const [addRows, setAddRows] = useState([{ quality: "", process_rec: "", finish_rec: "" }]);
   const [sortBy, setSortBy] = useState("date");
   const [sortDir, setSortDir] = useState("asc");
+  const [opts, setOpts] = useState({});
 
   useEffect(() => {
     const init = async () => {
@@ -62,6 +64,13 @@ export default function StockReceived() {
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, range?.start, range?.end]);
+
+  useEffect(() => { fetchAllOptions().then(setOpts); }, []);
+
+  const persistOptions = async (category, values) => {
+    const clean = await saveOptions(category, values);
+    if (clean.length) setOpts((p) => ({ ...p, [category]: Array.from(new Set([...(p[category] || []), ...clean])) }));
+  };
 
   const fetchMonths = async () => {
     setLoading(true);
@@ -76,10 +85,10 @@ export default function StockReceived() {
   };
 
   const qualityOptions = useMemo(() => {
-    const s = new Set(QUALITIES);
+    const s = new Set([...QUALITIES, ...(opts.quality || [])]);
     months.forEach((m) => (m.stock_received_items || []).forEach((it) => it.quality && s.add(it.quality)));
     return Array.from(s).sort();
-  }, [months]);
+  }, [months, opts]);
 
   const num = (v) => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
 
@@ -144,6 +153,8 @@ const handleSubmit = async (e) => {
         if (itErr) { alert("Month saved but lines failed: " + itErr.message); return; }
       }
 
+      persistOptions("quality", items.map((it) => it.quality));
+
       resetForm();
       setShowForm(false);
       fetchMonths();
@@ -187,6 +198,8 @@ const submitAdd = async (month) => {
           if (data) (month.stock_received_items = month.stock_received_items || []).push(data);
         }
       }
+      persistOptions("quality", addRows.map((r) => r.quality));
+
       setAddingTo(null);
       setAddRows([{ quality: "", process_rec: "", finish_rec: "" }]);
       fetchMonths();

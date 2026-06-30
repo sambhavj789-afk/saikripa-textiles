@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { fetchAllOptions, saveOptions } from "../lib/autocomplete";
 import AdminNav from "../components/AdminNav";
 import Autocomplete from "../components/Autocomplete";
 import { useFinancialYear, applyFyRange } from "../context/FinancialYearContext";
@@ -68,6 +69,7 @@ export default function SalesRecords() {
   });
   const [items, setItems] = useState([emptyItem()]);
 
+  const [opts, setOpts] = useState({});
   const [salesSearch, setSalesSearch] = useState("");
   const [saleTypeFilter, setSaleTypeFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date");
@@ -84,6 +86,13 @@ export default function SalesRecords() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, range?.start, range?.end]);
 
+  useEffect(() => { fetchAllOptions().then(setOpts); }, []);
+
+  const persistOptions = async (category, values) => {
+    const clean = await saveOptions(category, values);
+    if (clean.length) setOpts((p) => ({ ...p, [category]: Array.from(new Set([...(p[category] || []), ...clean])) }));
+  };
+
   const fetchBills = async () => {
     setLoading(true);
     const { data, error: dbError } = await applyFyRange(
@@ -97,28 +106,28 @@ export default function SalesRecords() {
   };
 
   const partyOptions = useMemo(() => {
-    const set = new Set();
+    const set = new Set(opts.party || []);
     bills.forEach((b) => b.party && set.add(b.party));
     return Array.from(set).sort();
-  }, [bills]);
+  }, [bills, opts]);
 
   const agencyOptions = useMemo(() => {
-    const set = new Set();
+    const set = new Set(opts.agency || []);
     bills.forEach((b) => b.agency_name && set.add(b.agency_name));
     return Array.from(set).sort();
-  }, [bills]);
+  }, [bills, opts]);
 
   const notesOptions = useMemo(() => {
-    const set = new Set();
+    const set = new Set(opts.notes || []);
     bills.forEach((b) => b.notes && set.add(b.notes));
     return Array.from(set).sort();
-  }, [bills]);
+  }, [bills, opts]);
 
   const qualityOptions = useMemo(() => {
-    const set = new Set(FABRIC_QUALITIES);
+    const set = new Set([...FABRIC_QUALITIES, ...(opts.quality || [])]);
     bills.forEach((b) => (b.bill_items || []).forEach((it) => it.quality && set.add(it.quality)));
     return Array.from(set).sort();
-  }, [bills]);
+  }, [bills, opts]);
 
   const resetForm = () => {
     setForm({
@@ -347,6 +356,11 @@ const handleSubmit = async (e) => {
         const { error: itemsError } = await supabase.from("bill_items").insert(itemsPayload);
         if (itemsError) { alert("Bill saved but items failed: " + itemsError.message); return; }
       }
+
+      persistOptions("party", [form.party]);
+      if (form.sale_type === "Agency") persistOptions("agency", [form.agency_name]);
+      persistOptions("notes", [form.notes]);
+      persistOptions("quality", items.map((it) => it.quality));
 
       resetForm();
       setShowForm(false);

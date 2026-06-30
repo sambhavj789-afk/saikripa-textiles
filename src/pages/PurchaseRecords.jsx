@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { fetchAllOptions, saveOptions } from "../lib/autocomplete";
 import AdminNav from "../components/AdminNav";
 import Autocomplete from "../components/Autocomplete";
 import { useFinancialYear, applyFyRange } from "../context/FinancialYearContext";
@@ -33,6 +34,7 @@ export default function PurchaseRecords() {
   const [partyFilter, setPartyFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date");
   const [sortDir, setSortDir] = useState("desc");
+  const [opts, setOpts] = useState({});
 
   useEffect(() => {
     const init = async () => {
@@ -44,6 +46,13 @@ export default function PurchaseRecords() {
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, range?.start, range?.end]);
+
+  useEffect(() => { fetchAllOptions().then(setOpts); }, []);
+
+  const persistOptions = async (category, values) => {
+    const clean = await saveOptions(category, values);
+    if (clean.length) setOpts((p) => ({ ...p, [category]: Array.from(new Set([...(p[category] || []), ...clean])) }));
+  };
 
   const fetchBills = async () => {
     setLoading(true);
@@ -58,18 +67,18 @@ export default function PurchaseRecords() {
   };
 
   const supplierOptions = useMemo(() => {
-    const set = new Set(SUPPLIERS);
+    const set = new Set([...SUPPLIERS, ...(opts.party || [])]);
     bills.forEach((b) => b.party && set.add(b.party));
     return Array.from(set).sort();
-  }, [bills]);
+  }, [bills, opts]);
 
   const qualityOptions = useMemo(() => {
-    const set = new Set(FABRIC_QUALITIES);
+    const set = new Set([...FABRIC_QUALITIES, ...(opts.quality || [])]);
     bills.forEach((b) => b.quality && set.add(b.quality));
     return Array.from(set).sort();
-  }, [bills]);
+  }, [bills, opts]);
 
-  const notesOptions = useMemo(() => Array.from(new Set(bills.map(b => b.notes).filter(Boolean))).sort(), [bills]);
+  const notesOptions = useMemo(() => Array.from(new Set([...(opts.notes || []), ...bills.map(b => b.notes).filter(Boolean)])).sort(), [bills, opts]);
 
   const handleChange = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
   const resetForm = () => { setForm(emptyForm()); setEditingId(null); };
@@ -100,6 +109,10 @@ export default function PurchaseRecords() {
       const { error: dbError } = await supabase.from("purchase_records").insert([payload]);
       if (dbError) { alert("Could not save: " + dbError.message); return; }
     }
+    persistOptions("party", [form.party]);
+    persistOptions("quality", [form.quality]);
+    persistOptions("notes", [form.notes]);
+
     resetForm();
     setShowForm(false);
     fetchBills();

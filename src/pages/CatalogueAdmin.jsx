@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { fetchAllOptions, saveOptions } from "../lib/autocomplete";
 import AdminNav from "../components/AdminNav";
 import Autocomplete from "../components/Autocomplete";
 import ImageCropModal from "../components/ImageCropModal";
@@ -52,6 +53,7 @@ export default function CatalogueAdmin() {
   const [cropIndex, setCropIndex] = useState(0);
   const [editIdx, setEditIdx] = useState(null);
   const [editSrc, setEditSrc] = useState(null);
+  const [opts, setOpts] = useState({});
 
   useEffect(() => {
     const init = async () => {
@@ -62,6 +64,13 @@ export default function CatalogueAdmin() {
     };
     init();
   }, [navigate]);
+
+  useEffect(() => { fetchAllOptions().then(setOpts); }, []);
+
+  const persistOptions = async (category, values) => {
+    const clean = await saveOptions(category, values);
+    if (clean.length) setOpts((p) => ({ ...p, [category]: Array.from(new Set([...(p[category] || []), ...clean])) }));
+  };
 
   const fetchRows = async () => {
     setLoading(true);
@@ -76,10 +85,10 @@ export default function CatalogueAdmin() {
   };
 
   const categoryOptions = useMemo(() => {
-    const set = new Set(CATEGORY_SUGGESTIONS);
+    const set = new Set([...CATEGORY_SUGGESTIONS, ...(opts.category || [])]);
     rows.forEach((r) => r.category && set.add(r.category));
     return Array.from(set).sort();
-  }, [rows]);
+  }, [rows, opts]);
 
   const set = (field, value) => setForm((p) => ({ ...p, [field]: value }));
 
@@ -229,6 +238,8 @@ export default function CatalogueAdmin() {
         const { error: dbError } = await supabase.from("catalogue").insert([payload]);
         if (dbError) { alert("Could not save: " + dbError.message); return; }
       }
+      persistOptions("category", [form.category]);
+
       resetForm();
       setShowForm(false);
       fetchRows();

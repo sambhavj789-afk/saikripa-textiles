@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { fetchAllOptions, saveOptions } from "../lib/autocomplete";
 import AdminNav from "../components/AdminNav";
 import Autocomplete from "../components/Autocomplete";
 import { useFinancialYear, applyFyRange } from "../context/FinancialYearContext";
@@ -49,6 +50,7 @@ export default function OfferRecords() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("date");
   const [sortDir, setSortDir] = useState("desc");
+  const [opts, setOpts] = useState({});
 
   useEffect(() => {
     const init = async () => {
@@ -60,6 +62,13 @@ export default function OfferRecords() {
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, range?.start, range?.end]);
+
+  useEffect(() => { fetchAllOptions().then(setOpts); }, []);
+
+  const persistOptions = async (category, values) => {
+    const clean = await saveOptions(category, values);
+    if (clean.length) setOpts((p) => ({ ...p, [category]: Array.from(new Set([...(p[category] || []), ...clean])) }));
+  };
 
   const fetchOffers = async () => {
     setLoading(true);
@@ -74,16 +83,16 @@ export default function OfferRecords() {
   };
 
   const millOptions = useMemo(() => {
-    const s = new Set(MILLS);
+    const s = new Set([...MILLS, ...(opts.mill || [])]);
     offers.forEach((o) => o.mill && s.add(o.mill));
     return Array.from(s).sort();
-  }, [offers]);
+  }, [offers, opts]);
 
   const qualityOptions = useMemo(() => {
-    const s = new Set(QUALITIES);
+    const s = new Set([...QUALITIES, ...(opts.quality || [])]);
     offers.forEach((o) => o.quality && s.add(o.quality));
     return Array.from(s).sort();
-  }, [offers]);
+  }, [offers, opts]);
 
   const num = (v) => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
 
@@ -173,6 +182,9 @@ const handleSubmit = async (e) => {
         const { error: shErr } = await supabase.from("offer_shades").insert(shadesPayload);
         if (shErr) { alert("Offer saved but shades failed: " + shErr.message); return; }
       }
+
+      persistOptions("mill", [form.mill]);
+      persistOptions("quality", [form.quality]);
 
       resetForm();
       setShowForm(false);
