@@ -264,12 +264,12 @@ export default function SalesRecords() {
 const handleSubmit = async (e) => {
     e.preventDefault();
     if (saving) return;
-    const validItems = items.filter((it) => it.quality && it.meter && it.rate);
+    const validItems = items.filter((it) => (it.quality || "").trim());
 
     setSaving(true);
     try {
       const subtotal = validItems.reduce((s, it) =>
-        s + (parseFloat(it.amount) || parseFloat(it.meter) * parseFloat(it.rate)), 0);
+        s + (num(it.amount) || num(it.meter) * num(it.rate)), 0);
       const formCharges = num(form.cartage) + num(form.insurance) + num(form.sp_pack_chg) + num(form.others);
       const gstBase = subtotal - num(form.discount) + formCharges;
       const cgst = (gstBase * num(form.cgst_percent)) / 100;
@@ -344,9 +344,9 @@ const handleSubmit = async (e) => {
       const itemsPayload = validItems.map((it) => ({
         sales_record_id: billId,
         quality: it.quality.trim(),
-        meter: parseFloat(it.meter),
-        rate: parseFloat(it.rate),
-        amount: parseFloat(it.amount) || parseFloat(it.meter) * parseFloat(it.rate),
+        meter: num(it.meter),
+        rate: num(it.rate),
+        amount: num(it.amount) || num(it.meter) * num(it.rate),
         hsn_code: it.hsn_code || "5515",
         case_no: it.case_no || null,
         pcs: parseInt(it.pcs, 10) || 1,
