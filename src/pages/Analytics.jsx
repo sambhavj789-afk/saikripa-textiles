@@ -121,6 +121,7 @@ export default function Analytics() {
   const purchaseTotals = useMemo(() => ({
     amount: filteredPurchases.reduce((s, p) => s + Number(p.amount || 0), 0),
     meters: filteredPurchases.reduce((s, p) => s + Number(p.meter || 0), 0),
+    bills: filteredPurchases.length,
   }), [filteredPurchases]);
 
   const getRowKey = (r, gb) => {
@@ -199,7 +200,7 @@ export default function Analytics() {
     filteredRows.forEach((r) => {
       const key = getRowKey(r, groupBy);
       const label = getRowLabel(r, groupBy);
-      if (!map[key]) map[key] = { key, label, revenue: 0, meters: 0, bills: new Set(), purchases: 0, purchaseMeters: 0 };
+      if (!map[key]) map[key] = { key, label, revenue: 0, meters: 0, bills: new Set(), purchases: 0, purchaseMeters: 0, purchaseBills: 0 };
       map[key].revenue += r.amount;
       map[key].meters += r.meter;
       map[key].bills.add(r.bill_id);
@@ -209,12 +210,13 @@ export default function Analytics() {
       filteredPurchases.forEach((p) => {
         const key = getRowKey(p, groupBy);
         const label = getRowLabel(p, groupBy);
-        if (!map[key]) map[key] = { key, label, revenue: 0, meters: 0, bills: new Set(), purchases: 0, purchaseMeters: 0 };
+        if (!map[key]) map[key] = { key, label, revenue: 0, meters: 0, bills: new Set(), purchases: 0, purchaseMeters: 0, purchaseBills: 0 };
         map[key].purchases += Number(p.amount || 0);
         map[key].purchaseMeters += Number(p.meter || 0);
+        map[key].purchaseBills += 1;
       });
     }
-    let arr = Object.values(map).map((m) => ({ key: m.key, label: m.label, revenue: m.revenue, meters: m.meters, bills: m.bills.size, purchases: m.purchases || 0, purchaseMeters: m.purchaseMeters || 0 }));
+    let arr = Object.values(map).map((m) => ({ key: m.key, label: m.label, revenue: m.revenue, meters: m.meters, bills: m.bills.size, purchases: m.purchases || 0, purchaseMeters: m.purchaseMeters || 0, purchaseBills: m.purchaseBills || 0 }));
     if (isTime) arr.sort((a, b) => a.key.localeCompare(b.key));
     else {
       arr.sort((a, b) => b[measure] - a[measure]);
@@ -444,6 +446,7 @@ export default function Analytics() {
                               <th className="text-left font-medium py-2">Period</th>
                               <th className="text-right font-medium py-2">Meters</th>
                               <th className="text-right font-medium py-2">Amount</th>
+                              <th className="text-right font-medium py-2">Bills</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -452,6 +455,7 @@ export default function Analytics() {
                                 <td className="py-2 font-semibold text-[#e8edf5]">{d.label}</td>
                                 <td className="py-2 text-right font-mono text-[#a8b0c0]">{(d.purchaseMeters || 0).toFixed(2)}</td>
                                 <td className="py-2 text-right font-mono text-[#60a5fa]">{inr(d.purchases || 0)}</td>
+                                <td className="py-2 text-right font-mono text-[#a8b0c0]">{d.purchaseBills || 0}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -460,6 +464,7 @@ export default function Analytics() {
                               <td className="py-2 text-[#60a5fa] font-bold uppercase tracking-[0.2em] text-[11px]">Total</td>
                               <td className="py-2 text-right font-mono font-bold text-white">{purchaseTotals.meters.toFixed(2)}</td>
                               <td className="py-2 text-right font-mono font-bold text-[#60a5fa]">{inr(purchaseTotals.amount)}</td>
+                              <td className="py-2 text-right font-mono font-bold text-white">{purchaseTotals.bills}</td>
                             </tr>
                           </tfoot>
                         </table>
