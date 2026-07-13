@@ -118,32 +118,6 @@ export default function Analytics() {
     return true;
   }), [purchases, fabricFilter, fromDate, toDate]);
 
-  const purchaseTotals = useMemo(() => ({
-    amount: filteredPurchases.reduce((s, p) => s + Number(p.amount || 0), 0),
-    meters: filteredPurchases.reduce((s, p) => s + Number(p.meter || 0), 0),
-    bills: filteredPurchases.length,
-  }), [filteredPurchases]);
-
-  const comparisonData = useMemo(() => {
-    const monthKey = (d) => {
-      const dt = new Date(d);
-      return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
-    };
-    const monthLabel = (d) => new Date(d).toLocaleDateString("en-IN", { month: "short", year: "2-digit" });
-    const map = {};
-    filteredRows.forEach((r) => {
-      const k = monthKey(r.bill_date);
-      if (!map[k]) map[k] = { key: k, label: monthLabel(r.bill_date), sales: 0, purchases: 0 };
-      map[k].sales += r.amount;
-    });
-    filteredPurchases.forEach((p) => {
-      const k = monthKey(p.bill_date);
-      if (!map[k]) map[k] = { key: k, label: monthLabel(p.bill_date), sales: 0, purchases: 0 };
-      map[k].purchases += Number(p.amount || 0);
-    });
-    return Object.values(map).sort((a, b) => a.key.localeCompare(b.key));
-  }, [filteredRows, filteredPurchases]);
-
   const getRowKey = (r, gb) => {
     const d = new Date(r.bill_date);
     switch (gb) {
@@ -220,13 +194,21 @@ export default function Analytics() {
     filteredRows.forEach((r) => {
       const key = getRowKey(r, groupBy);
       const label = getRowLabel(r, groupBy);
-      if (!map[key]) map[key] = { key, label, revenue: 0, meters: 0, bills: new Set() };
+      if (!map[key]) map[key] = { key, label, revenue: 0, meters: 0, bills: new Set(), purchases: 0 };
       map[key].revenue += r.amount;
       map[key].meters += r.meter;
       map[key].bills.add(r.bill_id);
     });
-    let arr = Object.values(map).map((m) => ({ key: m.key, label: m.label, revenue: m.revenue, meters: m.meters, bills: m.bills.size }));
     const isTime = groupBy === "daily" || groupBy === "monthly" || groupBy === "yearly";
+    if (isTime) {
+      filteredPurchases.forEach((p) => {
+        const key = getRowKey(p, groupBy);
+        const label = getRowLabel(p, groupBy);
+        if (!map[key]) map[key] = { key, label, revenue: 0, meters: 0, bills: new Set(), purchases: 0 };
+        map[key].purchases += Number(p.amount || 0);
+      });
+    }
+    let arr = Object.values(map).map((m) => ({ key: m.key, label: m.label, revenue: m.revenue, meters: m.meters, bills: m.bills.size, purchases: m.purchases || 0 }));
     if (isTime) arr.sort((a, b) => a.key.localeCompare(b.key));
     else {
       arr.sort((a, b) => b[measure] - a[measure]);
@@ -237,7 +219,7 @@ export default function Analytics() {
       }
     }
     return arr;
-  }, [filteredRows, groupBy, measure, useBreakdown, breakdownConfig]);
+  }, [filteredRows, filteredPurchases, groupBy, measure, useBreakdown, breakdownConfig]);
 
   const totals = useMemo(() => {
     const billSet = new Set();
@@ -402,7 +384,9 @@ export default function Analytics() {
                       <XAxis dataKey="label" stroke="#7a8499" style={{ fontSize: 11 }} />
                       <YAxis stroke="#7a8499" style={{ fontSize: 11 }} tickFormatter={yAxisFormatter} />
                       <Tooltip formatter={tooltipFormatter} contentStyle={{ borderRadius: 12, border: "1px solid #1a2233", backgroundColor: "#0a1124", color: "#e8edf5" }} />
+                      <Legend wrapperStyle={{ fontSize: 11, color: "#a8b0c0" }} />
                       <Line type="monotone" dataKey={measure} stroke="#d4af37" strokeWidth={3} dot={{ fill: "#d4af37", r: 4 }} activeDot={{ r: 7 }} name={measureLabel} />
+                      {measure === "revenue" && <Line type="monotone" dataKey="purchases" stroke="#60a5fa" strokeWidth={3} dot={{ fill: "#60a5fa", r: 4 }} activeDot={{ r: 7 }} name="Purchases" />}
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
@@ -416,42 +400,6 @@ export default function Analytics() {
                     </BarChart>
                   </ResponsiveContainer>
                 )}
-            </div>
-
-            <div className="bg-[#0a1124] rounded-xl p-6 mt-5 border border-[#1a2233]">
-              <div className="mb-4">
-                <h3 className="font-bold text-white text-lg">Purchases vs Sales <span className="text-[#7a8499] font-normal">· monthly amounts</span></h3>
-                <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.25em] font-medium mt-1">Fabric and date filters apply · sale type, agency and party filters affect sales only</p>
-              </div>
-              <div className="grid grid-cols-3 gap-3 mb-5">
-                <div className="bg-[#020817] rounded-xl p-4 border border-[#1a2233]">
-                  <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">Total Sales</p>
-                  <p className="text-2xl font-bold text-[#d4af37] mt-2 tracking-tight">{inr(totals.revenue)}</p>
-                </div>
-                <div className="bg-[#020817] rounded-xl p-4 border border-[#1a2233]">
-                  <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">Total Purchases</p>
-                  <p className="text-2xl font-bold text-[#60a5fa] mt-2 tracking-tight">{inr(purchaseTotals.amount)}</p>
-                </div>
-                <div className="bg-[#020817] rounded-xl p-4 border border-[#1a2233]">
-                  <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">Sales − Purchases</p>
-                  <p className={`text-2xl font-bold mt-2 tracking-tight ${totals.revenue - purchaseTotals.amount >= 0 ? "text-emerald-300" : "text-rose-300"}`}>{inr(totals.revenue - purchaseTotals.amount)}</p>
-                </div>
-              </div>
-              {comparisonData.length === 0 ? (
-                <div className="py-12 text-center text-[#7a8499] text-sm">No sales or purchases match your filters.</div>
-              ) : (
-                <ResponsiveContainer width="100%" height={360}>
-                  <BarChart data={comparisonData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1a2233" />
-                    <XAxis dataKey="label" stroke="#7a8499" style={{ fontSize: 11 }} />
-                    <YAxis stroke="#7a8499" style={{ fontSize: 11 }} tickFormatter={inrShort} />
-                    <Tooltip formatter={(value) => inr(value)} contentStyle={{ borderRadius: 12, border: "1px solid #1a2233", backgroundColor: "#0a1124", color: "#e8edf5" }} />
-                    <Legend wrapperStyle={{ fontSize: 11, color: "#a8b0c0" }} />
-                    <Bar dataKey="sales" name="Sales" fill="#d4af37" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="purchases" name="Purchases" fill="#60a5fa" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
             </div>
 
             {(useBreakdown ? chartData.arr.length > 0 : chartData.length > 0) && (
@@ -485,6 +433,7 @@ export default function Analytics() {
                         <tr className="border-b border-[#1a2233]">
                           <th className="text-left font-medium py-2">{isTimeChart ? "Period" : "Item"}</th>
                           <th className="text-right font-medium py-2">Revenue</th>
+                          {isTimeChart && <th className="text-right font-medium py-2">Purchases</th>}
                           <th className="text-right font-medium py-2">Meters</th>
                           <th className="text-right font-medium py-2">Bills</th>
                         </tr>
@@ -494,6 +443,7 @@ export default function Analytics() {
                           <tr key={i} className="border-b border-[#1a2233]/60 hover:bg-[#020817]/40">
                             <td className="py-2 font-semibold text-[#e8edf5]">{d.label}</td>
                             <td className="py-2 text-right font-mono text-[#a8b0c0]">{inr(d.revenue)}</td>
+                            {isTimeChart && <td className="py-2 text-right font-mono text-[#60a5fa]">{inr(d.purchases || 0)}</td>}
                             <td className="py-2 text-right font-mono text-[#a8b0c0]">{d.meters.toFixed(2)}</td>
                             <td className="py-2 text-right font-mono text-[#a8b0c0]">{d.bills}</td>
                           </tr>
