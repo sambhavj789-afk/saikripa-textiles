@@ -199,7 +199,7 @@ export default function Analytics() {
     filteredRows.forEach((r) => {
       const key = getRowKey(r, groupBy);
       const label = getRowLabel(r, groupBy);
-      if (!map[key]) map[key] = { key, label, revenue: 0, meters: 0, bills: new Set(), purchases: 0 };
+      if (!map[key]) map[key] = { key, label, revenue: 0, meters: 0, bills: new Set(), purchases: 0, purchaseMeters: 0 };
       map[key].revenue += r.amount;
       map[key].meters += r.meter;
       map[key].bills.add(r.bill_id);
@@ -209,11 +209,12 @@ export default function Analytics() {
       filteredPurchases.forEach((p) => {
         const key = getRowKey(p, groupBy);
         const label = getRowLabel(p, groupBy);
-        if (!map[key]) map[key] = { key, label, revenue: 0, meters: 0, bills: new Set(), purchases: 0 };
+        if (!map[key]) map[key] = { key, label, revenue: 0, meters: 0, bills: new Set(), purchases: 0, purchaseMeters: 0 };
         map[key].purchases += Number(p.amount || 0);
+        map[key].purchaseMeters += Number(p.meter || 0);
       });
     }
-    let arr = Object.values(map).map((m) => ({ key: m.key, label: m.label, revenue: m.revenue, meters: m.meters, bills: m.bills.size, purchases: m.purchases || 0 }));
+    let arr = Object.values(map).map((m) => ({ key: m.key, label: m.label, revenue: m.revenue, meters: m.meters, bills: m.bills.size, purchases: m.purchases || 0, purchaseMeters: m.purchaseMeters || 0 }));
     if (isTime) arr.sort((a, b) => a.key.localeCompare(b.key));
     else {
       arr.sort((a, b) => b[measure] - a[measure]);
@@ -345,35 +346,19 @@ export default function Analytics() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
-              {/* Purchases — shown first */}
-              <div className="bg-[#0a1124] rounded-xl p-5 border border-[#1a2233]">
-                <p className="text-[11px] text-[#60a5fa] uppercase tracking-[0.3em] font-bold mb-4">Purchases</p>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.25em] font-medium">Meters</p>
-                    <p className="text-2xl font-bold text-white mt-1.5 tracking-tight">{purchaseTotals.meters.toFixed(2)}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.25em] font-medium">Amount</p>
-                    <p className="text-2xl font-bold text-[#60a5fa] mt-1.5 tracking-tight">{inr(purchaseTotals.amount)}</p>
-                  </div>
-                </div>
-              </div>
-              {/* Sales / Revenue */}
-              <div className="rounded-xl p-5 bg-gradient-to-br from-[#0d1530] to-[#0a1124] relative overflow-hidden border border-[#1a2233]" style={goldGlow}>
+            <div className="grid grid-cols-3 gap-3 mb-5">
+              <div className="rounded-xl p-5 bg-gradient-to-br from-[#0d1530] to-[#0a1124] relative overflow-hidden" style={goldGlow}>
                 <div className="absolute top-0 right-0 w-32 h-32 opacity-20 pointer-events-none" style={{ background: "radial-gradient(circle at top right, rgba(212, 175, 55, 0.4) 0%, transparent 60%)" }} />
-                <p className="text-[11px] text-[#d4af37]/80 uppercase tracking-[0.3em] font-bold mb-4 relative">Sales</p>
-                <div className="grid grid-cols-2 gap-4 relative">
-                  <div>
-                    <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.25em] font-medium">Meters</p>
-                    <p className="text-2xl font-bold text-white mt-1.5 tracking-tight">{totals.meters.toFixed(2)}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.25em] font-medium">Amount</p>
-                    <p className="text-2xl font-bold text-[#d4af37] mt-1.5 tracking-tight">{inr(totals.revenue)}</p>
-                  </div>
-                </div>
+                <p className="text-[10px] text-[#d4af37]/70 uppercase tracking-[0.3em] font-medium relative">Total Revenue</p>
+                <p className="text-3xl font-bold text-[#d4af37] mt-3 tracking-tight relative">{inr(totals.revenue)}</p>
+              </div>
+              <div className="bg-[#0a1124] rounded-xl p-5 border border-[#1a2233]">
+                <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">Total Meters</p>
+                <p className="text-3xl font-bold text-white mt-3 tracking-tight">{totals.meters.toFixed(2)}</p>
+              </div>
+              <div className="bg-[#0a1124] rounded-xl p-5 border border-[#1a2233]">
+                <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">Bills</p>
+                <p className="text-3xl font-bold text-white mt-3 tracking-tight">{totals.bills}</p>
               </div>
             </div>
 
@@ -448,13 +433,76 @@ export default function Analytics() {
                         ))}
                       </tbody>
                     </table>
+                  ) : isTimeChart ? (
+                    <div className="space-y-6">
+                      {/* Purchases — first */}
+                      <div>
+                        <p className="text-[11px] font-bold text-[#60a5fa] uppercase tracking-[0.25em] mb-2">Purchases</p>
+                        <table className="w-full text-sm">
+                          <thead className="text-[#7a8499] uppercase tracking-[0.25em] text-xs">
+                            <tr className="border-b border-[#1a2233]">
+                              <th className="text-left font-medium py-2">Period</th>
+                              <th className="text-right font-medium py-2">Meters</th>
+                              <th className="text-right font-medium py-2">Amount</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {chartData.map((d, i) => (
+                              <tr key={i} className="border-b border-[#1a2233]/60 hover:bg-[#020817]/40">
+                                <td className="py-2 font-semibold text-[#e8edf5]">{d.label}</td>
+                                <td className="py-2 text-right font-mono text-[#a8b0c0]">{(d.purchaseMeters || 0).toFixed(2)}</td>
+                                <td className="py-2 text-right font-mono text-[#60a5fa]">{inr(d.purchases || 0)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          <tfoot>
+                            <tr className="border-t-2 border-[#60a5fa]/40">
+                              <td className="py-2 text-[#60a5fa] font-bold uppercase tracking-[0.2em] text-[11px]">Total</td>
+                              <td className="py-2 text-right font-mono font-bold text-white">{purchaseTotals.meters.toFixed(2)}</td>
+                              <td className="py-2 text-right font-mono font-bold text-[#60a5fa]">{inr(purchaseTotals.amount)}</td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                      {/* Sales — later */}
+                      <div>
+                        <p className="text-[11px] font-bold text-[#d4af37] uppercase tracking-[0.25em] mb-2">Sales</p>
+                        <table className="w-full text-sm">
+                          <thead className="text-[#7a8499] uppercase tracking-[0.25em] text-xs">
+                            <tr className="border-b border-[#1a2233]">
+                              <th className="text-left font-medium py-2">Period</th>
+                              <th className="text-right font-medium py-2">Meters</th>
+                              <th className="text-right font-medium py-2">Revenue</th>
+                              <th className="text-right font-medium py-2">Bills</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {chartData.map((d, i) => (
+                              <tr key={i} className="border-b border-[#1a2233]/60 hover:bg-[#020817]/40">
+                                <td className="py-2 font-semibold text-[#e8edf5]">{d.label}</td>
+                                <td className="py-2 text-right font-mono text-[#a8b0c0]">{d.meters.toFixed(2)}</td>
+                                <td className="py-2 text-right font-mono text-[#d4af37]">{inr(d.revenue)}</td>
+                                <td className="py-2 text-right font-mono text-[#a8b0c0]">{d.bills}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          <tfoot>
+                            <tr className="border-t-2 border-[#d4af37]/40">
+                              <td className="py-2 text-[#d4af37] font-bold uppercase tracking-[0.2em] text-[11px]">Total</td>
+                              <td className="py-2 text-right font-mono font-bold text-white">{totals.meters.toFixed(2)}</td>
+                              <td className="py-2 text-right font-mono font-bold text-[#d4af37]">{inr(totals.revenue)}</td>
+                              <td className="py-2 text-right font-mono font-bold text-white">{totals.bills}</td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    </div>
                   ) : (
                     <table className="w-full text-sm">
                       <thead className="text-[#7a8499] uppercase tracking-[0.25em] text-xs">
                         <tr className="border-b border-[#1a2233]">
-                          <th className="text-left font-medium py-2">{isTimeChart ? "Period" : "Item"}</th>
+                          <th className="text-left font-medium py-2">Item</th>
                           <th className="text-right font-medium py-2">Revenue</th>
-                          {isTimeChart && <th className="text-right font-medium py-2">Purchases</th>}
                           <th className="text-right font-medium py-2">Meters</th>
                           <th className="text-right font-medium py-2">Bills</th>
                         </tr>
@@ -464,7 +512,6 @@ export default function Analytics() {
                           <tr key={i} className="border-b border-[#1a2233]/60 hover:bg-[#020817]/40">
                             <td className="py-2 font-semibold text-[#e8edf5]">{d.label}</td>
                             <td className="py-2 text-right font-mono text-[#a8b0c0]">{inr(d.revenue)}</td>
-                            {isTimeChart && <td className="py-2 text-right font-mono text-[#60a5fa]">{inr(d.purchases || 0)}</td>}
                             <td className="py-2 text-right font-mono text-[#a8b0c0]">{d.meters.toFixed(2)}</td>
                             <td className="py-2 text-right font-mono text-[#a8b0c0]">{d.bills}</td>
                           </tr>
