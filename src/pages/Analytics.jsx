@@ -118,6 +118,11 @@ export default function Analytics() {
     return true;
   }), [purchases, fabricFilter, fromDate, toDate]);
 
+  const purchaseTotals = useMemo(() => ({
+    amount: filteredPurchases.reduce((s, p) => s + Number(p.amount || 0), 0),
+    meters: filteredPurchases.reduce((s, p) => s + Number(p.meter || 0), 0),
+  }), [filteredPurchases]);
+
   const getRowKey = (r, gb) => {
     const d = new Date(r.bill_date);
     switch (gb) {
@@ -340,19 +345,35 @@ export default function Analytics() {
               )}
             </div>
 
-            <div className="grid grid-cols-3 gap-3 mb-5">
-              <div className="rounded-xl p-5 bg-gradient-to-br from-[#0d1530] to-[#0a1124] relative overflow-hidden" style={goldGlow}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
+              {/* Purchases — shown first */}
+              <div className="bg-[#0a1124] rounded-xl p-5 border border-[#1a2233]">
+                <p className="text-[11px] text-[#60a5fa] uppercase tracking-[0.3em] font-bold mb-4">Purchases</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.25em] font-medium">Meters</p>
+                    <p className="text-2xl font-bold text-white mt-1.5 tracking-tight">{purchaseTotals.meters.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.25em] font-medium">Amount</p>
+                    <p className="text-2xl font-bold text-[#60a5fa] mt-1.5 tracking-tight">{inr(purchaseTotals.amount)}</p>
+                  </div>
+                </div>
+              </div>
+              {/* Sales / Revenue */}
+              <div className="rounded-xl p-5 bg-gradient-to-br from-[#0d1530] to-[#0a1124] relative overflow-hidden border border-[#1a2233]" style={goldGlow}>
                 <div className="absolute top-0 right-0 w-32 h-32 opacity-20 pointer-events-none" style={{ background: "radial-gradient(circle at top right, rgba(212, 175, 55, 0.4) 0%, transparent 60%)" }} />
-                <p className="text-[10px] text-[#d4af37]/70 uppercase tracking-[0.3em] font-medium relative">Total Revenue</p>
-                <p className="text-3xl font-bold text-[#d4af37] mt-3 tracking-tight relative">{inr(totals.revenue)}</p>
-              </div>
-              <div className="bg-[#0a1124] rounded-xl p-5 border border-[#1a2233]">
-                <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">Total Meters</p>
-                <p className="text-3xl font-bold text-white mt-3 tracking-tight">{totals.meters.toFixed(2)}</p>
-              </div>
-              <div className="bg-[#0a1124] rounded-xl p-5 border border-[#1a2233]">
-                <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">Bills</p>
-                <p className="text-3xl font-bold text-white mt-3 tracking-tight">{totals.bills}</p>
+                <p className="text-[11px] text-[#d4af37]/80 uppercase tracking-[0.3em] font-bold mb-4 relative">Sales</p>
+                <div className="grid grid-cols-2 gap-4 relative">
+                  <div>
+                    <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.25em] font-medium">Meters</p>
+                    <p className="text-2xl font-bold text-white mt-1.5 tracking-tight">{totals.meters.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.25em] font-medium">Amount</p>
+                    <p className="text-2xl font-bold text-[#d4af37] mt-1.5 tracking-tight">{inr(totals.revenue)}</p>
+                  </div>
+                </div>
               </div>
             </div>
 
