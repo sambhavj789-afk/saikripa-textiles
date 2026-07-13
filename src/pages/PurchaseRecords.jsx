@@ -31,7 +31,6 @@ export default function PurchaseRecords() {
   const [exportOpen, setExportOpen] = useState(false);
   const [form, setForm] = useState(emptyForm());
   const [search, setSearch] = useState("");
-  const [partyFilter, setPartyFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date");
   const [sortDir, setSortDir] = useState("desc");
   const [opts, setOpts] = useState({});
@@ -131,7 +130,6 @@ export default function PurchaseRecords() {
 
   const filteredBills = bills
     .filter((b) => {
-      if (partyFilter !== "all" && b.party !== partyFilter) return false;
       if (search) {
         const q = search.toLowerCase();
         return (b.party || "").toLowerCase().includes(q) || (b.bill_number || "").toLowerCase().includes(q) || (b.quality || "").toLowerCase().includes(q);
@@ -164,7 +162,6 @@ export default function PurchaseRecords() {
 
   const inputCls = "w-full bg-[#020817] border border-[#1a2233] rounded-lg px-3 py-2 text-sm text-[#e8edf5] placeholder-[#4a5568] focus:outline-none focus:border-[#d4af37]/60 transition";
   const goldGlow = { boxShadow: "0 0 40px rgba(212, 175, 55, 0.08), inset 0 0 0 1px rgba(212, 175, 55, 0.3)" };
-  const partyChips = ["all", ...supplierOptions];
 
   const exportFileName = (ext) => `saikripa-purchases-${new Date().toISOString().slice(0, 10)}.${ext}`;
 
@@ -343,11 +340,6 @@ export default function PurchaseRecords() {
               <option value="quality">Quality</option><option value="meter">Meter</option><option value="amount">Amount</option>
             </select>
             <button onClick={() => setSortDir(sortDir === "asc" ? "desc" : "asc")} className="text-sm font-bold px-3 py-2 text-[#d4af37] hover:bg-[#0a1124] transition border-l border-[#1a2233]">{sortDir === "asc" ? "↑" : "↓"}</button>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {partyChips.map((p) => (
-              <button key={p} onClick={() => setPartyFilter(p)} className={`px-3 py-2 rounded-lg text-xs font-medium uppercase tracking-wider transition ${partyFilter === p ? "bg-gradient-to-br from-[#d4af37] to-[#a8842c] text-[#020817] shadow-[0_0_15px_rgba(212,175,55,0.3)]" : "bg-[#020817] border border-[#1a2233] text-[#7a8499] hover:text-[#e8edf5] hover:border-[#d4af37]/40"}`}>{p === "all" ? "All" : p}</button>
-            ))}
           </div>
           <button onClick={fetchBills} className="text-xs font-medium text-[#d4af37] hover:text-[#f4d77a] whitespace-nowrap transition uppercase tracking-wider">Refresh</button>
         </div>

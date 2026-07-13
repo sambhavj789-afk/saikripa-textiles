@@ -27,6 +27,7 @@ const BREAKDOWN_MAP = {
 export default function Analytics() {
   const navigate = useNavigate();
   const [bills, setBills] = useState([]);
+  const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userEmail, setUserEmail] = useState("");
@@ -61,10 +62,15 @@ export default function Analytics() {
 
   const fetchData = async () => {
     setLoading(true);
-    const { data, error: dbError } = await supabase.from("sales_records").select("*, bill_items(*)").order("bill_date", { ascending: true });
+    const [salesRes, purchRes] = await Promise.all([
+      supabase.from("sales_records").select("*, bill_items(*)").order("bill_date", { ascending: true }),
+      supabase.from("purchase_records").select("*").order("bill_date", { ascending: true }),
+    ]);
     setLoading(false);
-    if (dbError) { setError(dbError.message); return; }
-    setBills(data || []);
+    if (salesRes.error) { setError(salesRes.error.message); return; }
+    setBills(salesRes.data || []);
+    if (purchRes.error) { setError(purchRes.error.message); return; }
+    setPurchases(purchRes.data || []);
   };
 
   const allRows = useMemo(() => {
@@ -102,6 +108,41 @@ export default function Analytics() {
     if (toDate && r.bill_date > toDate) return false;
     return true;
   }), [allRows, fabricFilter, saleTypeFilter, agencyFilter, partyFilter, fromDate, toDate]);
+
+  // Purchases respect the fabric + date filters. Sale type / agency / party
+  // filters don't apply — purchase parties are suppliers, a different list.
+  const filteredPurchases = useMemo(() => purchases.filter(p => {
+    if (fabricFilter !== "all" && p.quality !== fabricFilter) return false;
+    if (fromDate && p.bill_date < fromDate) return false;
+    if (toDate && p.bill_date > toDate) return false;
+    return true;
+  }), [purchases, fabricFilter, fromDate, toDate]);
+
+  const purchaseTotals = useMemo(() => ({
+    amount: filteredPurchases.reduce((s, p) => s + Number(p.amount || 0), 0),
+    meters: filteredPurchases.reduce((s, p) => s + Number(p.meter || 0), 0),
+    bills: filteredPurchases.length,
+  }), [filteredPurchases]);
+
+  const comparisonData = useMemo(() => {
+    const monthKey = (d) => {
+      const dt = new Date(d);
+      return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
+    };
+    const monthLabel = (d) => new Date(d).toLocaleDateString("en-IN", { month: "short", year: "2-digit" });
+    const map = {};
+    filteredRows.forEach((r) => {
+      const k = monthKey(r.bill_date);
+      if (!map[k]) map[k] = { key: k, label: monthLabel(r.bill_date), sales: 0, purchases: 0 };
+      map[k].sales += r.amount;
+    });
+    filteredPurchases.forEach((p) => {
+      const k = monthKey(p.bill_date);
+      if (!map[k]) map[k] = { key: k, label: monthLabel(p.bill_date), sales: 0, purchases: 0 };
+      map[k].purchases += Number(p.amount || 0);
+    });
+    return Object.values(map).sort((a, b) => a.key.localeCompare(b.key));
+  }, [filteredRows, filteredPurchases]);
 
   const getRowKey = (r, gb) => {
     const d = new Date(r.bill_date);
@@ -247,8 +288,8 @@ export default function Analytics() {
 
         {error && <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded-xl p-4 text-sm mb-4">{error}</div>}
 
-        {bills.length === 0 ? (
-          <div className="bg-[#0a1124] rounded-xl p-12 text-center text-[#7a8499] border border-[#1a2233]">No sales records yet.</div>
+        {bills.length === 0 && purchases.length === 0 ? (
+          <div className="bg-[#0a1124] rounded-xl p-12 text-center text-[#7a8499] border border-[#1a2233]">No records yet.</div>
         ) : (
           <>
             <div className="bg-[#0a1124] rounded-xl p-5 mb-5 border border-[#1a2233]">
@@ -375,6 +416,42 @@ export default function Analytics() {
                     </BarChart>
                   </ResponsiveContainer>
                 )}
+            </div>
+
+            <div className="bg-[#0a1124] rounded-xl p-6 mt-5 border border-[#1a2233]">
+              <div className="mb-4">
+                <h3 className="font-bold text-white text-lg">Purchases vs Sales <span className="text-[#7a8499] font-normal">· monthly amounts</span></h3>
+                <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.25em] font-medium mt-1">Fabric and date filters apply · sale type, agency and party filters affect sales only</p>
+              </div>
+              <div className="grid grid-cols-3 gap-3 mb-5">
+                <div className="bg-[#020817] rounded-xl p-4 border border-[#1a2233]">
+                  <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">Total Sales</p>
+                  <p className="text-2xl font-bold text-[#d4af37] mt-2 tracking-tight">{inr(totals.revenue)}</p>
+                </div>
+                <div className="bg-[#020817] rounded-xl p-4 border border-[#1a2233]">
+                  <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">Total Purchases</p>
+                  <p className="text-2xl font-bold text-[#60a5fa] mt-2 tracking-tight">{inr(purchaseTotals.amount)}</p>
+                </div>
+                <div className="bg-[#020817] rounded-xl p-4 border border-[#1a2233]">
+                  <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.3em] font-medium">Sales − Purchases</p>
+                  <p className={`text-2xl font-bold mt-2 tracking-tight ${totals.revenue - purchaseTotals.amount >= 0 ? "text-emerald-300" : "text-rose-300"}`}>{inr(totals.revenue - purchaseTotals.amount)}</p>
+                </div>
+              </div>
+              {comparisonData.length === 0 ? (
+                <div className="py-12 text-center text-[#7a8499] text-sm">No sales or purchases match your filters.</div>
+              ) : (
+                <ResponsiveContainer width="100%" height={360}>
+                  <BarChart data={comparisonData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1a2233" />
+                    <XAxis dataKey="label" stroke="#7a8499" style={{ fontSize: 11 }} />
+                    <YAxis stroke="#7a8499" style={{ fontSize: 11 }} tickFormatter={inrShort} />
+                    <Tooltip formatter={(value) => inr(value)} contentStyle={{ borderRadius: 12, border: "1px solid #1a2233", backgroundColor: "#0a1124", color: "#e8edf5" }} />
+                    <Legend wrapperStyle={{ fontSize: 11, color: "#a8b0c0" }} />
+                    <Bar dataKey="sales" name="Sales" fill="#d4af37" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="purchases" name="Purchases" fill="#60a5fa" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
 
             {(useBreakdown ? chartData.arr.length > 0 : chartData.length > 0) && (
