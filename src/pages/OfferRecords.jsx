@@ -207,7 +207,10 @@ const handleSubmit = async (e) => {
 
   const offerQty = (o) => (o.offer_shades || []).reduce((s, x) => s + Number(x.quantity || 0), 0);
   const offerGrey = (o) => (o.offer_shades || []).reduce((s, x) => s + Number(x.grey_rec || 0), 0);
-  const offerNotRec = (o) => (o.offer_shades || []).reduce((s, x) => s + (Number(x.quantity || 0) * Number(x.not_rec_pct || 0)) / 100, 0);
+  // Not received = quantity still outstanding. Derived from the raw numbers, not
+  // from the stored not_rec_pct: a shade with no grey received yet has a blank
+  // pct, which used to count as 0 outstanding instead of its full quantity.
+  const offerNotRec = (o) => (o.offer_shades || []).reduce((s, x) => s + (Number(x.quantity || 0) - Number(x.grey_rec || 0)), 0);
 
   const filtered = offers
     .filter((o) => {
@@ -253,8 +256,8 @@ const handleSubmit = async (e) => {
 
     // columns that should merge vertically per offer (by 0-based column index)
     // 0 Date, 1 Offer No., 2 Mill, 3 Quality, 4 @ (Rate), 5 Weight,
-    // 10 Total Quantity, 11 Total Grey Rec., 12 Notes
-    const mergeCols = [0, 1, 2, 3, 4, 5, 10, 11, 12];
+    // 11 Total Quantity, 12 Total Grey Rec., 13 Total Not Rec., 14 Notes
+    const mergeCols = [0, 1, 2, 3, 4, 5, 11, 12, 13, 14];
 
     filtered.forEach((o) => {
       const shadesList = o.offer_shades || [];
@@ -269,9 +272,10 @@ const handleSubmit = async (e) => {
           Quality: o.quality || "",
           "@ (Rate)": o.rate ? Number(o.rate).toFixed(2) : "",
           Weight: o.weight || "",
-          Shade: "", Quantity: "", "Grey Rec.": "", "Not Rec. (%)": "",
+          Shade: "", Quantity: "", "Grey Rec.": "", "Not Rec.": "", "Not Rec. (%)": "",
           "Total Quantity": offerQty(o).toFixed(2),
           "Total Grey Rec.": offerGrey(o).toFixed(2),
+          "Total Not Rec.": offerNotRec(o).toFixed(2),
           Notes: o.notes || "",
         });
         r += 1;
@@ -287,9 +291,11 @@ const handleSubmit = async (e) => {
             Shade: s.shade || "",
             Quantity: Number(s.quantity || 0).toFixed(2),
             "Grey Rec.": s.grey_rec == null ? "" : Number(s.grey_rec).toFixed(2),
-            "Not Rec. (%)": Number(s.not_rec_pct || 0).toFixed(2),
+            "Not Rec.": (Number(s.quantity || 0) - Number(s.grey_rec || 0)).toFixed(2),
+            "Not Rec. (%)": s.grey_rec == null ? "100.00" : Number(s.not_rec_pct || 0).toFixed(2),
             "Total Quantity": offerQty(o).toFixed(2),
             "Total Grey Rec.": offerGrey(o).toFixed(2),
+            "Total Not Rec.": offerNotRec(o).toFixed(2),
             Notes: o.notes || "",
           });
         });
@@ -309,10 +315,11 @@ const handleSubmit = async (e) => {
       Date: "TOTAL", "Offer No.": filtered.length + " offers",
       Quantity: grandQty.toFixed(2),
       "Grey Rec.": grandGrey.toFixed(2),
+      "Not Rec.": grandNotRec.toFixed(2),
     });
 
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws["!cols"] = [{ wch: 12 }, { wch: 11 }, { wch: 12 }, { wch: 22 }, { wch: 9 }, { wch: 10 }, { wch: 10 }, { wch: 11 }, { wch: 11 }, { wch: 12 }, { wch: 13 }, { wch: 13 }, { wch: 30 }];
+    ws["!cols"] = [{ wch: 12 }, { wch: 11 }, { wch: 12 }, { wch: 22 }, { wch: 9 }, { wch: 10 }, { wch: 10 }, { wch: 11 }, { wch: 11 }, { wch: 11 }, { wch: 12 }, { wch: 13 }, { wch: 13 }, { wch: 14 }, { wch: 30 }];
     ws["!merges"] = merges;
 
     // Center text (horizontal + vertical) in every merged cell's anchor cell
@@ -346,17 +353,18 @@ const handleSubmit = async (e) => {
       (o.offer_shades || []).length + " shades",
       offerQty(o).toFixed(0),
       offerGrey(o).toFixed(1),
+      offerNotRec(o).toFixed(1),
     ]);
     autoTable(doc, {
       startY: 26,
-      head: [["Date", "Offer No.", "Mill", "Quality", "@", "Weight", "Shades", "Total Qty", "Grey Rec."]],
+      head: [["Date", "Offer No.", "Mill", "Quality", "@", "Weight", "Shades", "Total Qty", "Grey Rec.", "Not Rec."]],
       body,
       foot: [["", "TOTAL", filtered.length + " offers", "", "", "", "",
-        grandQty.toFixed(0), grandGrey.toFixed(1)]],
+        grandQty.toFixed(0), grandGrey.toFixed(1), grandNotRec.toFixed(1)]],
       headStyles: { fillColor: [212, 175, 55], textColor: [2, 8, 23], fontStyle: "bold", fontSize: 8 },
       footStyles: { fillColor: [10, 17, 36], textColor: [212, 175, 55], fontStyle: "bold", fontSize: 9 },
       bodyStyles: { fontSize: 8 },
-      columnStyles: { 4: { halign: "right" }, 7: { halign: "right" }, 8: { halign: "right" } },
+      columnStyles: { 4: { halign: "right" }, 7: { halign: "right" }, 8: { halign: "right" }, 9: { halign: "right" } },
       margin: { left: 14, right: 14 },
     });
     doc.save(exportFileName("pdf"));
@@ -616,6 +624,7 @@ const handleSubmit = async (e) => {
                                       <th className="text-left font-medium py-2">Shade</th>
                                       <th className="text-right font-medium py-2">Quantity</th>
                                       <th className="text-right font-medium py-2">Grey Rec.</th>
+                                      <th className="text-right font-medium py-2">Not Rec.</th>
                                       <th className="text-right font-medium py-2">Not Rec.(%)</th>
                                     </tr>
                                   </thead>
@@ -625,13 +634,15 @@ const handleSubmit = async (e) => {
                                         <td className="py-2 text-[#e8edf5] font-semibold">{s.shade}</td>
                                         <td className="py-2 text-right font-mono text-[#a8b0c0]">{Number(s.quantity).toFixed(0)}</td>
                                         <td className="py-2 text-right font-mono text-[#a8b0c0]">{s.grey_rec == null ? "—" : Number(s.grey_rec).toFixed(1)}</td>
-                                        <td className={`py-2 text-right font-mono ${Number(s.not_rec_pct) < 0 ? "text-emerald-300" : "text-rose-300/80"}`}>{Number(s.not_rec_pct).toFixed(2)}</td>
+                                        <td className="py-2 text-right font-mono text-[#a8b0c0]">{(Number(s.quantity || 0) - Number(s.grey_rec || 0)).toFixed(1)}</td>
+                                        <td className={`py-2 text-right font-mono ${Number(s.not_rec_pct) < 0 ? "text-emerald-300" : "text-rose-300/80"}`}>{s.grey_rec == null ? "100.00" : Number(s.not_rec_pct).toFixed(2)}</td>
                                       </tr>
                                     ))}
                                     <tr className="border-t-2 border-[#d4af37]/40">
                                       <td className="py-2 text-[#d4af37] font-bold uppercase tracking-[0.2em] text-[11px]">Total</td>
                                       <td className="py-2 text-right font-mono font-bold text-[#d4af37]">{offerQty(o).toFixed(0)}</td>
                                       <td className="py-2 text-right font-mono font-bold text-[#d4af37]">{offerGrey(o).toFixed(1)}</td>
+                                      <td className="py-2 text-right font-mono font-bold text-[#d4af37]">{offerNotRec(o).toFixed(1)}</td>
                                       <td></td>
                                     </tr>
                                   </tbody>

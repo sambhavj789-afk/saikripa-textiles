@@ -16,6 +16,9 @@ const inrShort = (n) => {
   return `₹${n.toFixed(0)}`;
 };
 
+// Average rate = amount / meters. Blank when there are no meters to divide by.
+const rate = (amount, meters) => (Number(meters) > 0 ? `₹${(Number(amount || 0) / Number(meters)).toFixed(2)}` : "—");
+
 const STACK_COLORS = ["#d4af37", "#7a8499", "#a8842c", "#34d399", "#60a5fa", "#f59e0b", "#a855f7", "#ec4899", "#10b981", "#3b82f6"];
 
 const BREAKDOWN_MAP = {
@@ -206,7 +209,10 @@ export default function Analytics() {
       map[key].bills.add(r.bill_id);
     });
     const isTime = groupBy === "daily" || groupBy === "monthly" || groupBy === "yearly";
-    if (isTime) {
+    // Purchases can be compared against sales wherever both sides share a key:
+    // time periods, and fabric (a purchase record carries its own quality).
+    // Agency / party can't — purchase parties are suppliers, not customers.
+    if (isTime || groupBy === "fabric") {
       filteredPurchases.forEach((p) => {
         const key = getRowKey(p, groupBy);
         const label = getRowLabel(p, groupBy);
@@ -218,14 +224,7 @@ export default function Analytics() {
     }
     let arr = Object.values(map).map((m) => ({ key: m.key, label: m.label, revenue: m.revenue, meters: m.meters, bills: m.bills.size, purchases: m.purchases || 0, purchaseMeters: m.purchaseMeters || 0, purchaseBills: m.purchaseBills || 0 }));
     if (isTime) arr.sort((a, b) => a.key.localeCompare(b.key));
-    else {
-      arr.sort((a, b) => b[measure] - a[measure]);
-      if (arr.length > 15) {
-        const top = arr.slice(0, 15);
-        const others = arr.slice(15).reduce((acc, x) => ({ key: "_other", label: `Others (${arr.length - 15})`, revenue: acc.revenue + x.revenue, meters: acc.meters + x.meters, bills: acc.bills + x.bills }), { revenue: 0, meters: 0, bills: 0 });
-        arr = [...top, others];
-      }
-    }
+    else arr.sort((a, b) => b[measure] - a[measure]);
     return arr;
   }, [filteredRows, filteredPurchases, groupBy, measure, useBreakdown, breakdownConfig]);
 
@@ -237,7 +236,10 @@ export default function Analytics() {
   }, [filteredRows]);
 
   const isTimeChart = groupBy === "daily" || groupBy === "monthly" || groupBy === "yearly";
-  const measureLabel = measure === "revenue" ? "Revenue" : measure === "meters" ? "Meters" : "Bills";
+  // Sales vs purchases can only be compared where both sides share a key.
+  const comparePurchases = isTimeChart || groupBy === "fabric";
+  const purchaseKey = measure === "revenue" ? "purchases" : measure === "meters" ? "purchaseMeters" : "purchaseBills";
+  const measureLabel =measure === "revenue" ? "Revenue" : measure === "meters" ? "Meters" : "Bills";
   const tooltipFormatter = (value) => measure === "revenue" ? inr(value) : measure === "meters" ? `${Number(value).toFixed(2)} m` : `${value} bills`;
   const yAxisFormatter = measure === "revenue" ? inrShort : undefined;
 
@@ -368,7 +370,7 @@ export default function Analytics() {
               <div className="mb-4">
                 <h3 className="font-bold text-white text-lg">{measureLabel} {isTimeChart ? "Over Time" : `by ${groupBy === "fabric" ? "Fabric" : groupBy === "agency" ? "Agency" : "Party"}`}{useBreakdown && <span className="text-[#7a8499] font-normal"> · stacked by {breakdownConfig.label}</span>}</h3>
                 <p className="text-[10px] text-[#7a8499] uppercase tracking-[0.25em] font-medium mt-1">
-                  {useBreakdown ? `${chartData.arr.length} groups · ${chartData.bdKeys.length} segments` : `${chartData.length} data points${!isTimeChart && chartData.length >= 15 ? " · top 15 + others" : ""}`}
+                  {useBreakdown ? `${chartData.arr.length} groups · ${chartData.bdKeys.length} segments` : `${chartData.length} data points`}
                 </p>
               </div>
               {useBreakdown ? (
@@ -393,18 +395,20 @@ export default function Analytics() {
                       <YAxis stroke="#7a8499" style={{ fontSize: 11 }} tickFormatter={yAxisFormatter} />
                       <Tooltip formatter={tooltipFormatter} contentStyle={{ borderRadius: 12, border: "1px solid #1a2233", backgroundColor: "#0a1124", color: "#e8edf5" }} />
                       <Legend wrapperStyle={{ fontSize: 11, color: "#a8b0c0" }} />
-                      <Line type="monotone" dataKey={measure} stroke="#d4af37" strokeWidth={3} dot={{ fill: "#d4af37", r: 4 }} activeDot={{ r: 7 }} name={measureLabel} />
-                      {measure === "revenue" && <Line type="monotone" dataKey="purchases" stroke="#60a5fa" strokeWidth={3} dot={{ fill: "#60a5fa", r: 4 }} activeDot={{ r: 7 }} name="Purchases" />}
+                      <Line type="monotone" dataKey={measure} stroke="#d4af37" strokeWidth={3} dot={{ fill: "#d4af37", r: 4 }} activeDot={{ r: 7 }} name={`Sales ${measureLabel}`} />
+                      <Line type="monotone" dataKey={purchaseKey} stroke="#60a5fa" strokeWidth={3} dot={{ fill: "#60a5fa", r: 4 }} activeDot={{ r: 7 }} name={`Purchase ${measureLabel}`} />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
-                  <ResponsiveContainer width="100%" height={Math.max(400, chartData.length * 35)}>
+                  <ResponsiveContainer width="100%" height={Math.max(400, chartData.length * (comparePurchases ? 48 : 35))}>
                     <BarChart data={chartData} layout="vertical">
                       <CartesianGrid strokeDasharray="3 3" stroke="#1a2233" />
                       <XAxis type="number" stroke="#7a8499" style={{ fontSize: 11 }} tickFormatter={yAxisFormatter} />
                       <YAxis dataKey="label" type="category" stroke="#7a8499" style={{ fontSize: 11 }} width={150} />
                       <Tooltip formatter={tooltipFormatter} contentStyle={{ borderRadius: 12, border: "1px solid #1a2233", backgroundColor: "#0a1124", color: "#e8edf5" }} />
-                      <Bar dataKey={measure} fill="#d4af37" radius={[0, 8, 8, 0]} name={measureLabel} />
+                      {comparePurchases && <Legend wrapperStyle={{ fontSize: 11, color: "#a8b0c0" }} />}
+                      <Bar dataKey={measure} fill="#d4af37" radius={[0, 8, 8, 0]} name={comparePurchases ? `Sales ${measureLabel}` : measureLabel} />
+                      {comparePurchases && <Bar dataKey={purchaseKey} fill="#60a5fa" radius={[0, 8, 8, 0]} name={`Purchase ${measureLabel}`} />}
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -435,7 +439,7 @@ export default function Analytics() {
                         ))}
                       </tbody>
                     </table>
-                  ) : isTimeChart ? (
+                  ) : comparePurchases ? (
                     <div className="space-y-6">
                       {/* Purchases — first */}
                       <div>
@@ -443,8 +447,9 @@ export default function Analytics() {
                         <table className="w-full text-sm">
                           <thead className="text-[#7a8499] uppercase tracking-[0.25em] text-xs">
                             <tr className="border-b border-[#1a2233]">
-                              <th className="text-left font-medium py-2">Period</th>
+                              <th className="text-left font-medium py-2">{isTimeChart ? "Period" : "Fabric"}</th>
                               <th className="text-right font-medium py-2">Meters</th>
+                              <th className="text-right font-medium py-2">Rate</th>
                               <th className="text-right font-medium py-2">Amount</th>
                               <th className="text-right font-medium py-2">Bills</th>
                             </tr>
@@ -454,6 +459,7 @@ export default function Analytics() {
                               <tr key={i} className="border-b border-[#1a2233]/60 hover:bg-[#020817]/40">
                                 <td className="py-2 font-semibold text-[#e8edf5]">{d.label}</td>
                                 <td className="py-2 text-right font-mono text-[#a8b0c0]">{(d.purchaseMeters || 0).toFixed(2)}</td>
+                                <td className="py-2 text-right font-mono text-[#a8b0c0]">{rate(d.purchases, d.purchaseMeters)}</td>
                                 <td className="py-2 text-right font-mono text-[#60a5fa]">{inr(d.purchases || 0)}</td>
                                 <td className="py-2 text-right font-mono text-[#a8b0c0]">{d.purchaseBills || 0}</td>
                               </tr>
@@ -463,6 +469,7 @@ export default function Analytics() {
                             <tr className="border-t-2 border-[#60a5fa]/40">
                               <td className="py-2 text-[#60a5fa] font-bold uppercase tracking-[0.2em] text-[11px]">Total</td>
                               <td className="py-2 text-right font-mono font-bold text-white">{purchaseTotals.meters.toFixed(2)}</td>
+                              <td className="py-2 text-right font-mono font-bold text-white">{rate(purchaseTotals.amount, purchaseTotals.meters)}</td>
                               <td className="py-2 text-right font-mono font-bold text-[#60a5fa]">{inr(purchaseTotals.amount)}</td>
                               <td className="py-2 text-right font-mono font-bold text-white">{purchaseTotals.bills}</td>
                             </tr>
@@ -475,8 +482,9 @@ export default function Analytics() {
                         <table className="w-full text-sm">
                           <thead className="text-[#7a8499] uppercase tracking-[0.25em] text-xs">
                             <tr className="border-b border-[#1a2233]">
-                              <th className="text-left font-medium py-2">Period</th>
+                              <th className="text-left font-medium py-2">{isTimeChart ? "Period" : "Fabric"}</th>
                               <th className="text-right font-medium py-2">Meters</th>
+                              <th className="text-right font-medium py-2">Rate</th>
                               <th className="text-right font-medium py-2">Revenue</th>
                               <th className="text-right font-medium py-2">Bills</th>
                             </tr>
@@ -486,6 +494,7 @@ export default function Analytics() {
                               <tr key={i} className="border-b border-[#1a2233]/60 hover:bg-[#020817]/40">
                                 <td className="py-2 font-semibold text-[#e8edf5]">{d.label}</td>
                                 <td className="py-2 text-right font-mono text-[#a8b0c0]">{d.meters.toFixed(2)}</td>
+                                <td className="py-2 text-right font-mono text-[#a8b0c0]">{rate(d.revenue, d.meters)}</td>
                                 <td className="py-2 text-right font-mono text-[#d4af37]">{inr(d.revenue)}</td>
                                 <td className="py-2 text-right font-mono text-[#a8b0c0]">{d.bills}</td>
                               </tr>
@@ -495,6 +504,7 @@ export default function Analytics() {
                             <tr className="border-t-2 border-[#d4af37]/40">
                               <td className="py-2 text-[#d4af37] font-bold uppercase tracking-[0.2em] text-[11px]">Total</td>
                               <td className="py-2 text-right font-mono font-bold text-white">{totals.meters.toFixed(2)}</td>
+                              <td className="py-2 text-right font-mono font-bold text-white">{rate(totals.revenue, totals.meters)}</td>
                               <td className="py-2 text-right font-mono font-bold text-[#d4af37]">{inr(totals.revenue)}</td>
                               <td className="py-2 text-right font-mono font-bold text-white">{totals.bills}</td>
                             </tr>
@@ -507,8 +517,9 @@ export default function Analytics() {
                       <thead className="text-[#7a8499] uppercase tracking-[0.25em] text-xs">
                         <tr className="border-b border-[#1a2233]">
                           <th className="text-left font-medium py-2">Item</th>
-                          <th className="text-right font-medium py-2">Revenue</th>
                           <th className="text-right font-medium py-2">Meters</th>
+                          <th className="text-right font-medium py-2">Rate</th>
+                          <th className="text-right font-medium py-2">Revenue</th>
                           <th className="text-right font-medium py-2">Bills</th>
                         </tr>
                       </thead>
@@ -516,12 +527,22 @@ export default function Analytics() {
                         {chartData.map((d, i) => (
                           <tr key={i} className="border-b border-[#1a2233]/60 hover:bg-[#020817]/40">
                             <td className="py-2 font-semibold text-[#e8edf5]">{d.label}</td>
-                            <td className="py-2 text-right font-mono text-[#a8b0c0]">{inr(d.revenue)}</td>
                             <td className="py-2 text-right font-mono text-[#a8b0c0]">{d.meters.toFixed(2)}</td>
+                            <td className="py-2 text-right font-mono text-[#a8b0c0]">{rate(d.revenue, d.meters)}</td>
+                            <td className="py-2 text-right font-mono text-[#d4af37]">{inr(d.revenue)}</td>
                             <td className="py-2 text-right font-mono text-[#a8b0c0]">{d.bills}</td>
                           </tr>
                         ))}
                       </tbody>
+                      <tfoot>
+                        <tr className="border-t-2 border-[#d4af37]/40">
+                          <td className="py-2 text-[#d4af37] font-bold uppercase tracking-[0.2em] text-[11px]">Total</td>
+                          <td className="py-2 text-right font-mono font-bold text-white">{totals.meters.toFixed(2)}</td>
+                          <td className="py-2 text-right font-mono font-bold text-white">{rate(totals.revenue, totals.meters)}</td>
+                          <td className="py-2 text-right font-mono font-bold text-[#d4af37]">{inr(totals.revenue)}</td>
+                          <td className="py-2 text-right font-mono font-bold text-white">{totals.bills}</td>
+                        </tr>
+                      </tfoot>
                     </table>
                   )}
                 </div>
