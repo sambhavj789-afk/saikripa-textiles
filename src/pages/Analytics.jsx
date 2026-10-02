@@ -5,6 +5,7 @@ import {
 } from "recharts";
 import { supabase, fetchAll } from "../lib/supabase";
 import AdminNav from "../components/AdminNav";
+import { useFinancialYear, applyFyRange } from "../context/FinancialYearContext";
 
 const inr = (n) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n || 0);
 
@@ -15,6 +16,9 @@ const inrShort = (n) => {
   if (n >= 1000) return `₹${(n / 1000).toFixed(1)}K`;
   return `₹${n.toFixed(0)}`;
 };
+
+// Financial year (1 Apr – 31 Mar) a date falls in, labelled by its starting year.
+const fyStart = (d) => (d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1);
 
 // Average rate = amount / meters. Blank when there are no meters to divide by.
 const rate = (amount, meters) => (Number(meters) > 0 ? `₹${(Number(amount || 0) / Number(meters)).toFixed(2)}` : "—");
@@ -34,6 +38,7 @@ export default function Analytics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userEmail, setUserEmail] = useState("");
+  const { fy, setFy, years, range, label: fyLabel } = useFinancialYear();
 
   const [measure, setMeasure] = useState("revenue");
   const [groupBy, setGroupBy] = useState("monthly");
@@ -58,16 +63,20 @@ export default function Analytics() {
       const { data } = await supabase.auth.getSession();
       if (!data.session) { navigate("/admin/login", { replace: true }); return; }
       setUserEmail(data.session.user.email);
-      await fetchData();
     };
     init();
   }, [navigate]);
 
+  // Reload whenever the financial year changes (shared with the other admin pages).
+  useEffect(() => {
+    if (userEmail) fetchData();
+  }, [userEmail, fy]);
+
   const fetchData = async () => {
     setLoading(true);
     const [salesRes, purchRes] = await Promise.all([
-      fetchAll(() => supabase.from("sales_records").select("*, bill_items(*)").order("bill_date", { ascending: true })),
-      fetchAll(() => supabase.from("purchase_records").select("*").order("bill_date", { ascending: true })),
+      fetchAll(() => applyFyRange(supabase.from("sales_records").select("*, bill_items(*)").order("bill_date", { ascending: true }), "bill_date", range)),
+      fetchAll(() => applyFyRange(supabase.from("purchase_records").select("*").order("bill_date", { ascending: true }), "bill_date", range)),
     ]);
     setLoading(false);
     if (salesRes.error) { setError(salesRes.error.message); return; }
@@ -132,7 +141,7 @@ export default function Analytics() {
     switch (gb) {
       case "daily": return r.bill_date;
       case "monthly": return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      case "yearly": return String(d.getFullYear());
+      case "yearly": return String(fyStart(d));
       case "fabric": return r.quality || "Unknown";
       case "agency": return r.sale_type === "Direct" ? "Direct (no agency)" : (r.agency_name || "Unknown");
       case "party": return r.party || "Unknown";
@@ -145,7 +154,7 @@ export default function Analytics() {
     switch (gb) {
       case "daily": return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
       case "monthly": return d.toLocaleDateString("en-IN", { month: "short", year: "2-digit" });
-      case "yearly": return String(d.getFullYear());
+      case "yearly": return `FY ${fyStart(d)}–${String((fyStart(d) + 1) % 100).padStart(2, "0")}`;
       case "agency": return r.sale_type === "Direct" ? "Direct" : (r.agency_name || "Unknown");
       default: return getRowKey(r, gb);
     }
@@ -270,18 +279,33 @@ export default function Analytics() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-10 relative">
-        <div className="mb-8 flex items-center gap-4">
+        <div className="mb-8 flex flex-wrap items-center gap-4">
           <div className="w-1 h-12 rounded-full bg-gradient-to-b from-[#f4d77a] via-[#d4af37] to-[#a8842c]" />
           <div>
             <h2 className="text-4xl font-bold tracking-tight" style={{ background: "linear-gradient(135deg, #ffffff 0%, #f4d77a 60%, #d4af37 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Business Analytics</h2>
             <p className="text-xs text-[#7a8499] mt-2 uppercase tracking-[0.25em] font-medium">Use the controls below to slice your data</p>
+          </div>
+          <div className="ml-auto flex items-center gap-2 bg-[#0a1124] border border-[#d4af37]/40 rounded-lg px-3 py-2">
+            <svg className="w-4 h-4 text-[#d4af37]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <select
+              value={fy}
+              onChange={(e) => { setFy(e.target.value === "all" ? "all" : parseInt(e.target.value, 10)); setFromDate(""); setToDate(""); }}
+              className="bg-[#0a1124] text-sm font-bold text-[#e8edf5] focus:outline-none cursor-pointer pr-1"
+            >
+              <option value="all">All Years</option>
+              {years.map((y) => (
+                <option key={y} value={y}>{`FY ${y}–${String((y + 1) % 100).padStart(2, "0")}`}</option>
+              ))}
+            </select>
           </div>
         </div>
 
         {error && <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded-xl p-4 text-sm mb-4">{error}</div>}
 
         {bills.length === 0 && purchases.length === 0 ? (
-          <div className="bg-[#0a1124] rounded-xl p-12 text-center text-[#7a8499] border border-[#1a2233]">No records yet.</div>
+          <div className="bg-[#0a1124] rounded-xl p-12 text-center text-[#7a8499] border border-[#1a2233]">No records in {fyLabel}.</div>
         ) : (
           <>
             <div className="bg-[#0a1124] rounded-xl p-5 mb-5 border border-[#1a2233]">
@@ -299,7 +323,7 @@ export default function Analytics() {
                 </Field>
                 <Field label="Group by">
                   <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} className={selectCls}>
-                    <optgroup label="Time"><option value="daily">Daily</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></optgroup>
+                    <optgroup label="Time"><option value="daily">Daily</option><option value="monthly">Monthly</option><option value="yearly">Financial Year</option></optgroup>
                     <optgroup label="Category"><option value="fabric">By Fabric</option><option value="agency">By Agency</option><option value="party">By Party</option></optgroup>
                   </select>
                 </Field>
@@ -333,10 +357,10 @@ export default function Analytics() {
                   </Field>
                 )}
                 <Field label="Date Range — From (optional)">
-                  <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className={selectCls + " [color-scheme:dark]"} />
+                  <input type="date" min={range?.start} max={range ? new Date(new Date(range.end).getTime() - 86400000).toISOString().slice(0, 10) : undefined} value={fromDate} onChange={(e) => setFromDate(e.target.value)} className={selectCls + " [color-scheme:dark]"} />
                 </Field>
                 <Field label="Date Range — To (optional)">
-                  <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className={selectCls + " [color-scheme:dark]"} />
+                  <input type="date" min={range?.start} max={range ? new Date(new Date(range.end).getTime() - 86400000).toISOString().slice(0, 10) : undefined} value={toDate} onChange={(e) => setToDate(e.target.value)} className={selectCls + " [color-scheme:dark]"} />
                 </Field>
               </div>
               {breakdownConfig && (
