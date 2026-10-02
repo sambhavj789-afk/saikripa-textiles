@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { supabase, fetchAll } from "../lib/supabase";
 import { fetchAllOptions, saveOptions, deleteOption } from "../lib/autocomplete";
 import AdminNav from "../components/AdminNav";
 import Autocomplete from "../components/Autocomplete";
@@ -78,11 +78,11 @@ export default function StockReceived() {
 
   const fetchMonths = async () => {
     setLoading(true);
-    const { data, error: dbError } = await applyFyRange(
+    const { data, error: dbError } = await fetchAll(() => applyFyRange(
       supabase.from("stock_received").select("*, stock_received_items(*)").order("period_date", { ascending: true }),
       "period_date",
       range
-    );
+    ));
     setLoading(false);
     if (dbError) { setError(dbError.message); return; }
     setMonths(data || []);

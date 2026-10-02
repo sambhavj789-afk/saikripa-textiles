@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { supabase, fetchAll } from "../lib/supabase";
 import { fetchAllOptions, saveOptions, deleteOption } from "../lib/autocomplete";
 import AdminNav from "../components/AdminNav";
 import Autocomplete from "../components/Autocomplete";
@@ -76,11 +76,11 @@ export default function OfferRecords() {
 
   const fetchOffers = async () => {
     setLoading(true);
-    const { data, error: dbError } = await applyFyRange(
+    const { data, error: dbError } = await fetchAll(() => applyFyRange(
       supabase.from("offer_records").select("*, offer_shades(*)").order("offer_date", { ascending: false }),
       "offer_date",
       range
-    );
+    ));
     setLoading(false);
     if (dbError) { setError(dbError.message); return; }
     setOffers(data || []);

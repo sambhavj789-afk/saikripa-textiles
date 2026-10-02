@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { supabase, fetchAll } from "../lib/supabase";
 import AdminNav from "../components/AdminNav";
 import { useFinancialYear, applyFyRange } from "../context/FinancialYearContext";
 
@@ -80,11 +80,11 @@ export default function AdminDashboard() {
     // Revenue matches the Sales Records page: use the stored final_total
     // (includes GST, charges, discount, TCS, round-off) and fall back to the
     // line-item subtotal only when final_total is missing.
-    const { data: salesData } = await applyFyRange(
+    const { data: salesData } = await fetchAll(() => applyFyRange(
       supabase.from("sales_records").select("id, final_total, bill_items(amount)"),
       "bill_date",
       range
-    );
+    ));
 
     const salesRevenue =
       salesData?.reduce((sum, b) => {
@@ -94,11 +94,11 @@ export default function AdminDashboard() {
       }, 0) || 0;
 
     // Fetch purchase records and sum their amounts (matches Purchase Records page Total Amount)
-    const { data: purchaseData } = await applyFyRange(
+    const { data: purchaseData } = await fetchAll(() => applyFyRange(
       supabase.from("purchase_records").select("amount"),
       "bill_date",
       range
-    );
+    ));
 
     const purchasesTotal = purchaseData?.reduce((sum, b) => sum + Number(b.amount || 0), 0) || 0;
 

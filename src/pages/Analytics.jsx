@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
-import { supabase } from "../lib/supabase";
+import { supabase, fetchAll } from "../lib/supabase";
 import AdminNav from "../components/AdminNav";
 
 const inr = (n) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n || 0);
@@ -66,8 +66,8 @@ export default function Analytics() {
   const fetchData = async () => {
     setLoading(true);
     const [salesRes, purchRes] = await Promise.all([
-      supabase.from("sales_records").select("*, bill_items(*)").order("bill_date", { ascending: true }),
-      supabase.from("purchase_records").select("*").order("bill_date", { ascending: true }),
+      fetchAll(() => supabase.from("sales_records").select("*, bill_items(*)").order("bill_date", { ascending: true })),
+      fetchAll(() => supabase.from("purchase_records").select("*").order("bill_date", { ascending: true })),
     ]);
     setLoading(false);
     if (salesRes.error) { setError(salesRes.error.message); return; }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { supabase, fetchAll } from "../lib/supabase";
 import { fetchAllOptions, saveOptions, deleteOption } from "../lib/autocomplete";
 import AdminNav from "../components/AdminNav";
 import Autocomplete from "../components/Autocomplete";
@@ -59,11 +59,11 @@ export default function PurchaseRecords() {
 
   const fetchBills = async () => {
     setLoading(true);
-    const { data, error: dbError } = await applyFyRange(
+    const { data, error: dbError } = await fetchAll(() => applyFyRange(
       supabase.from("purchase_records").select("*").order("bill_date", { ascending: false }),
       "bill_date",
       range
-    );
+    ));
     setLoading(false);
     if (dbError) { setError(dbError.message); return; }
     setBills(data || []);
