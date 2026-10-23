@@ -43,7 +43,7 @@ export default function StockReceived() {
   const [exportOpen, setExportOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    period_date: new Date().toISOString().split("T")[0],
+    period_date: new Date().toLocaleDateString("en-CA"),
     notes: "",
   });
   const [items, setItems] = useState([emptyItem()]);
@@ -97,7 +97,7 @@ export default function StockReceived() {
   const num = (v) => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
 
   const resetForm = () => {
-    setForm({ period_date: new Date().toISOString().split("T")[0], notes: "" });
+    setForm({ period_date: new Date().toLocaleDateString("en-CA"), notes: "" });
     setItems([emptyItem()]);
     setEditingId(null);
   };

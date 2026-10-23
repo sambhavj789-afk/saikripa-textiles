@@ -6,7 +6,35 @@ html {
 }
 
 body {
-  background: #f8f6f2;
+  background: #020817;
+  -webkit-tap-highlight-color: transparent;
+}
+
+a, button, [role="button"], input, select, textarea, label {
+  touch-action: manipulation;
+}
+
+/* Keyboard focus ring (mouse clicks don't show it) */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+summary:focus-visible {
+  outline: 2px solid #d4af37;
+  outline-offset: 3px;
+}
+
+/* Respect "reduce motion": stop pulses, bounces, AOS reveals and smooth scroll */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  [data-aos] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 @keyframes float {

@@ -69,10 +69,10 @@ export default function FabricDetail() {
       {/* Header */}
       <header className="bg-[#020817] border-b border-[#1a2233] sticky top-0 z-30 backdrop-blur-xl bg-opacity-90">
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
-          <Link to="/" className="flex flex-col">
-            <h1 className="text-lg font-black tracking-wider text-[#d4af37] uppercase">
+          <Link to="/" className="flex flex-col" translate="no">
+            <p className="text-lg font-black tracking-wider text-[#d4af37] uppercase">
               Saikripa Textiles
-            </h1>
+            </p>
             <p className="text-[10px] text-[#7a8499] tracking-[0.25em] uppercase mt-0.5">
               Fabric Detail
             </p>
@@ -150,7 +150,7 @@ export default function FabricDetail() {
                       imgIdx === i ? "border-[#d4af37]" : "border-[#1a2233] hover:border-[#d4af37]/40"
                     }`}
                   >
-                    <img src={src} alt={`${item.title} ${i + 1}`} className="w-full h-full object-cover" />
+                    <img src={src} alt={`${item.title} ${i + 1}`} width="200" height="200" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -241,6 +241,8 @@ export default function FabricDetail() {
                     <img
                       src={c.image}
                       alt={c.title}
+                      loading="lazy"
+                      decoding="async"
                       className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition duration-500"
                     />
                   </div>

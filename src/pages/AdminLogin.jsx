@@ -21,12 +21,17 @@ export default function AdminLogin() {
     setError(null);
     setLoading(true);
 
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    setLoading(false);
+    let authError;
+    try {
+      ({ error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      }));
+    } catch {
+      authError = { message: "Couldn't reach the server. Check your internet connection and try again." };
+    } finally {
+      setLoading(false);
+    }
 
     if (authError) {
       setError(authError.message || "Login failed. Check your credentials.");
@@ -54,40 +59,47 @@ export default function AdminLogin() {
         <div className="bg-white rounded-[32px] p-8 shadow-[0_40px_120px_rgba(0,0,0,0.3)]">
           <h2 className="text-2xl font-black text-[#081225] mb-1">Sign In</h2>
           <p className="text-gray-400 text-sm mb-6">
-            Access your appointments dashboard
+            Access your sales and purchase records
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">
+              <label htmlFor="login-email" className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">
                 Email
               </label>
               <input
+                id="login-email"
+                name="email"
                 type="email"
+                autoComplete="username"
+                spellCheck={false}
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@saikripa.com"
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-[#081225] bg-white focus:outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">
+              <label htmlFor="login-password" className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">
                 Password
               </label>
               <input
+                id="login-password"
+                name="password"
                 type="password"
+                autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-[#081225] bg-white focus:outline-none focus:border-[#d4af37] focus:ring-2 focus:ring-[#d4af37]/20 transition"
               />
             </div>
 
             {error && (
-              <p className="text-red-500 text-xs bg-red-50 rounded-xl p-3">
+              <p role="alert" className="text-red-500 text-xs bg-red-50 rounded-xl p-3">
                 {error}
               </p>
             )}
@@ -101,7 +113,7 @@ export default function AdminLogin() {
                   : "bg-gradient-to-r from-[#081225] to-[#0f2060] text-white hover:shadow-[0_8px_30px_rgba(8,18,37,0.4)] hover:scale-[1.01]"
                 }`}
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? "Signing in…" : "Sign In"}
             </button>
           </form>
 

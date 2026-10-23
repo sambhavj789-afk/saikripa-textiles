@@ -15,7 +15,7 @@ const SUPPLIERS = ["Suzuki", "Saileela"];
 const FABRIC_QUALITIES = ["Superior Collection", "Gold Club", "Aura Plus", "Innova", "Milky Way", "Classic P 7200", "Victory", "Alpha Dyed", "Poly King", "Good Cut", "Fant", "Rages", "Chindi", "Dress Code"];
 
 const emptyForm = () => ({
-  bill_date: new Date().toISOString().split("T")[0],
+  bill_date: new Date().toLocaleDateString("en-CA"),
   bill_number: "", party: "", quality: "", meter: "", plus: "", minus: "", amount: "", notes: "",
 });
 
@@ -28,6 +28,7 @@ export default function PurchaseRecords() {
   const [userEmail, setUserEmail] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [form, setForm] = useState(emptyForm());
   const [search, setSearch] = useState("");
@@ -99,6 +100,20 @@ export default function PurchaseRecords() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (saving) return;
+    if (!Number.isFinite(parseFloat(form.meter)) || !Number.isFinite(parseFloat(form.amount))) {
+      alert("Enter both Meter and Amount as numbers before saving.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await saveBill();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveBill = async () => {
     const payload = {
       bill_date: form.bill_date, bill_number: form.bill_number.trim(), party: form.party.trim(),
       quality: form.quality.trim(), meter: parseFloat(form.meter),
@@ -234,7 +249,7 @@ export default function PurchaseRecords() {
       <header className="relative border-b border-[#1a2233]/80 backdrop-blur-xl bg-[#020817]/80 sticky top-0 z-40">
         <AdminNav userEmail={userEmail} className="absolute left-4 top-1/2 -translate-y-1/2" />
         <div className="max-w-7xl mx-auto px-6 py-5">
-          <h1 className="text-lg font-bold tracking-[0.2em] uppercase" style={{ background: "linear-gradient(135deg, #f4d77a 0%, #d4af3750%, #a8842c 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Saikripa Textiles</h1>
+          <h1 className="text-lg font-bold tracking-[0.2em] uppercase" style={{ background: "linear-gradient(135deg, #f4d77a 0%, #d4af37 50%, #a8842c 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Saikripa Textiles</h1>
           <p className="text-[10px] text-[#7a8499] tracking-[0.35em] uppercase mt-1 font-medium">Purchase Records</p>
         </div>
       </header>
@@ -325,7 +340,7 @@ export default function PurchaseRecords() {
               </div>
             </div>
             <div className="flex gap-3 mt-6">
-              <button type="submit" className="bg-gradient-to-br from-[#d4af37] to-[#a8842c] text-[#020817] px-6 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition">{editingId ? "Update Bill" : "Save Bill"}</button>
+              <button type="submit" disabled={saving} className="bg-gradient-to-br from-[#d4af37] to-[#a8842c] text-[#020817] px-6 py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition disabled:opacity-60 disabled:cursor-wait">{saving ? "Saving…" : editingId ? "Update Bill" : "Save Bill"}</button>
               <button type="button" onClick={() => { resetForm(); setShowForm(false); }} className="bg-[#020817] border border-[#1a2233] text-[#a8b0c0] px-6 py-2.5 rounded-lg font-medium text-xs uppercase tracking-wider hover:border-[#d4af37]/40 hover:text-[#e8edf5] transition">Cancel</button>
             </div>
           </form>

@@ -60,7 +60,7 @@ export default function SalesRecords() {
   const [exportOpen, setExportOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    bill_date: new Date().toISOString().split("T")[0],
+    bill_date: new Date().toLocaleDateString("en-CA"),
     bill_number: "", party: "", sale_type: "Direct", agency_name: "", notes: "",
     ...emptyInvoiceFields(),
   });
@@ -132,7 +132,7 @@ export default function SalesRecords() {
 
   const resetForm = () => {
     setForm({
-      bill_date: new Date().toISOString().split("T")[0],
+      bill_date: new Date().toLocaleDateString("en-CA"),
       bill_number: "", party: "", sale_type: "Direct", agency_name: "", notes: "",
       ...emptyInvoiceFields(),
     });

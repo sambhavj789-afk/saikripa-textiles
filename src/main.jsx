@@ -24,6 +24,17 @@ function RobotsMeta() {
   }, [pathname]);
   return null;
 }
+// Scrolling the page over a focused number field (meters, rates, amounts) would
+// otherwise silently change its value in Chrome. Blur it so the wheel scrolls.
+document.addEventListener(
+  "wheel",
+  (e) => {
+    const el = document.activeElement;
+    if (el && el.type === "number" && el === e.target) el.blur();
+  },
+  { passive: true }
+);
+
 import { FinancialYearProvider } from "./context/FinancialYearContext.jsx";
 import LuxuryTextileWebsite from "./App.jsx";
 import Catalogue from "./pages/Catalogue.jsx";

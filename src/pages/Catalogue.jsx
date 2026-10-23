@@ -153,8 +153,11 @@ export default function Catalogue() {
         {/* Filter bar */}
         <div className="bg-[#0a1124] rounded-2xl p-5 mb-6 border border-[#1a2233]">
           <input
-            type="text"
-            placeholder="Search by name or category..."
+            type="search"
+            name="q"
+            aria-label="Search fabrics"
+            autoComplete="off"
+            placeholder="Search by name or category…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-[#020817] border border-[#1a2233] rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#4a5568] focus:outline-none focus:border-[#d4af37]/60 focus:ring-2 focus:ring-[#d4af37]/20 transition"
@@ -165,6 +168,7 @@ export default function Catalogue() {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
+                aria-pressed={activeCategory === cat}
                 className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wide transition ${
                   activeCategory === cat
                     ? "bg-gradient-to-br from-[#f4d77a] via-[#d4af37] to-[#a8842c] text-[#020817] shadow-[0_0_20px_rgba(212,175,55,0.3)]"
@@ -384,7 +388,7 @@ function DescriptionWithToggle({ text }) {
   if (text.length <= 100) return text;
   return (
     <>
-      {expanded ? text : text.substring(0, 100) + "..."}{" "}
+      {expanded ? text : text.substring(0, 100).trimEnd() + "…"}{" "}
       <button
         onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
         className="text-[#d4af37] hover:text-[#f4d77a] font-semibold transition"
@@ -405,11 +409,16 @@ function FabricCard({ item, isCompared, onToggleCompare, onNavigate }) {
     }`}>
       <button
         onClick={onNavigate}
+        aria-label={`View ${item.title}`}
         className="relative aspect-[4/3] bg-[#020817] overflow-hidden block w-full"
       >
         <img
           src={item.image}
           alt={item.title}
+          width="800"
+          height="600"
+          loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
         />
         <div className="absolute top-3 left-3">
@@ -442,6 +451,7 @@ function FabricCard({ item, isCompared, onToggleCompare, onNavigate }) {
           </button>
           <button
             onClick={onToggleCompare}
+            aria-pressed={isCompared}
             className={`py-2.5 rounded-xl font-bold text-xs transition border uppercase tracking-wider ${
               isCompared
                 ? "bg-[#d4af37]/15 text-[#d4af37] border-[#d4af37]/40"

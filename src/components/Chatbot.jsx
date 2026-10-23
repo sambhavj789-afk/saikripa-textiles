@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useCatalogue } from "../lib/catalogue";
 
 const WHATSAPP_NUMBER = "918949881253";
 const WHATSAPP_URL = (msg) => `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
@@ -15,7 +16,8 @@ const FLOWS = {
     ],
   },
   fabrics: {
-    botMsg: "We have 6 premium collections, all manufactured in Bhilwara 🏭\n\nOur bestsellers:\n• Superior Collection — 380 GSM, 65/35 PV\n• Gold Club — 340 GSM, premium suiting\n• Aura Plus — soft, durable, vibrant shades\n\nWould you like to see the full catalog or get details on a specific fabric?",
+    // botMsg is filled in from the live catalogue (see fabricsMsg below)
+    botMsg: "",
     options: [
       { label: "💬 Get Full Catalog on WhatsApp", action: "whatsapp", message: "Hi, I'd like to see your full fabric catalog. Please share details." },
       { label: "💬 Ask About Specific Fabric", action: "whatsapp", message: "Hi, I'd like details on: ___ (please specify fabric name)" },
@@ -61,6 +63,17 @@ export default function Chatbot() {
   const [typing, setTyping] = useState(false);
   const [userInput, setUserInput] = useState("");
   const scrollRef = useRef(null);
+  const { items: catalogueItems } = useCatalogue();
+
+  // Fabric facts come from the catalogue so GSM / counts never drift from the site.
+  const preferred = ["superior-collection", "gold-club", "aura-plus"];
+  const picked = catalogueItems.filter((c) => preferred.includes(c.slug));
+  const bestsellers = (picked.length ? picked : catalogueItems).slice(0, 3);
+  const fabricLines = bestsellers
+    .map((c) => `• ${c.title} — ${[c.gsm, c.blend].filter(Boolean).join(", ")}`)
+    .join("\n");
+  const fabricsMsg = `We have ${catalogueItems.length} premium collections, all manufactured in Bhilwara 🏭\n\nOur bestsellers:\n${fabricLines}`;
+  const botText = (key) => (key === "fabrics" ? `${fabricsMsg}\n\nWould you like to see the full catalog or get details on a specific fabric?` : FLOWS[key].botMsg);
 
   useEffect(() => {
     if (open && messages.length === 0) {
@@ -92,7 +105,7 @@ export default function Chatbot() {
       } else if (lower.includes("sample")) {
         reply = "We dispatch free fabric samples within 48 hours! 📦\n\nShare your name, city, and fabrics you'd like on WhatsApp and we'll send swatches right away.";
       } else if (lower.includes("fabric") || lower.includes("collection") || lower.includes("gsm")) {
-        reply = "We have 6 premium collections 🧵\n\n• Superior Collection — 380 GSM, 65/35 PV\n• Gold Club — 340 GSM premium suiting\n• Aura Plus — soft, durable, vibrant shades\n\nWould you like the full catalog on WhatsApp?";
+        reply = `${fabricsMsg}\n\nWould you like the full catalog on WhatsApp?`;
       } else if (lower.includes("address") || lower.includes("location") || lower.includes("shop") || lower.includes("visit")) {
         reply = "Our shop is at 📍\n\nMarvel Square, 38-A\nGandhi Nagar, Bhilwara, Rajasthan 311001\n\nMon–Sat: 10AM – 7PM\nCall: +91 89498 81253";
       } else if (lower.includes("delivery") || lower.includes("ship") || lower.includes("dispatch")) {
@@ -125,8 +138,7 @@ export default function Chatbot() {
         setMessages((m) => [...m, { from: "bot", text: "Opening Google Maps for directions 📍\n\nAnything else I can help with?" }]);
         setShowOptions(true);
       } else if (option.next) {
-        const nextFlow = FLOWS[option.next];
-        setMessages((m) => [...m, { from: "bot", text: nextFlow.botMsg }]);
+        setMessages((m) => [...m, { from: "bot", text: botText(option.next) }]);
         setStep(option.next);
         setShowOptions(true);
       }
@@ -134,6 +146,13 @@ export default function Chatbot() {
   };
 
   const currentOptions = FLOWS[step]?.options || [];
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   return (
     <>
@@ -160,7 +179,7 @@ export default function Chatbot() {
       )}
 
       {open && (
-        <div className="fixed bottom-5 right-5 z-50 w-[calc(100vw-2.5rem)] sm:w-[380px] max-w-[400px] h-[calc(100vh-5rem)] sm:h-[580px] sm:max-h-[80vh] bg-[#0a1124] border border-[#d4af37]/30 rounded-[24px] shadow-[0_20px_60px_rgba(0,0,0,0.6),0_0_40px_rgba(212,175,55,0.15)] flex flex-col overflow-hidden animate-slideUp">
+        <div role="dialog" aria-label="Saikripa Assistant chat" className="fixed bottom-5 right-5 z-50 w-[calc(100vw-2.5rem)] sm:w-[380px] max-w-[400px] h-[calc(100vh-5rem)] sm:h-[580px] sm:max-h-[80vh] bg-[#0a1124] border border-[#d4af37]/30 rounded-[24px] shadow-[0_20px_60px_rgba(0,0,0,0.6),0_0_40px_rgba(212,175,55,0.15)] flex flex-col overflow-hidden animate-slideUp">
           <div className="bg-gradient-to-r from-[#f4d77a] via-[#d4af37] to-[#a8842c] px-5 py-4 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[#020817]/20 backdrop-blur border border-[#020817]/30 flex items-center justify-center">
@@ -183,7 +202,7 @@ export default function Chatbot() {
             </button>
           </div>
 
-          <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#020817]">
+          <div ref={scrollRef} aria-live="polite" className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-3 bg-[#020817]">
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.from === "user" ? "justify-end" : "justify-start"} animate-fadeInUp`}>
                 <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm whitespace-pre-line leading-relaxed ${msg.from === "user" ? "bg-gradient-to-br from-[#d4af37] to-[#a8842c] text-[#020817] font-medium rounded-br-sm" : "bg-[#0a1124] border border-[#1a2233] text-[#e8edf5] rounded-bl-sm"}`}>
@@ -219,11 +238,13 @@ export default function Chatbot() {
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleUserInput(); }}
-              placeholder="Type your question..."
+              placeholder="Type your question…"
+              aria-label="Type your question"
+              autoComplete="off"
               className="flex-1 bg-[#0a1124] border border-[#1a2233] text-[#e8edf5] text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:border-[#d4af37] placeholder-[#7a8499]"
             />
-            <button onClick={handleUserInput} className="bg-gradient-to-br from-[#d4af37] to-[#a8842c] text-[#020817] w-10 h-10 rounded-xl flex items-center justify-center hover:scale-105 transition flex-shrink-0">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+            <button onClick={handleUserInput} aria-label="Send message" className="bg-gradient-to-br from-[#d4af37] to-[#a8842c] text-[#020817] w-10 h-10 rounded-xl flex items-center justify-center hover:scale-105 transition flex-shrink-0">
+              <svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
             </button>

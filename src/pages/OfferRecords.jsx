@@ -42,7 +42,7 @@ export default function OfferRecords() {
   const [exportOpen, setExportOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    offer_date: new Date().toISOString().split("T")[0],
+    offer_date: new Date().toLocaleDateString("en-CA"),
     offer_no: "", mill: "", quality: "", rate: "", weight: "", notes: "",
   });
   const [shades, setShades] = useState([emptyShade()]);
@@ -102,7 +102,7 @@ export default function OfferRecords() {
 
   const resetForm = () => {
     setForm({
-      offer_date: new Date().toISOString().split("T")[0],
+      offer_date: new Date().toLocaleDateString("en-CA"),
       offer_no: "", mill: "", quality: "", rate: "", weight: "", notes: "",
     });
     setShades([emptyShade()]);

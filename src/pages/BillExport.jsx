@@ -171,8 +171,8 @@ export default function BillExport() {
           <tbody>
             <tr>
               <td colSpan={4} className="xsmall" style={{ padding: "3px 8px" }}>
-                {["Orignal", "Duplicate", "Triplicate", "Transport Copy"].map((t) => {
-                  const isChecked = (t === "Orignal" && bill.bill_type === "Original") || bill.bill_type === t;
+                {["Original", "Duplicate", "Triplicate", "Transport Copy"].map((t) => {
+                  const isChecked = (t === "Original" && bill.bill_type === "Original") || bill.bill_type === t;
                   return (
                     <span key={t} style={{ marginRight: 18 }}>
                       <span className={`checkbox ${isChecked ? "checked" : ""}`}>{isChecked ? "✓" : ""}</span>
@@ -455,7 +455,7 @@ export default function BillExport() {
                       <td className="right">{Number(bill.others) > 0 ? fmtMoney(bill.others) : ""}</td>
                     </tr>
                     <tr className="bold">
-                      <td colSpan={3}>GST Apllicable Amount</td>
+                      <td colSpan={3}>GST Applicable Amount</td>
                       <td className="right">{fmtMoney(gstBase)}</td>
                     </tr>
                     <tr>
@@ -483,7 +483,7 @@ export default function BillExport() {
                       <td className="right">{Number(bill.tcs) > 0 ? fmtMoney((subtotal * Number(bill.tcs)) / 100) : ""}</td>
                     </tr>
                     <tr className="bold">
-                      <td colSpan={2} style={{ paddingLeft: "14%" }}>Round of</td>
+                      <td colSpan={2} style={{ paddingLeft: "14%" }}>Round Off</td>
                       <td></td>
                       <td className="right">{fmtMoney(roundOff)}</td>
                     </tr>

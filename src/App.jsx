@@ -162,16 +162,24 @@ function Navbar({ hasBar }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const topOffset = hasBar ? "top-[36px]" : "top-0";
   const navLinks = ["Home", "Collections", "About", "Process", "Contact"];
+  const closeMenu = () => { setMenuOpen(false); unlockScroll(); };
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e) => { if (e.key === "Escape") closeMenu(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
 
   return (
     <>
       <header className={`fixed ${topOffset} left-0 w-full z-50 backdrop-blur-2xl bg-[#020817]/80 shadow-[0_4px_30px_rgba(0,0,0,0.5)]`}>
         <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#d4af37]/40 to-transparent pointer-events-none" />
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <a href="#home">
-            <h1 className="text-xl font-black tracking-wider text-[#d4af37] uppercase leading-tight">
+          <a href="#home" translate="no">
+            <p className="text-xl font-black tracking-wider text-[#d4af37] uppercase leading-tight">
               Saikripa Textiles
-            </h1>
+            </p>
             <p className="text-[10px] text-[#7a8499] tracking-[0.25em] uppercase">
               Premium Suiting House · Bhilwara
             </p>
@@ -186,7 +194,7 @@ function Navbar({ hasBar }) {
             <a href="/catalogue" className="hover:text-[#d4af37] transition-colors duration-200">Catalogue</a>
           </nav>
 
-          <button className="md:hidden text-white focus:outline-none" onClick={() => { setMenuOpen(true); lockScroll(); }} aria-label="Open menu">
+          <button className="md:hidden text-white" onClick={() => { setMenuOpen(true); lockScroll(); }} aria-label="Open menu" aria-expanded={menuOpen}>
             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
@@ -195,17 +203,17 @@ function Navbar({ hasBar }) {
       </header>
 
       {menuOpen && (
-        <div className="fixed inset-0 z-[70] flex">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => { setMenuOpen(false); unlockScroll(); }} />
-          <div className="relative ml-auto w-72 h-full bg-[#0a1124] border-l border-[#1a2233] flex flex-col p-8 shadow-2xl">
-            <button className="self-end text-white/60 hover:text-white mb-8 text-2xl" onClick={() => { setMenuOpen(false); unlockScroll(); }} aria-label="Close menu">×</button>
+        <div className="fixed inset-0 z-[70] flex" role="dialog" aria-modal="true" aria-label="Menu">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={closeMenu} />
+          <div className="relative ml-auto w-72 h-full bg-[#0a1124] border-l border-[#1a2233] flex flex-col p-8 shadow-2xl overflow-y-auto overscroll-contain">
+            <button className="self-end text-white/60 hover:text-white mb-8 text-2xl" onClick={closeMenu} aria-label="Close menu">×</button>
             <div className="mb-8">
               <p className="text-[#d4af37] font-black text-lg uppercase">Saikripa Textiles</p>
               <p className="text-[#7a8499] text-xs mt-1">Premium Suiting · Bhilwara</p>
             </div>
             <nav className="flex flex-col gap-5">
               {navLinks.map((l) => (
-                <a key={l} href={`#${l.toLowerCase().replace(" ", "-")}`} onClick={() => { setMenuOpen(false); unlockScroll(); }} className="text-white/80 hover:text-[#d4af37] text-lg font-semibold transition">{l}</a>
+                <a key={l} href={`#${l.toLowerCase().replace(" ", "-")}`} onClick={closeMenu} className="text-white/80 hover:text-[#d4af37] text-lg font-semibold transition">{l}</a>
               ))}
               <a href="/catalogue" className="text-white/80 hover:text-[#d4af37] text-lg font-semibold transition">Catalogue</a>
             </nav>
@@ -241,8 +249,8 @@ function ProductModal({ item, onClose }) {
   const prev = () => setIdx((i) => (i - 1 + imgs.length) % imgs.length);
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="bg-[#0a1124] border border-[#1a2233] w-full max-w-3xl rounded-[28px] overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-label={item.title} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="bg-[#0a1124] border border-[#1a2233] w-full max-w-3xl rounded-[28px] overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto overscroll-contain">
         <div className="relative bg-[#020817]">
           <img src={imgs[idx]} alt={item.title} className="w-full h-auto block" />
           {imgs.length > 1 && (
@@ -287,9 +295,9 @@ function FAQItem({ q, a }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="border border-[#1a2233] rounded-2xl overflow-hidden bg-[#0a1124] hover:border-[#d4af37]/30 transition">
-      <button className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-[#0e1730] transition" onClick={() => setOpen(!open)}>
+      <button className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-[#0e1730] transition" onClick={() => setOpen(!open)} aria-expanded={open}>
         <span className="font-bold text-white pr-4">{q}</span>
-        <span className={`text-[#d4af37] text-xl font-light flex-shrink-0 transition-transform duration-300 ${open ? "rotate-45" : ""}`}>+</span>
+        <span aria-hidden="true" className={`text-[#d4af37] text-xl font-light flex-shrink-0 transition-transform duration-300 ${open ? "rotate-45" : ""}`}>+</span>
       </button>
       {open && (
         <div className="px-6 py-5 bg-[#020817] border-t border-[#1a2233]">
@@ -304,11 +312,22 @@ function FAQItem({ q, a }) {
 function ContactForm() {
   const [form, setForm] = useState({ name: "", phone: "", city: "", fabric: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors] = useState({});
   const { items: catalogueItems } = useCatalogue();
 
-  const handleSubmit = () => {
-    if (!form.name || !form.phone) return;
-    const msg = `Hi, I'm ${form.name} from ${form.city}. I'm interested in: ${form.fabric || "General Inquiry"}. ${form.message}. My phone: ${form.phone}`;
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const next = {};
+    if (!form.name.trim()) next.name = "Enter your name so we know who to reply to.";
+    if (form.phone.replace(/\D/g, "").length < 10) next.phone = "Enter a 10-digit phone or WhatsApp number.";
+    setErrors(next);
+    if (Object.keys(next).length) {
+      document.getElementById(next.name ? "cf-name" : "cf-phone")?.focus();
+      return;
+    }
+    const from = form.city.trim() ? ` from ${form.city.trim()}` : "";
+    const note = form.message.trim() ? ` ${form.message.trim()}` : "";
+    const msg = `Hi, I'm ${form.name.trim()}${from}. I'm interested in: ${form.fabric || "General Inquiry"}.${note} My phone: ${form.phone}`;
     window.open(`https://wa.me/918949881253?text=${encodeURIComponent(msg)}`, "_blank");
     setSubmitted(true);
   };
@@ -321,9 +340,9 @@ function ContactForm() {
         <div className="w-16 h-16 mx-auto mb-5 rounded-full bg-[#d4af37]/15 border border-[#d4af37]/40 flex items-center justify-center text-[#d4af37]" style={{ boxShadow: "0 0 30px rgba(212, 175, 55, 0.2)" }}>
           <Icon name="check" className="w-8 h-8" />
         </div>
-        <h3 className="text-2xl font-black text-white mb-2">Inquiry Sent!</h3>
-        <p className="text-[#cbd5e1]">You'll be redirected to WhatsApp. We respond within 4 hours on business days.</p>
-        <button onClick={() => setSubmitted(false)} className="mt-6 text-[#d4af37] font-bold text-sm hover:underline">Submit another inquiry</button>
+        <h3 className="text-2xl font-black text-white mb-2">WhatsApp Opened</h3>
+        <p className="text-[#cbd5e1]">Press send in WhatsApp to deliver your inquiry. We respond within 4 hours on business days.</p>
+        <button onClick={() => setSubmitted(false)} className="mt-6 text-[#d4af37] font-bold text-sm hover:underline">Submit Another Inquiry</button>
       </div>
     );
   }
@@ -332,25 +351,27 @@ function ContactForm() {
     <div className="bg-[#0a1124] border border-[#1a2233] rounded-[32px] p-8">
       <h3 className="text-2xl font-black text-white mb-1">Send an Inquiry</h3>
       <p className="text-[#cbd5e1] text-sm mb-6">We respond within 4 business hours</p>
-      <div className="space-y-4">
+      <form className="space-y-4" onSubmit={handleSubmit} noValidate>
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-[#7a8499] uppercase tracking-widest mb-1">Full Name *</label>
-            <input type="text" placeholder="Your name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputCls} />
+            <label htmlFor="cf-name" className="block text-xs font-bold text-[#7a8499] uppercase tracking-widest mb-1">Full Name *</label>
+            <input id="cf-name" name="name" type="text" autoComplete="name" placeholder="Your name…" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} aria-invalid={!!errors.name} aria-describedby={errors.name ? "cf-name-err" : undefined} className={inputCls + (errors.name ? " border-red-400/70" : "")} />
+            {errors.name && <p id="cf-name-err" className="mt-1 text-xs text-red-300" aria-live="polite">{errors.name}</p>}
           </div>
           <div>
-            <label className="block text-xs font-bold text-[#7a8499] uppercase tracking-widest mb-1">Phone / WhatsApp *</label>
-            <input type="tel" placeholder="+91 98765 43210" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={inputCls} />
+            <label htmlFor="cf-phone" className="block text-xs font-bold text-[#7a8499] uppercase tracking-widest mb-1">Phone / WhatsApp *</label>
+            <input id="cf-phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="+91 98765 43210" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} aria-invalid={!!errors.phone} aria-describedby={errors.phone ? "cf-phone-err" : undefined} className={inputCls + (errors.phone ? " border-red-400/70" : "")} />
+            {errors.phone && <p id="cf-phone-err" className="mt-1 text-xs text-red-300" aria-live="polite">{errors.phone}</p>}
           </div>
         </div>
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-[#7a8499] uppercase tracking-widest mb-1">City</label>
-            <input type="text" placeholder="Your city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className={inputCls} />
+            <label htmlFor="cf-city" className="block text-xs font-bold text-[#7a8499] uppercase tracking-widest mb-1">City</label>
+            <input id="cf-city" name="city" type="text" autoComplete="address-level2" placeholder="Your city…" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className={inputCls} />
           </div>
           <div>
-            <label className="block text-xs font-bold text-[#7a8499] uppercase tracking-widest mb-1">Fabric / Collection</label>
-            <select value={form.fabric} onChange={(e) => setForm({ ...form, fabric: e.target.value })} className={inputCls + " cursor-pointer"}>
+            <label htmlFor="cf-fabric" className="block text-xs font-bold text-[#7a8499] uppercase tracking-widest mb-1">Fabric / Collection</label>
+            <select id="cf-fabric" name="fabric" value={form.fabric} onChange={(e) => setForm({ ...form, fabric: e.target.value })} className={inputCls + " cursor-pointer"}>
               <option value="">Select a fabric</option>
               {catalogueItems.map((c) => <option key={c.slug || c.title} value={c.title}>{c.title} ({c.gsm})</option>)}
               <option value="Shade Card Request">Shade Card Request</option>
@@ -359,16 +380,16 @@ function ContactForm() {
           </div>
         </div>
         <div>
-          <label className="block text-xs font-bold text-[#7a8499] uppercase tracking-widest mb-1">Message</label>
-          <textarea placeholder="Tell us your quantity, color requirements, or any specific needs..." rows={4} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className={inputCls + " resize-none"} />
+          <label htmlFor="cf-message" className="block text-xs font-bold text-[#7a8499] uppercase tracking-widest mb-1">Message</label>
+          <textarea id="cf-message" name="message" placeholder="Tell us your quantity, color requirements, or any specific needs…" rows={4} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className={inputCls + " resize-none"} />
         </div>
-        <button onClick={handleSubmit} className="w-full bg-gradient-to-br from-[#f4d77a] via-[#d4af37] to-[#a8842c] text-[#020817] py-4 rounded-2xl font-bold hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] hover:scale-[1.01] transition-all duration-300 text-sm flex items-center justify-center gap-2">
+        <button type="submit" className="w-full bg-gradient-to-br from-[#f4d77a] via-[#d4af37] to-[#a8842c] text-[#020817] py-4 rounded-2xl font-bold hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] hover:scale-[1.01] transition-all duration-300 text-sm flex items-center justify-center gap-2">
           Send via WhatsApp
         </button>
         <p className="text-center text-xs text-[#7a8499]">
           Or email directly: <a href="https://mail.google.com/mail/?view=cm&fs=1&to=saikripatextiles58@gmail.com" target="_blank" rel="noreferrer" className="text-[#d4af37] hover:underline">saikripatextiles58@gmail.com</a>
         </p>
-      </div>
+      </form>
     </div>
   );
 }
@@ -399,7 +420,8 @@ export default function LuxuryTextileWebsite() {
   const bestsellers = (picked.length ? picked : catalogueItems).slice(0, 3);
 
   useEffect(() => {
-    AOS.init({ duration: 500, once: true, easing: "ease-out", offset: 50 });
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    AOS.init({ duration: 500, once: true, easing: "ease-out", offset: 50, disable: reduceMotion });
   }, []);
 
   return (
@@ -410,11 +432,11 @@ export default function LuxuryTextileWebsite() {
           <span className="flex-1 text-center tracking-wider">
             <span className="text-[#f5f0e1] font-bold">Free Sample Dispatch</span>
             <span className="text-[#f5f0e1]/40 mx-3">·</span>
-            <span className="text-[#f5f0e1] font-medium">+91 89498 81253</span>
-            <span className="text-[#f5f0e1]/40 mx-3">·</span>
-            <span className="text-[#f5f0e1]/80">Mon–Sat 10AM–7PM</span>
+            <a href="tel:+918949881253" className="text-[#f5f0e1] font-medium whitespace-nowrap hover:text-[#d4af37]">+91&nbsp;89498&nbsp;81253</a>
+            <span className="hidden sm:inline text-[#f5f0e1]/40 mx-3">·</span>
+            <span className="hidden sm:inline text-[#f5f0e1]/80">Mon–Sat 10AM–7PM</span>
           </span>
-          <button onClick={() => setBarVisible(false)} className="ml-4 text-[#7a8499] hover:text-white text-xl leading-none">×</button>
+          <button onClick={() => setBarVisible(false)} className="ml-4 text-[#7a8499] hover:text-white text-xl leading-none" aria-label="Dismiss announcement">×</button>
         </div>
       )}
 
@@ -518,7 +540,7 @@ export default function LuxuryTextileWebsite() {
               <div key={item.title} data-aos="fade-up" data-aos-delay={i * 100}>
               <div onClick={() => setSelectedItem(item)} className="bestseller-card group relative bg-[#0a1124] rounded-[32px] overflow-hidden border border-[#1a2233] flex flex-col cursor-pointer h-full">
                 <div className="relative aspect-[4/3] bg-[#020817] flex items-center justify-center overflow-hidden">
-                  <img src={item.image} alt={item.title} className="w-full h-full object-cover bestseller-img" />
+                  <img src={item.image} alt={item.title} width="800" height="600" loading="lazy" decoding="async" className="w-full h-full object-cover bestseller-img" />
                   <div className="absolute top-3 left-3">
                     <span className="bg-[#020817]/90 backdrop-blur border border-[#1a2233] text-white px-2.5 py-1 rounded-lg text-[10px] font-bold">{item.category}</span>
                   </div>
@@ -534,7 +556,7 @@ export default function LuxuryTextileWebsite() {
                     <span className="bg-[#d4af37]/15 border border-[#d4af37]/30 text-[#d4af37] px-3 py-1 rounded-full text-[10px] font-bold">{item.blend}</span>
                   </div>
                   <h3 className="text-xl font-black text-white mb-2">{item.title}</h3>
-                  <p className="text-[#a8b0c0] text-sm leading-relaxed flex-grow">{item.description.substring(0, 90)}...</p>
+                  <p className="text-[#a8b0c0] text-sm leading-relaxed flex-grow">{item.description.length > 90 ? `${item.description.substring(0, 90).trimEnd()}…` : item.description}</p>
                   <div className="mt-5 space-y-2">
                     <button onClick={(e) => { e.stopPropagation(); setSelectedItem(item); }} className="w-full bg-gradient-to-br from-[#f4d77a] via-[#d4af37] to-[#a8842c] text-[#020817] py-3 rounded-xl font-bold text-sm hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all duration-300">View Details</button>
                     <a onClick={(e) => e.stopPropagation()} href={`https://wa.me/918949881253?text=Hi, I'm interested in ${item.title} (${item.gsm}). Please share pricing.`} target="_blank" rel="noreferrer" className="flex items-center justify-center w-full border border-[#d4af37]/40 text-[#d4af37] py-3 rounded-xl font-bold text-sm hover:bg-[#d4af37]/10 transition">WhatsApp Quote</a>
@@ -589,7 +611,7 @@ export default function LuxuryTextileWebsite() {
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center relative z-10">
           <div data-aos="fade-up" className="relative">
             <div className="absolute -inset-4 bg-gradient-to-br from-[#d4af37]/15 to-transparent blur-3xl rounded-[40px] pointer-events-none" />
-            <img src="https://images.unsplash.com/photo-1705493253566-1522b9015c58?q=80&w=1400&auto=format&fit=crop" alt="Saikripa Textiles Manufacturing" className="relative rounded-[32px] shadow-[0_20px_60px_rgba(0,0,0,0.4)] w-full border border-[#1a2233] hover:scale-[1.01] transition-all duration-500" />
+            <img src="https://images.unsplash.com/photo-1705493253566-1522b9015c58?q=80&w=1400&auto=format&fit=crop" alt="Saikripa Textiles Manufacturing" width="1400" height="933" loading="lazy" decoding="async" className="relative rounded-[32px] shadow-[0_20px_60px_rgba(0,0,0,0.4)] w-full border border-[#1a2233] hover:scale-[1.01] transition-all duration-500" />
           </div>
 
           <div data-aos="fade-up" data-aos-delay="100">
@@ -698,8 +720,8 @@ export default function LuxuryTextileWebsite() {
                 <h3 className="font-black text-white mb-5 text-lg">Contact Information</h3>
                 <div className="space-y-4">
                   {[
-                    { iconName: "phone", label: "Phone / WhatsApp", value: "+91 89498 81253" },
-                    { iconName: "mail", label: "Email", value: "saikripatextiles58@gmail.com" },
+                    { iconName: "phone", label: "Phone / WhatsApp", value: "+91 89498 81253", href: "tel:+918949881253" },
+                    { iconName: "mail", label: "Email", value: "saikripatextiles58@gmail.com", href: "mailto:saikripatextiles58@gmail.com" },
                     { iconName: "pin", label: "Location", value: "Marvel Square, 38-A, opposite Shiv Charan Mathur House, Gandhi Nagar, Bhilwara, Rajasthan 311001" },
                     { iconName: "clock", label: "Business Hours", value: "Mon–Sat: 10:00 AM – 7:00 PM" },
                   ].map((c) => (
@@ -707,9 +729,13 @@ export default function LuxuryTextileWebsite() {
                       <div className="w-10 h-10 rounded-lg bg-[#020817] border border-[#1a2233] flex items-center justify-center text-[#d4af37] flex-shrink-0">
                         <Icon name={c.iconName} className="w-5 h-5" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-xs text-[#7a8499] uppercase tracking-wide font-bold">{c.label}</p>
-                        <p className="text-white font-semibold text-sm mt-0.5">{c.value}</p>
+                        {c.href ? (
+                          <a href={c.href} className="block text-white font-semibold text-sm mt-0.5 break-words hover:text-[#d4af37] transition-colors">{c.value}</a>
+                        ) : (
+                          <p className="text-white font-semibold text-sm mt-0.5">{c.value}</p>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -771,7 +797,7 @@ export default function LuxuryTextileWebsite() {
           </div>
           <div className="relative pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#d4af37]/20 to-transparent pointer-events-none" />
-            <p className="text-[#7a8499] text-xs">© 2025 Saikripa Textiles. All rights reserved.</p>
+            <p className="text-[#7a8499] text-xs">© {new Date().getFullYear()} Saikripa Textiles. All rights reserved.</p>
             <p className="text-[#7a8499] text-xs">Premium Suiting Manufacturer · Bhilwara, India</p>
           </div>
         </div>

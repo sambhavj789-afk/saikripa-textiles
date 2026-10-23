@@ -45,7 +45,7 @@ export default function Autocomplete({
 
   // Reset active highlight when matches change
   useEffect(() => {
-    setActiveIdx(matches.length > 0 ? 0 : -1);
+    setActiveIdx(value && matches.length > 0 ? 0 : -1);
   }, [value, open]);
 
   const acceptSuggestion = (suggestion) => {
